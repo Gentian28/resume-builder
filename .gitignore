@@ -1,0 +1,21 @@
+# Visual Studio / .NET build artifacts
+.vs/
+bin/
+obj/
+publish/
+*.user
+*.suo
+
+# Build output / packages
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+artifacts/
+
+# Local secrets / env
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+secrets.json

@@ -8,6 +8,12 @@ public interface IImporter
     string[] SupportedExtensions { get; }
     Task<ImportResult<Resume>> ImportAsync(Stream stream);
     Task<ImportResult<Resume>> ImportFromFileAsync(string filePath);
+
+    /// <summary>
+    /// Set by the importer that owns an extension shared by several formats (".json" is claimed by
+    /// both the native and the JSON Resume format). Lookup by extension picks this one.
+    /// </summary>
+    bool IsDefaultForExtension => false;
 }
 
 public class ImportResult<T>

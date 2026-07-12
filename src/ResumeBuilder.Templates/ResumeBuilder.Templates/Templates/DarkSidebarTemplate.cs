@@ -115,9 +115,9 @@ public class DarkSidebarTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.Website))
                 col.Item().PaddingBottom(3).Text(info.Website).FontSize(8 * FontSizeScale).FontColor(Colors.White);
             if (!string.IsNullOrWhiteSpace(info.LinkedIn))
-                col.Item().PaddingBottom(3).Text(info.LinkedIn).FontSize(8 * FontSizeScale).FontColor(Colors.White);
+                col.Item().PaddingBottom(3).Text(FormatLinkedInDisplay(info.LinkedIn)).FontSize(8 * FontSizeScale).FontColor(Colors.White);
             if (!string.IsNullOrWhiteSpace(info.GitHub))
-                col.Item().PaddingBottom(3).Text(info.GitHub).FontSize(8 * FontSizeScale).FontColor(Colors.White);
+                col.Item().PaddingBottom(3).Text($"github.com/{FormatGitHubDisplay(info.GitHub)}").FontSize(8 * FontSizeScale).FontColor(Colors.White);
         });
     }
 
@@ -130,7 +130,7 @@ public class DarkSidebarTemplate : BaseTemplate
             col.Item().LineHorizontal(1).LineColor(accent.WithAlpha(0.4f));
             col.Item().Height(5);
 
-            foreach (var skill in resume.Skills.OrderBy(s => s.Order).Take(12))
+            foreach (var skill in resume.Skills.OrderBy(s => s.Order))
             {
                 col.Item().PaddingBottom(4).Row(row =>
                 {
@@ -221,7 +221,7 @@ public class DarkSidebarTemplate : BaseTemplate
                                 if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
                                     text.Span($" — {cert.IssuingOrganization}").FontSize(9 * FontSizeScale);
                                 if (cert.IssueDate.HasValue)
-                                    text.Span($" ({cert.IssueDate.Value:MMM yyyy})")
+                                    text.Span($" ({ResumeDateFormat.MonthYear(cert.IssueDate)})")
                                         .FontSize(9 * FontSizeScale).FontColor(Colors.Grey.Darken1);
                             });
                         }
@@ -235,6 +235,14 @@ public class DarkSidebarTemplate : BaseTemplate
                         foreach (var project in resume.Projects.OrderBy(p => p.Order))
                             ct.Item().Element(e => ComposeProject(e, project));
                     }));
+                    break;
+
+                case SectionType.CustomSections:
+                    foreach (var custom in GetVisibleCustomSections(resume))
+                    {
+                        main.Item().Element(c => ComposeMainSection(c, custom.Title.ToUpper(), ct =>
+                            ComposeCustomSectionItems(ct, custom, 10, 9)));
+                    }
                     break;
             }
         }

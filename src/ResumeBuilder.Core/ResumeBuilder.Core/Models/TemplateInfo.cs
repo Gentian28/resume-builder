@@ -8,8 +8,8 @@ public class TemplateInfo
     public required TemplateCategory Category { get; init; }
     public required TemplateLayout Layout { get; init; }
     public string[] Tags { get; init; } = Array.Empty<string>();
-    public string DefaultAccentColor { get; init; } = "#2563eb";
-    public string DefaultFontFamily { get; init; } = "Inter";
+    public string DefaultAccentColor { get; init; } = TemplateSettings.DefaultAccentColor;
+    public string DefaultFontFamily { get; init; } = TemplateSettings.DefaultFontFamily;
 }
 
 public enum TemplateCategory

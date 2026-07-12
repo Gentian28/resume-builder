@@ -25,9 +25,33 @@ public class CompositeAction : IUndoableAction
 
     public void Execute()
     {
-        foreach (var action in _actions)
+        // Roll back on partial failure. Without this, a composite that throws halfway leaves the
+        // first few actions applied but never reaches the undo stack, so they can't be taken back.
+        var applied = new List<IUndoableAction>();
+
+        try
         {
-            action.Execute();
+            foreach (var action in _actions)
+            {
+                action.Execute();
+                applied.Add(action);
+            }
+        }
+        catch
+        {
+            for (int i = applied.Count - 1; i >= 0; i--)
+            {
+                try
+                {
+                    applied[i].Undo();
+                }
+                catch
+                {
+                    // Already failing; keep unwinding the rest rather than masking the original error.
+                }
+            }
+
+            throw;
         }
     }
 

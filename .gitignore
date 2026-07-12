@@ -13,6 +13,24 @@ x64/
 x86/
 artifacts/
 
+# Test + coverage output
+TestResults/
+coverage*.xml
+coverage*.json
+*.coverage
+*.trx
+
+# Local databases (the app creates SQLite files at runtime)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
 # Local secrets / env
 .env
 .env.*

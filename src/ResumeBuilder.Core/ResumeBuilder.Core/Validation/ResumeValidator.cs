@@ -4,32 +4,147 @@ namespace ResumeBuilder.Core.Validation;
 
 public class ResumeValidator
 {
+    /// <summary>Kept in step with the Summary column length in ResumeDbContext.</summary>
+    public const int SummaryMaxLength = 5000;
+
     public ResumeValidationResult Validate(Resume resume)
     {
         var result = new ResumeValidationResult();
 
-        // Personal Info validation
         ValidatePersonalInfo(resume.PersonalInfo, result);
 
-        // Summary validation
-        if (!string.IsNullOrWhiteSpace(resume.Summary) && resume.Summary.Length > 5000)
+        if (!string.IsNullOrWhiteSpace(resume.Summary) && resume.Summary.Length > SummaryMaxLength)
         {
-            result.AddError("Summary", "Summary cannot exceed 5000 characters");
+            result.AddError("Summary", $"Summary cannot exceed {SummaryMaxLength} characters");
         }
 
-        // Experience validation
         foreach (var exp in resume.Experiences)
         {
             ValidateExperience(exp, result);
         }
 
-        // Education validation
         foreach (var edu in resume.EducationList)
         {
             ValidateEducation(edu, result);
         }
 
+        foreach (var skill in resume.Skills)
+        {
+            ValidateSkill(skill, result);
+        }
+
+        foreach (var language in resume.Languages)
+        {
+            ValidateLanguage(language, result);
+        }
+
+        foreach (var certification in resume.Certifications)
+        {
+            ValidateCertification(certification, result);
+        }
+
+        foreach (var project in resume.Projects)
+        {
+            ValidateProject(project, result);
+        }
+
+        foreach (var section in resume.CustomSections)
+        {
+            ValidateCustomSection(section, result);
+        }
+
         return result;
+    }
+
+    private void ValidateSkill(Skill skill, ResumeValidationResult result)
+    {
+        if (string.IsNullOrWhiteSpace(skill.Name))
+        {
+            result.AddWarning("Skills", "Skill entry has no name and will not be shown");
+        }
+    }
+
+    private void ValidateLanguage(Language language, ResumeValidationResult result)
+    {
+        if (string.IsNullOrWhiteSpace(language.Name))
+        {
+            result.AddWarning("Languages", "Language entry has no name and will not be shown");
+        }
+    }
+
+    private void ValidateCertification(Certification certification, ResumeValidationResult result)
+    {
+        var label = string.IsNullOrWhiteSpace(certification.Name)
+            ? "Certifications"
+            : $"Certification: {certification.Name}";
+
+        if (string.IsNullOrWhiteSpace(certification.Name))
+        {
+            result.AddWarning("Certifications", "Certification entry has no name and will not be shown");
+        }
+
+        if (!certification.DoesNotExpire)
+        {
+            var dateRange = new DateRangeRule(certification.IssueDate, certification.ExpirationDate).Validate(null);
+            if (!dateRange.IsValid)
+            {
+                result.AddError(label, "Issue date must be before expiration date");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(certification.CredentialUrl))
+        {
+            var url = new UrlRule().Validate(certification.CredentialUrl);
+            if (!url.IsValid)
+            {
+                result.AddError(label, url.ErrorMessage!);
+            }
+        }
+    }
+
+    private void ValidateProject(Project project, ResumeValidationResult result)
+    {
+        var label = string.IsNullOrWhiteSpace(project.Name) ? "Projects" : $"Project: {project.Name}";
+
+        if (string.IsNullOrWhiteSpace(project.Name))
+        {
+            result.AddWarning("Projects", "Project entry has no name and will not be shown");
+        }
+
+        if (!project.IsOngoing)
+        {
+            var dateRange = new DateRangeRule(project.StartDate, project.EndDate).Validate(null);
+            if (!dateRange.IsValid)
+            {
+                result.AddError(label, "Start date must be before end date");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(project.Url))
+        {
+            var url = new UrlRule().Validate(project.Url);
+            if (!url.IsValid)
+            {
+                result.AddError(label, url.ErrorMessage!);
+            }
+        }
+    }
+
+    private void ValidateCustomSection(CustomSection section, ResumeValidationResult result)
+    {
+        if (string.IsNullOrWhiteSpace(section.Title))
+        {
+            result.AddWarning("Custom Sections", "Custom section has no title and will not be shown");
+        }
+
+        foreach (var item in section.Items)
+        {
+            var dateRange = new DateRangeRule(item.StartDate, item.EndDate).Validate(null);
+            if (!dateRange.IsValid)
+            {
+                result.AddError($"Custom Section: {section.Title}", "Start date must be before end date");
+            }
+        }
     }
 
     private void ValidatePersonalInfo(PersonalInfo info, ResumeValidationResult result)
@@ -86,6 +201,15 @@ public class ResumeValidator
                 result.AddError("LinkedIn", linkedInResult.ErrorMessage!);
             }
         }
+
+        if (!string.IsNullOrWhiteSpace(info.GitHub))
+        {
+            var gitHubResult = new UrlRule().Validate(info.GitHub);
+            if (!gitHubResult.IsValid)
+            {
+                result.AddError("GitHub", gitHubResult.ErrorMessage!);
+            }
+        }
     }
 
     private void ValidateExperience(Experience exp, ResumeValidationResult result)
@@ -95,9 +219,10 @@ public class ResumeValidator
             result.AddWarning("Experience", "Experience entry is incomplete");
         }
 
-        if (exp.StartDate.HasValue && exp.EndDate.HasValue && !exp.IsCurrentRole)
+        if (!exp.IsCurrentRole)
         {
-            if (exp.StartDate > exp.EndDate)
+            var dateRange = new DateRangeRule(exp.StartDate, exp.EndDate).Validate(null);
+            if (!dateRange.IsValid)
             {
                 result.AddError($"Experience: {exp.JobTitle}", "Start date must be before end date");
             }
@@ -111,9 +236,10 @@ public class ResumeValidator
             result.AddWarning("Education", "Education entry is incomplete");
         }
 
-        if (edu.StartDate.HasValue && edu.EndDate.HasValue && !edu.IsCurrentlyStudying)
+        if (!edu.IsCurrentlyStudying)
         {
-            if (edu.StartDate > edu.EndDate)
+            var dateRange = new DateRangeRule(edu.StartDate, edu.EndDate).Validate(null);
+            if (!dateRange.IsValid)
             {
                 result.AddError($"Education: {edu.Degree}", "Start date must be before end date");
             }

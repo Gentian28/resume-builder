@@ -133,8 +133,9 @@ public class KeywordAnalyzer
     {
         var words = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        // Clean and tokenize
-        var cleanText = Regex.Replace(text.ToLower(), @"[^\w\s\-/+#.]", " ");
+        // ToLowerInvariant, not ToLower: the lookups below are ordinal, and a Turkish locale would
+        // lowercase "I" to a dotless "ı" that never matches them.
+        var cleanText = Regex.Replace(text.ToLowerInvariant(), @"[^\w\s\-/+#.]", " ");
         var tokens = cleanText.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var token in tokens)
@@ -158,7 +159,7 @@ public class KeywordAnalyzer
         // Also extract multi-word phrases (bigrams for technical terms)
         for (int i = 0; i < tokens.Length - 1; i++)
         {
-            var phrase = $"{tokens[i]} {tokens[i + 1]}".ToLower();
+            var phrase = $"{tokens[i]} {tokens[i + 1]}".ToLowerInvariant();
             if (IsKnownPhrase(phrase))
             {
                 if (words.ContainsKey(phrase))
@@ -188,22 +189,18 @@ public class KeywordAnalyzer
         return knownPhrases.Contains(phrase);
     }
 
-    private string GetKeywordCategory(string keyword)
-    {
-        foreach (var (category, keywords) in SkillCategories)
-        {
-            if (keywords.Any(k => keyword.Contains(k, StringComparison.OrdinalIgnoreCase)))
-                return category;
-        }
-        return "General";
-    }
+    /// <summary>
+    /// Skill terms indexed for exact lookup. Substring matching was used here before and produced
+    /// nonsense: "email" contains "ai", "goal" contains "go", "scalable" contains "scala".
+    /// </summary>
+    private static readonly Dictionary<string, string> SkillToCategory = SkillCategories
+        .SelectMany(pair => pair.Value.Select(skill => (Skill: skill, Category: pair.Key)))
+        .ToDictionary(x => x.Skill, x => x.Category, StringComparer.OrdinalIgnoreCase);
 
-    private bool IsImportantKeyword(string keyword)
-    {
-        // Check if keyword is in any skill category
-        return SkillCategories.Values.Any(skills =>
-            skills.Any(s => keyword.Contains(s, StringComparison.OrdinalIgnoreCase)));
-    }
+    private string GetKeywordCategory(string keyword) =>
+        SkillToCategory.TryGetValue(keyword, out var category) ? category : "General";
+
+    private bool IsImportantKeyword(string keyword) => SkillToCategory.ContainsKey(keyword);
 
     private List<string> GenerateSuggestions(List<KeywordMatch> matched, List<string> missing)
     {

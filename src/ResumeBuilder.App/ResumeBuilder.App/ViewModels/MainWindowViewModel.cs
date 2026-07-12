@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,20 +15,35 @@ using ResumeBuilder.Core.SpellCheck;
 using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Core.UndoRedo;
 using ResumeBuilder.Core.Validation;
+using ResumeBuilder.Data;
 using ResumeBuilder.Templates;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using System.IO;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 
 namespace ResumeBuilder.App.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 {
+    private const string DefaultResumeName = "Untitled Resume";
+
     private readonly AppServices _services;
-    private System.Timers.Timer? _autoSaveTimer;
-    private System.Timers.Timer? _previewDebounceTimer;
+
+    // Autosave and the manual Save both write the same resume; the gate keeps them from overlapping.
+    private readonly SemaphoreSlim _saveGate = new(1, 1);
+
+    private DispatcherTimer? _autoSaveTimer;
+    private DispatcherTimer? _previewDebounceTimer;
+    private DispatcherTimer? _spellCheckTimer;
+
+    private CancellationTokenSource? _previewCts;
+    private string? _renderedSignature;
+
     private bool _isLoadingEditor;
+    private bool _suppressUndoRecording;
+    private DateTime? _lastSavedAt;
 
     [ObservableProperty]
     private Resume _currentResume = new();
@@ -52,9 +70,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _statusMessage = "Ready";
 
     [ObservableProperty]
-    private int _selectedEditorTab;
-
-    [ObservableProperty]
     private bool _showTemplateGallery;
 
     [ObservableProperty]
@@ -62,6 +77,19 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private double _previewZoom = 1.0;
+
+    // Save state
+    [ObservableProperty]
+    private string _resumeName = DefaultResumeName;
+
+    [ObservableProperty]
+    private bool _isDirty;
+
+    [ObservableProperty]
+    private bool _isSaving;
+
+    [ObservableProperty]
+    private string _saveStateText = "No changes";
 
     // Personal Info properties for binding
     [ObservableProperty] private string _firstName = "";
@@ -94,6 +122,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<ProjectViewModel> _projects = new();
+
+    [ObservableProperty]
+    private ObservableCollection<CustomSectionViewModel> _customSections = new();
 
     // Theme
     [ObservableProperty]
@@ -130,7 +161,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     // Template Customization
     [ObservableProperty]
-    private string _accentColor = "#2563eb";
+    private string _accentColor = TemplateSettings.DefaultAccentColor;
 
     [ObservableProperty]
     private string _secondaryColor = "#64748b";
@@ -142,10 +173,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _headingColor = "#111827";
 
     [ObservableProperty]
-    private string _selectedFontFamily = "Arial";
+    private string _selectedFontFamily = TemplateSettings.DefaultFontFamily;
 
     [ObservableProperty]
-    private string _selectedHeadingFontFamily = "Arial";
+    private string _selectedHeadingFontFamily = TemplateSettings.DefaultFontFamily;
 
     [ObservableProperty]
     private float _fontSizeScale = 1.0f;
@@ -166,88 +197,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _showAccentColorPicker;
 
     [ObservableProperty]
-    private Avalonia.Media.Color _accentColorValue = Avalonia.Media.Color.Parse("#2563eb");
+    private Avalonia.Media.Color _accentColorValue = Avalonia.Media.Color.Parse(TemplateSettings.DefaultAccentColor);
 
     private bool _isSyncingColor;
-
-    partial void OnAccentColorValueChanged(Avalonia.Media.Color value)
-    {
-        if (_isSyncingColor) return;
-
-        _isSyncingColor = true;
-        try
-        {
-            var newHex = $"#{value.R:X2}{value.G:X2}{value.B:X2}";
-            if (AccentColor != newHex)
-            {
-                AccentColor = newHex;
-            }
-        }
-        finally
-        {
-            _isSyncingColor = false;
-        }
-    }
-
-    private void SyncAccentColorToColorPicker()
-    {
-        if (_isSyncingColor) return;
-
-        _isSyncingColor = true;
-        try
-        {
-            if (TryParseHexColor(AccentColor, out var color) && color != AccentColorValue)
-            {
-                AccentColorValue = color;
-            }
-        }
-        finally
-        {
-            _isSyncingColor = false;
-        }
-    }
-
-    private static bool TryParseHexColor(string hex, out Avalonia.Media.Color color)
-    {
-        color = default;
-        if (string.IsNullOrEmpty(hex) || !hex.StartsWith("#") || hex.Length != 7)
-            return false;
-
-        try
-        {
-            color = Avalonia.Media.Color.Parse(hex);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    public static Avalonia.Data.Converters.FuncValueConverter<string, Avalonia.Media.IBrush> HexToColorConverter { get; } =
-        new(hex =>
-        {
-            if (string.IsNullOrEmpty(hex) || !hex.StartsWith("#") || hex.Length != 7)
-                return new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.Blue);
-
-            try
-            {
-                return new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(hex));
-            }
-            catch
-            {
-                return new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.Blue);
-            }
-        });
-
-    [RelayCommand]
-    private void ToggleAccentColorPicker()
-    {
-        ShowAccentColorPicker = !ShowAccentColorPicker;
-    }
-
-    public string[] AvailableFonts => TemplateSettings.AvailableFonts;
-    public string[] PresetColors => TemplateSettings.PresetColors;
 
     // Section Ordering
     [ObservableProperty]
@@ -285,8 +237,6 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string? _nextRedoDescription;
 
-    private bool _suppressUndoRecording;
-
     // AI Features
     [ObservableProperty]
     private bool _showAiPanel;
@@ -296,6 +246,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _aiApiKey = "";
+
+    [ObservableProperty]
+    private string _aiBaseUrl = LocalAiService.OpenAiBaseUrl;
+
+    [ObservableProperty]
+    private string _aiModel = LocalAiService.DefaultModel;
+
+    [ObservableProperty]
+    private bool _isAiLocal;
+
+    [ObservableProperty]
+    private string _aiPrivacyNotice = "";
 
     [ObservableProperty]
     private bool _isAiProcessing;
@@ -312,12 +274,15 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string? _aiStatusMessage;
 
-    // Keyword Optimization
+    // Tailor to job
     [ObservableProperty]
-    private bool _showKeywordPanel;
+    private bool _showTailorPanel;
 
     [ObservableProperty]
     private string _jobDescriptionText = "";
+
+    [ObservableProperty]
+    private string _targetRoleText = "";
 
     [ObservableProperty]
     private int _keywordMatchScore;
@@ -337,6 +302,21 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasKeywordAnalysis;
 
+    [ObservableProperty]
+    private bool _isTailoring;
+
+    [ObservableProperty]
+    private ObservableCollection<TailoredEditViewModel> _tailoredEdits = new();
+
+    [ObservableProperty]
+    private bool _hasTailoredEdits;
+
+    [ObservableProperty]
+    private ObservableCollection<string> _tailorSuggestedSkills = new();
+
+    [ObservableProperty]
+    private string? _tailorAiError;
+
     // Cloud Sync
     [ObservableProperty]
     private bool _showSyncPanel;
@@ -354,6 +334,21 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isSyncing;
 
     [ObservableProperty]
+    private int _syncUploadedCount;
+
+    [ObservableProperty]
+    private int _syncDownloadedCount;
+
+    [ObservableProperty]
+    private bool _hasSyncResult;
+
+    [ObservableProperty]
+    private ConflictResolution _selectedConflictResolution = ConflictResolution.NewestWins;
+
+    [ObservableProperty]
+    private ObservableCollection<SyncConflictViewModel> _syncConflicts = new();
+
+    [ObservableProperty]
     private ObservableCollection<RemoteResumeViewModel> _remoteResumes = new();
 
     public MainWindowViewModel() : this(null!) { }
@@ -369,11 +364,38 @@ public partial class MainWindowViewModel : ViewModelBase
             LoadTemplates();
             _ = LoadSavedResumesAsync();
             SetupAutoSave();
-            CreateNewResume();
+            ResetToNewResume();
             InitializeTheme();
             InitializeUndoRedo();
+            UpdateAiPrivacyNotice();
         }
     }
+
+    public string[] AvailableFonts => TemplateSettings.AvailableFonts;
+    public string[] PresetColors => TemplateSettings.PresetColors;
+    public ConflictResolution[] ConflictResolutions { get; } = Enum.GetValues<ConflictResolution>();
+
+    public static Avalonia.Data.Converters.FuncValueConverter<string, Avalonia.Media.IBrush> HexToColorConverter { get; } =
+        new(hex =>
+        {
+            if (!TryParseHexColor(hex, out var color))
+                return new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.Blue);
+
+            return new Avalonia.Media.SolidColorBrush(color);
+        });
+
+    /// <summary>Indents a variant under the resume it was branched from.</summary>
+    public static Avalonia.Data.Converters.FuncValueConverter<bool, Avalonia.Thickness> VariantIndentConverter { get; } =
+        new(isVariant => isVariant
+            ? new Avalonia.Thickness(30, 2, 0, 2)
+            : new Avalonia.Thickness(0, 5, 0, 5));
+
+    public static Avalonia.Data.Converters.FuncValueConverter<bool, Avalonia.Thickness> VariantBorderConverter { get; } =
+        new(isVariant => isVariant
+            ? new Avalonia.Thickness(3, 0, 0, 0)
+            : new Avalonia.Thickness(0));
+
+    // ---------------------------------------------------------------- Undo/Redo
 
     private void InitializeUndoRedo()
     {
@@ -390,16 +412,18 @@ public partial class MainWindowViewModel : ViewModelBase
                 NextRedoDescription = manager.NextRedoDescription;
         };
 
-        manager.ActionUndone += _ =>
+        manager.ActionUndone += action =>
         {
+            MarkDirty();
             UpdatePreviewDebounced();
-            StatusMessage = $"Undo: {manager.NextRedoDescription}";
+            StatusMessage = $"Undo: {action.Description}";
         };
 
-        manager.ActionRedone += _ =>
+        manager.ActionRedone += action =>
         {
+            MarkDirty();
             UpdatePreviewDebounced();
-            StatusMessage = $"Redo: {manager.NextUndoDescription}";
+            StatusMessage = $"Redo: {action.Description}";
         };
     }
 
@@ -435,26 +459,41 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private void RecordPropertyChange<T>(string propertyName, T oldValue, T newValue, Action<T?> setter)
+    /// <summary>
+    /// The undo entry is recorded after the property already changed, so the setter here is only ever
+    /// run by undo/redo - where the manager suppresses re-recording.
+    /// </summary>
+    public void RecordTextEdit(string fieldKey, string oldValue, string newValue, Action<string> setter, string description)
     {
-        if (_suppressUndoRecording || _services?.UndoRedoManager == null)
+        if (!CanRecordUndo() || string.Equals(oldValue, newValue, StringComparison.Ordinal))
             return;
 
-        if (_services.UndoRedoManager.IsExecutingAction)
-            return;
-
-        // Don't record if values are the same
-        if (EqualityComparer<T>.Default.Equals(oldValue, newValue))
-            return;
-
-        var action = new PropertyChangeAction<T>(
-            setter,
-            oldValue,
-            newValue,
-            $"Change {propertyName}");
-
-        _services.UndoRedoManager.RecordAction(action);
+        _services.UndoRedoManager.RecordAction(
+            new TextEditAction(fieldKey, oldValue, newValue, setter, description));
     }
+
+    private void RecordEdit(string field, string oldValue, string newValue, Action<string> setter) =>
+        RecordTextEdit($"Resume.{field}", oldValue, newValue, setter, $"Edit {field}");
+
+    /// <summary>
+    /// Numeric customization is round-tripped through invariant strings so that a slider drag merges
+    /// into one undo entry instead of flooding the history with one entry per tick.
+    /// </summary>
+    private void RecordNumericEdit(string field, float oldValue, float newValue, Action<float> setter) =>
+        RecordTextEdit(
+            $"Style.{field}",
+            oldValue.ToString(CultureInfo.InvariantCulture),
+            newValue.ToString(CultureInfo.InvariantCulture),
+            v => setter(float.Parse(v, CultureInfo.InvariantCulture)),
+            $"Change {field}");
+
+    private bool CanRecordUndo() =>
+        !_isLoadingEditor &&
+        !_suppressUndoRecording &&
+        _services?.UndoRedoManager != null &&
+        !_services.UndoRedoManager.IsExecutingAction;
+
+    // ---------------------------------------------------------------- Theme
 
     private void InitializeTheme()
     {
@@ -501,95 +540,38 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusMessage = $"Theme changed to {ThemeDisplayName}";
     }
 
-    // Validation
+    // ---------------------------------------------------------------- Validation
+
     private readonly EmailRule _emailValidator = new();
     private readonly PhoneRule _phoneValidator = new();
     private readonly UrlRule _urlValidator = new();
     private readonly LinkedInRule _linkedInValidator = new();
 
-    partial void OnEmailChanged(string value)
-    {
-        ValidateEmail(value);
-        SyncEditorToResume();
-        UpdatePreviewDebounced();
-    }
-
-    partial void OnPhoneChanged(string value)
-    {
-        ValidatePhone(value);
-        SyncEditorToResume();
-        UpdatePreviewDebounced();
-    }
-
-    partial void OnWebsiteChanged(string value)
-    {
-        ValidateWebsite(value);
-        SyncEditorToResume();
-        UpdatePreviewDebounced();
-    }
-
-    partial void OnLinkedInChanged(string value)
-    {
-        ValidateLinkedIn(value);
-        SyncEditorToResume();
-        UpdatePreviewDebounced();
-    }
-
     private void ValidateEmail(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            EmailError = null;
-        }
-        else
-        {
-            var result = _emailValidator.Validate(value);
-            EmailError = result.IsValid ? null : result.ErrorMessage;
-        }
+        EmailError = string.IsNullOrWhiteSpace(value) ? null : Error(_emailValidator.Validate(value));
         UpdateValidationState();
     }
 
     private void ValidatePhone(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            PhoneError = null;
-        }
-        else
-        {
-            var result = _phoneValidator.Validate(value);
-            PhoneError = result.IsValid ? null : result.ErrorMessage;
-        }
+        PhoneError = string.IsNullOrWhiteSpace(value) ? null : Error(_phoneValidator.Validate(value));
         UpdateValidationState();
     }
 
     private void ValidateWebsite(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            WebsiteError = null;
-        }
-        else
-        {
-            var result = _urlValidator.Validate(value);
-            WebsiteError = result.IsValid ? null : result.ErrorMessage;
-        }
+        WebsiteError = string.IsNullOrWhiteSpace(value) ? null : Error(_urlValidator.Validate(value));
         UpdateValidationState();
     }
 
     private void ValidateLinkedIn(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            LinkedInError = null;
-        }
-        else
-        {
-            var result = _linkedInValidator.Validate(value);
-            LinkedInError = result.IsValid ? null : result.ErrorMessage;
-        }
+        LinkedInError = string.IsNullOrWhiteSpace(value) ? null : Error(_linkedInValidator.Validate(value));
         UpdateValidationState();
     }
+
+    private static string? Error(ValidationResult result) => result.IsValid ? null : result.ErrorMessage;
 
     private void UpdateValidationState()
     {
@@ -603,7 +585,8 @@ public partial class MainWindowViewModel : ViewModelBase
         HasValidationErrors = errorCount > 0;
     }
 
-    // Photo
+    // ---------------------------------------------------------------- Photo
+
     private readonly ImageService _imageService = new();
 
     [RelayCommand]
@@ -611,11 +594,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow
-                : null;
-
+            var topLevel = MainWindow;
             if (topLevel == null) return;
 
             var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
@@ -633,13 +612,14 @@ public partial class MainWindowViewModel : ViewModelBase
                 CurrentResume.PersonalInfo.Photo = imageBytes;
                 PhotoPreview = _imageService.BytesToBitmap(imageBytes);
                 HasPhoto = true;
+                MarkDirty();
                 UpdatePreviewDebounced();
-                StatusMessage = "Photo uploaded successfully";
+                StatusMessage = "Photo uploaded";
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error uploading photo: {ex.Message}";
+            await DialogService.ShowErrorAsync("Photo upload failed", ex.Message);
         }
     }
 
@@ -649,15 +629,16 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentResume.PersonalInfo.Photo = null;
         PhotoPreview = null;
         HasPhoto = false;
+        MarkDirty();
         UpdatePreviewDebounced();
         StatusMessage = "Photo removed";
     }
 
     private void LoadPhotoPreview()
     {
-        if (CurrentResume.PersonalInfo.Photo != null && CurrentResume.PersonalInfo.Photo.Length > 0)
+        if (CurrentResume.PersonalInfo.Photo is { Length: > 0 } photo)
         {
-            PhotoPreview = _imageService.BytesToBitmap(CurrentResume.PersonalInfo.Photo);
+            PhotoPreview = _imageService.BytesToBitmap(photo);
             HasPhoto = true;
         }
         else
@@ -666,6 +647,8 @@ public partial class MainWindowViewModel : ViewModelBase
             HasPhoto = false;
         }
     }
+
+    // ---------------------------------------------------------------- Editor <-> model
 
     private void LoadTemplates()
     {
@@ -679,31 +662,55 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task LoadSavedResumesAsync()
     {
-        var resumes = await _services.Repository.GetAllAsync();
-        SavedResumes.Clear();
-        foreach (var resume in resumes)
+        try
         {
-            SavedResumes.Add(resume);
+            var resumes = await _services.Repository.GetAllAsync();
+            SavedResumes.Clear();
+            foreach (var resume in OrderWithVariants(resumes))
+            {
+                SavedResumes.Add(resume);
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Could not load your resumes", ex.Message);
         }
     }
 
-    private void SetupAutoSave()
+    /// <summary>
+    /// Lists each base resume followed by the variants branched from it. A variant whose base has
+    /// been deleted keeps its own place in the list rather than disappearing.
+    /// </summary>
+    private static IEnumerable<Resume> OrderWithVariants(List<Resume> resumes)
     {
-        _autoSaveTimer = new System.Timers.Timer(30000); // 30 seconds
-        _autoSaveTimer.Elapsed += async (s, e) => await SaveCurrentResumeAsync();
-        _autoSaveTimer.Start();
+        var variantsByBase = resumes.Where(r => r.IsVariant).ToLookup(r => r.BaseResumeId!.Value);
+        var ids = resumes.Select(r => r.Id).ToHashSet();
+
+        foreach (var resume in resumes.Where(r => !r.IsVariant || !ids.Contains(r.BaseResumeId!.Value)))
+        {
+            yield return resume;
+
+            foreach (var variant in variantsByBase[resume.Id])
+            {
+                yield return variant;
+            }
+        }
     }
 
-    [RelayCommand]
-    private void CreateNewResume()
+    private void ResetToNewResume()
     {
-        CurrentResume = new Resume
+        var resume = new Resume
         {
-            Name = "Untitled Resume",
+            Name = DefaultResumeName,
             SelectedTemplateId = SelectedTemplate?.Id ?? "modern"
         };
 
-        LoadResumeIntoEditor(CurrentResume);
+        _services.UndoRedoManager.Clear();
+        CurrentResume = resume;
+        LoadResumeIntoEditor(resume);
+        IsDirty = false;
+        _lastSavedAt = null;
+        UpdateSaveState();
         UpdatePreviewDebounced();
         StatusMessage = "New resume created";
     }
@@ -713,64 +720,54 @@ public partial class MainWindowViewModel : ViewModelBase
         _isLoadingEditor = true;
         try
         {
-        FirstName = resume.PersonalInfo.FirstName;
-        LastName = resume.PersonalInfo.LastName;
-        JobTitle = resume.PersonalInfo.JobTitle;
-        Email = resume.PersonalInfo.Email;
-        Phone = resume.PersonalInfo.Phone;
-        City = resume.PersonalInfo.City;
-        Country = resume.PersonalInfo.Country;
-        Website = resume.PersonalInfo.Website;
-        LinkedIn = resume.PersonalInfo.LinkedIn;
-        GitHub = resume.PersonalInfo.GitHub;
-        Summary = resume.Summary;
+            resume.SectionOrder.EnsureAllSectionsPresent();
 
-        Experiences.Clear();
-        foreach (var exp in resume.Experiences)
-        {
-            Experiences.Add(new ExperienceViewModel(exp, OnSubViewModelChanged));
-        }
+            ResumeName = resume.Name;
+            JobDescriptionText = resume.JobDescription;
+            TargetRoleText = resume.TargetRole;
+            FirstName = resume.PersonalInfo.FirstName;
+            LastName = resume.PersonalInfo.LastName;
+            JobTitle = resume.PersonalInfo.JobTitle;
+            Email = resume.PersonalInfo.Email;
+            Phone = resume.PersonalInfo.Phone;
+            City = resume.PersonalInfo.City;
+            Country = resume.PersonalInfo.Country;
+            Website = resume.PersonalInfo.Website;
+            LinkedIn = resume.PersonalInfo.LinkedIn;
+            GitHub = resume.PersonalInfo.GitHub;
+            Summary = resume.Summary;
 
-        EducationList.Clear();
-        foreach (var edu in resume.EducationList)
-        {
-            EducationList.Add(new EducationViewModel(edu, OnSubViewModelChanged));
-        }
+            Experiences = new ObservableCollection<ExperienceViewModel>(
+                resume.Experiences.OrderBy(e => e.Order).Select(e => new ExperienceViewModel(e, OnSubViewModelChanged, this)));
 
-        Skills.Clear();
-        foreach (var skill in resume.Skills)
-        {
-            Skills.Add(new SkillViewModel(skill, OnSubViewModelChanged));
-        }
+            EducationList = new ObservableCollection<EducationViewModel>(
+                resume.EducationList.OrderBy(e => e.Order).Select(e => new EducationViewModel(e, OnSubViewModelChanged, this)));
 
-        Languages.Clear();
-        foreach (var lang in resume.Languages)
-        {
-            Languages.Add(new LanguageViewModel(lang, OnSubViewModelChanged));
-        }
+            Skills = new ObservableCollection<SkillViewModel>(
+                resume.Skills.OrderBy(s => s.Order).Select(s => new SkillViewModel(s, OnSubViewModelChanged, this)));
 
-        Certifications.Clear();
-        foreach (var cert in resume.Certifications)
-        {
-            Certifications.Add(new CertificationViewModel(cert, OnSubViewModelChanged));
-        }
+            Languages = new ObservableCollection<LanguageViewModel>(
+                resume.Languages.OrderBy(l => l.Order).Select(l => new LanguageViewModel(l, OnSubViewModelChanged, this)));
 
-        Projects.Clear();
-        foreach (var proj in resume.Projects)
-        {
-            Projects.Add(new ProjectViewModel(proj, OnSubViewModelChanged));
-        }
+            Certifications = new ObservableCollection<CertificationViewModel>(
+                resume.Certifications.OrderBy(c => c.Order).Select(c => new CertificationViewModel(c, OnSubViewModelChanged, this)));
 
-        SelectedTemplate = Templates.FirstOrDefault(t => t.Id == resume.SelectedTemplateId) ?? Templates.FirstOrDefault();
+            Projects = new ObservableCollection<ProjectViewModel>(
+                resume.Projects.OrderBy(p => p.Order).Select(p => new ProjectViewModel(p, OnSubViewModelChanged, this)));
 
-        // Load photo preview
-        LoadPhotoPreview();
+            CustomSections = new ObservableCollection<CustomSectionViewModel>(
+                resume.CustomSections.OrderBy(c => c.Order).Select(c => new CustomSectionViewModel(c, OnSubViewModelChanged, this)));
 
-        // Load customization settings
-        LoadCustomizationFromResume();
+            SelectedTemplate = Templates.FirstOrDefault(t => t.Id == resume.SelectedTemplateId) ?? Templates.FirstOrDefault();
 
-        // Load section ordering
-        LoadSectionsFromResume();
+            LoadPhotoPreview();
+            LoadCustomizationFromResume();
+            LoadSectionsFromResume();
+
+            ValidateEmail(Email);
+            ValidatePhone(Phone);
+            ValidateWebsite(Website);
+            ValidateLinkedIn(LinkedIn);
         }
         finally
         {
@@ -782,6 +779,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (_isLoadingEditor) return;
 
+        CurrentResume.Name = string.IsNullOrWhiteSpace(ResumeName) ? DefaultResumeName : ResumeName.Trim();
+        CurrentResume.JobDescription = JobDescriptionText;
+        CurrentResume.TargetRole = TargetRoleText;
         CurrentResume.PersonalInfo.FirstName = FirstName;
         CurrentResume.PersonalInfo.LastName = LastName;
         CurrentResume.PersonalInfo.JobTitle = JobTitle;
@@ -795,61 +795,268 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentResume.Summary = Summary;
         CurrentResume.SelectedTemplateId = SelectedTemplate?.Id ?? "modern";
 
-        CurrentResume.Experiences = Experiences.Select(e => e.ToModel()).ToList();
-        CurrentResume.EducationList = EducationList.Select(e => e.ToModel()).ToList();
-        CurrentResume.Skills = Skills.Select(s => s.ToModel()).ToList();
-        CurrentResume.Languages = Languages.Select(l => l.ToModel()).ToList();
-        CurrentResume.Certifications = Certifications.Select(c => c.ToModel()).ToList();
-        CurrentResume.Projects = Projects.Select(p => p.ToModel()).ToList();
+        CurrentResume.Experiences = Experiences.Select((e, i) => e.ToModel(i)).ToList();
+        CurrentResume.EducationList = EducationList.Select((e, i) => e.ToModel(i)).ToList();
+        CurrentResume.Skills = Skills.Select((s, i) => s.ToModel(i)).ToList();
+        CurrentResume.Languages = Languages.Select((l, i) => l.ToModel(i)).ToList();
+        CurrentResume.Certifications = Certifications.Select((c, i) => c.ToModel(i)).ToList();
+        CurrentResume.Projects = Projects.Select((p, i) => p.ToModel(i)).ToList();
+        CurrentResume.CustomSections = CustomSections.Select((c, i) => c.ToModel(i)).ToList();
     }
 
-    private void OnSubViewModelChanged()
+    private void OnSubViewModelChanged() => OnEditorChanged();
+
+    private void OnEditorChanged()
     {
+        if (_isLoadingEditor) return;
+
         SyncEditorToResume();
+        MarkDirty();
         UpdatePreviewDebounced();
     }
 
-    partial void OnFirstNameChanged(string value) { SyncEditorToResume(); UpdatePreviewDebounced(); }
-    partial void OnLastNameChanged(string value) { SyncEditorToResume(); UpdatePreviewDebounced(); }
-    partial void OnJobTitleChanged(string value) { SyncEditorToResume(); UpdatePreviewDebounced(); }
-    partial void OnCityChanged(string value) { SyncEditorToResume(); UpdatePreviewDebounced(); }
-    partial void OnCountryChanged(string value) { SyncEditorToResume(); UpdatePreviewDebounced(); }
-    partial void OnGitHubChanged(string value) { SyncEditorToResume(); UpdatePreviewDebounced(); }
-    partial void OnSelectedTemplateChanged(TemplateInfo? value) => UpdatePreviewDebounced();
+    partial void OnResumeNameChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(ResumeName), oldValue ?? "", newValue, v => ResumeName = v);
+        OnEditorChanged();
+    }
 
-    // Customization property change handlers
-    partial void OnAccentColorChanged(string value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); SyncAccentColorToColorPicker(); }
-    partial void OnSecondaryColorChanged(string value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
-    partial void OnTextColorChanged(string value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
-    partial void OnHeadingColorChanged(string value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
-    partial void OnSelectedFontFamilyChanged(string value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
-    partial void OnSelectedHeadingFontFamilyChanged(string value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
-    partial void OnFontSizeScaleChanged(float value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
-    partial void OnLineSpacingChanged(float value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
-    partial void OnSectionSpacingChanged(float value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
-    partial void OnPageMarginChanged(float value) { SyncCustomizationToResume(); UpdatePreviewDebounced(); }
+    partial void OnFirstNameChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(FirstName), oldValue ?? "", newValue, v => FirstName = v);
+        OnEditorChanged();
+    }
+
+    partial void OnLastNameChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(LastName), oldValue ?? "", newValue, v => LastName = v);
+        OnEditorChanged();
+    }
+
+    partial void OnJobTitleChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(JobTitle), oldValue ?? "", newValue, v => JobTitle = v);
+        OnEditorChanged();
+    }
+
+    partial void OnCityChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(City), oldValue ?? "", newValue, v => City = v);
+        OnEditorChanged();
+    }
+
+    partial void OnCountryChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(Country), oldValue ?? "", newValue, v => Country = v);
+        OnEditorChanged();
+    }
+
+    partial void OnGitHubChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(GitHub), oldValue ?? "", newValue, v => GitHub = v);
+        OnEditorChanged();
+    }
+
+    partial void OnEmailChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(Email), oldValue ?? "", newValue, v => Email = v);
+        ValidateEmail(newValue);
+        OnEditorChanged();
+    }
+
+    partial void OnPhoneChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(Phone), oldValue ?? "", newValue, v => Phone = v);
+        ValidatePhone(newValue);
+        OnEditorChanged();
+    }
+
+    partial void OnWebsiteChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(Website), oldValue ?? "", newValue, v => Website = v);
+        ValidateWebsite(newValue);
+        OnEditorChanged();
+    }
+
+    partial void OnLinkedInChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(LinkedIn), oldValue ?? "", newValue, v => LinkedIn = v);
+        ValidateLinkedIn(newValue);
+        OnEditorChanged();
+    }
+
+    partial void OnSummaryChanged(string? oldValue, string newValue)
+    {
+        RecordEdit(nameof(Summary), oldValue ?? "", newValue, v => Summary = v);
+        OnEditorChanged();
+        CheckSpellingDebounced();
+    }
+
+    partial void OnSelectedTemplateChanged(TemplateInfo? value)
+    {
+        if (value == null || _isLoadingEditor) return;
+
+        CurrentResume.SelectedTemplateId = value.Id;
+        CurrentResume.TemplateSettings.ApplyTemplateDefaults(value);
+
+        _isLoadingEditor = true;
+        try
+        {
+            LoadCustomizationFromResume();
+        }
+        finally
+        {
+            _isLoadingEditor = false;
+        }
+
+        MarkDirty();
+        UpdatePreviewDebounced();
+    }
+
+    // ---------------------------------------------------------------- Dirty state
+
+    private void MarkDirty()
+    {
+        if (_isLoadingEditor) return;
+
+        IsDirty = true;
+        UpdateSaveState();
+    }
+
+    private void UpdateSaveState()
+    {
+        SaveStateText = IsSaving
+            ? "Saving..."
+            : IsDirty
+                ? "Unsaved changes"
+                : _lastSavedAt.HasValue
+                    ? $"Saved at {_lastSavedAt:HH:mm:ss}"
+                    : "No changes";
+    }
+
+    /// <summary>A resume with nothing in it is never worth autosaving as a new record.</summary>
+    private bool HasMeaningfulContent() =>
+        !string.IsNullOrWhiteSpace(FirstName) ||
+        !string.IsNullOrWhiteSpace(LastName) ||
+        !string.IsNullOrWhiteSpace(JobTitle) ||
+        !string.IsNullOrWhiteSpace(Email) ||
+        !string.IsNullOrWhiteSpace(Phone) ||
+        !string.IsNullOrWhiteSpace(Summary) ||
+        Experiences.Count > 0 ||
+        EducationList.Count > 0 ||
+        Skills.Count > 0 ||
+        Languages.Count > 0 ||
+        Certifications.Count > 0 ||
+        Projects.Count > 0 ||
+        CustomSections.Count > 0;
+
+    // ---------------------------------------------------------------- Customization
+
+    partial void OnAccentColorChanged(string? oldValue, string newValue)
+    {
+        MarkAccentCustomized();
+        RecordTextEdit("Style.AccentColor", oldValue ?? "", newValue, v => AccentColor = v, "Change accent color");
+        OnCustomizationChanged();
+        SyncAccentColorToColorPicker();
+    }
+
+    partial void OnSecondaryColorChanged(string? oldValue, string newValue)
+    {
+        RecordTextEdit("Style.SecondaryColor", oldValue ?? "", newValue, v => SecondaryColor = v, "Change secondary color");
+        OnCustomizationChanged();
+    }
+
+    partial void OnTextColorChanged(string? oldValue, string newValue)
+    {
+        RecordTextEdit("Style.TextColor", oldValue ?? "", newValue, v => TextColor = v, "Change text color");
+        OnCustomizationChanged();
+    }
+
+    partial void OnHeadingColorChanged(string? oldValue, string newValue)
+    {
+        RecordTextEdit("Style.HeadingColor", oldValue ?? "", newValue, v => HeadingColor = v, "Change heading color");
+        OnCustomizationChanged();
+    }
+
+    partial void OnSelectedFontFamilyChanged(string? oldValue, string newValue)
+    {
+        MarkFontCustomized();
+        RecordTextEdit("Style.FontFamily", oldValue ?? "", newValue, v => SelectedFontFamily = v, "Change body font");
+        OnCustomizationChanged();
+    }
+
+    partial void OnSelectedHeadingFontFamilyChanged(string? oldValue, string newValue)
+    {
+        MarkFontCustomized();
+        RecordTextEdit("Style.HeadingFontFamily", oldValue ?? "", newValue, v => SelectedHeadingFontFamily = v, "Change heading font");
+        OnCustomizationChanged();
+    }
+
+    partial void OnFontSizeScaleChanged(float oldValue, float newValue)
+    {
+        RecordNumericEdit(nameof(FontSizeScale), oldValue, newValue, v => FontSizeScale = v);
+        OnCustomizationChanged();
+    }
+
+    partial void OnLineSpacingChanged(float oldValue, float newValue)
+    {
+        RecordNumericEdit(nameof(LineSpacing), oldValue, newValue, v => LineSpacing = v);
+        OnCustomizationChanged();
+    }
+
+    partial void OnSectionSpacingChanged(float oldValue, float newValue)
+    {
+        RecordNumericEdit(nameof(SectionSpacing), oldValue, newValue, v => SectionSpacing = v);
+        OnCustomizationChanged();
+    }
+
+    partial void OnPageMarginChanged(float oldValue, float newValue)
+    {
+        RecordNumericEdit(nameof(PageMargin), oldValue, newValue, v => PageMargin = v);
+        OnCustomizationChanged();
+    }
+
+    private void OnCustomizationChanged()
+    {
+        if (_isLoadingEditor) return;
+
+        SyncCustomizationToResume();
+        MarkDirty();
+        UpdatePreviewDebounced();
+    }
+
+    private void MarkAccentCustomized()
+    {
+        if (!_isLoadingEditor)
+            CurrentResume.TemplateSettings.IsAccentColorCustomized = true;
+    }
+
+    private void MarkFontCustomized()
+    {
+        if (!_isLoadingEditor)
+            CurrentResume.TemplateSettings.IsFontCustomized = true;
+    }
 
     private void SyncCustomizationToResume()
     {
-        CurrentResume.TemplateSettings.AccentColor = AccentColor;
-        CurrentResume.TemplateSettings.SecondaryColor = SecondaryColor;
-        CurrentResume.TemplateSettings.TextColor = TextColor;
-        CurrentResume.TemplateSettings.HeadingColor = HeadingColor;
-        CurrentResume.TemplateSettings.FontFamily = SelectedFontFamily;
-        CurrentResume.TemplateSettings.HeadingFontFamily = SelectedHeadingFontFamily;
-        CurrentResume.TemplateSettings.FontSizeScale = FontSizeScale;
-        CurrentResume.TemplateSettings.LineSpacing = LineSpacing;
-        CurrentResume.TemplateSettings.SectionSpacing = SectionSpacing;
-        CurrentResume.TemplateSettings.PageMargin = PageMargin;
+        var settings = CurrentResume.TemplateSettings;
+        settings.AccentColor = AccentColor;
+        settings.SecondaryColor = SecondaryColor;
+        settings.TextColor = TextColor;
+        settings.HeadingColor = HeadingColor;
+        settings.FontFamily = SelectedFontFamily;
+        settings.HeadingFontFamily = SelectedHeadingFontFamily;
+        settings.FontSizeScale = FontSizeScale;
+        settings.LineSpacing = LineSpacing;
+        settings.SectionSpacing = SectionSpacing;
+        settings.PageMargin = PageMargin;
 
-        // Also update legacy properties for backwards compatibility
-        CurrentResume.AccentColor = AccentColor;
-        CurrentResume.FontFamily = SelectedFontFamily;
+        CurrentResume.SyncLegacyStyling();
     }
 
     private void LoadCustomizationFromResume()
     {
-        var settings = CurrentResume.TemplateSettings ?? new TemplateSettings();
+        var settings = CurrentResume.TemplateSettings;
         AccentColor = settings.AccentColor;
         SecondaryColor = settings.SecondaryColor;
         TextColor = settings.TextColor;
@@ -860,13 +1067,14 @@ public partial class MainWindowViewModel : ViewModelBase
         LineSpacing = settings.LineSpacing;
         SectionSpacing = settings.SectionSpacing;
         PageMargin = settings.PageMargin;
+        SyncAccentColorToColorPicker();
     }
 
     [RelayCommand]
-    private void SetAccentColor(string color)
-    {
-        AccentColor = color;
-    }
+    private void SetAccentColor(string color) => AccentColor = color;
+
+    [RelayCommand]
+    private void ToggleAccentColorPicker() => ShowAccentColorPicker = !ShowAccentColorPicker;
 
     [RelayCommand]
     private void ResetCustomization()
@@ -882,20 +1090,87 @@ public partial class MainWindowViewModel : ViewModelBase
         LineSpacing = defaults.LineSpacing;
         SectionSpacing = defaults.SectionSpacing;
         PageMargin = defaults.PageMargin;
-        StatusMessage = "Customization reset to defaults";
+
+        CurrentResume.TemplateSettings.IsAccentColorCustomized = false;
+        CurrentResume.TemplateSettings.IsFontCustomized = false;
+
+        if (SelectedTemplate != null)
+        {
+            CurrentResume.TemplateSettings.ApplyTemplateDefaults(SelectedTemplate);
+
+            _isLoadingEditor = true;
+            try
+            {
+                LoadCustomizationFromResume();
+            }
+            finally
+            {
+                _isLoadingEditor = false;
+            }
+        }
+
+        MarkDirty();
+        UpdatePreviewDebounced();
+        StatusMessage = "Customization reset to template defaults";
     }
 
-    // Section Ordering Methods
+    partial void OnAccentColorValueChanged(Avalonia.Media.Color value)
+    {
+        if (_isSyncingColor) return;
+
+        _isSyncingColor = true;
+        try
+        {
+            var newHex = $"#{value.R:X2}{value.G:X2}{value.B:X2}";
+            if (!string.Equals(AccentColor, newHex, StringComparison.OrdinalIgnoreCase))
+            {
+                AccentColor = newHex;
+            }
+        }
+        finally
+        {
+            _isSyncingColor = false;
+        }
+    }
+
+    private void SyncAccentColorToColorPicker()
+    {
+        if (_isSyncingColor) return;
+
+        _isSyncingColor = true;
+        try
+        {
+            if (TryParseHexColor(AccentColor, out var color) && color != AccentColorValue)
+            {
+                AccentColorValue = color;
+            }
+        }
+        finally
+        {
+            _isSyncingColor = false;
+        }
+    }
+
+    private static bool TryParseHexColor(string? hex, out Avalonia.Media.Color color)
+    {
+        color = default;
+        if (string.IsNullOrEmpty(hex) || !hex.StartsWith("#") || hex.Length != 7)
+            return false;
+
+        return Avalonia.Media.Color.TryParse(hex, out color);
+    }
+
+    // ---------------------------------------------------------------- Section ordering
+
     private void LoadSectionsFromResume()
     {
         Sections.Clear();
-        var sectionOrder = CurrentResume.SectionOrder ?? new SectionOrder();
+        var sectionOrder = CurrentResume.SectionOrder;
 
-        for (int i = 0; i < sectionOrder.OrderedSections.Count; i++)
+        for (var i = 0; i < sectionOrder.OrderedSections.Count; i++)
         {
             var type = sectionOrder.OrderedSections[i];
-            var isVisible = sectionOrder.IsSectionVisible(type);
-            Sections.Add(new SectionViewModel(type, isVisible, i, OnSectionChanged));
+            Sections.Add(new SectionViewModel(type, sectionOrder.IsSectionVisible(type), i, OnSectionChanged));
         }
     }
 
@@ -910,7 +1185,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnSectionChanged()
     {
+        if (_isLoadingEditor) return;
+
         SyncSectionsToResume();
+        MarkDirty();
         UpdatePreviewDebounced();
     }
 
@@ -922,8 +1200,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Sections.Move(index, index - 1);
             UpdateSectionOrders();
-            SyncSectionsToResume();
-            UpdatePreviewDebounced();
+            OnSectionChanged();
         }
     }
 
@@ -931,12 +1208,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private void MoveSectionDown(SectionViewModel section)
     {
         var index = Sections.IndexOf(section);
-        if (index < Sections.Count - 1)
+        if (index >= 0 && index < Sections.Count - 1)
         {
             Sections.Move(index, index + 1);
             UpdateSectionOrders();
-            SyncSectionsToResume();
-            UpdatePreviewDebounced();
+            OnSectionChanged();
         }
     }
 
@@ -945,49 +1221,50 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         CurrentResume.SectionOrder = new SectionOrder();
         LoadSectionsFromResume();
+        MarkDirty();
         UpdatePreviewDebounced();
         StatusMessage = "Section order reset to default";
     }
 
     private void UpdateSectionOrders()
     {
-        for (int i = 0; i < Sections.Count; i++)
+        for (var i = 0; i < Sections.Count; i++)
         {
             Sections[i].Order = i;
         }
     }
 
-    // Spell Check Methods
-    private System.Timers.Timer? _spellCheckTimer;
+    // ---------------------------------------------------------------- Spell check
 
     private void CheckSpellingDebounced()
     {
         if (!IsSpellCheckEnabled || _services?.SpellChecker == null)
             return;
 
-        _spellCheckTimer?.Stop();
-        _spellCheckTimer?.Dispose();
-
-        _spellCheckTimer = new System.Timers.Timer(500);
-        _spellCheckTimer.Elapsed += (s, e) =>
+        if (_spellCheckTimer == null)
         {
-            _spellCheckTimer?.Stop();
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(CheckSummarySpelling);
-        };
-        _spellCheckTimer.AutoReset = false;
+            _spellCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+            _spellCheckTimer.Tick += (_, _) =>
+            {
+                _spellCheckTimer!.Stop();
+                CheckSummarySpelling();
+            };
+        }
+
+        _spellCheckTimer.Stop();
         _spellCheckTimer.Start();
     }
 
     private void CheckSummarySpelling()
     {
-        if (!IsSpellCheckEnabled || _services?.SpellChecker == null || !_services.SpellChecker.IsInitialized)
+        if (!IsSpellCheckEnabled || _services?.SpellChecker is not { IsInitialized: true } checker)
         {
             SummarySpellErrorCount = 0;
             SummarySpellResult = null;
             return;
         }
 
-        var result = _services.SpellChecker.CheckText(Summary);
+        var result = checker.CheckText(Summary);
         SummarySpellResult = result;
         SummarySpellErrorCount = result.ErrorCount;
     }
@@ -995,24 +1272,41 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void ShowSpellingSuggestions()
     {
-        if (SummarySpellResult == null || !SummarySpellResult.HasErrors)
+        if (SummarySpellResult is not { HasErrors: true } result)
             return;
 
         SpellSuggestions.Clear();
-        foreach (var misspelled in SummarySpellResult.MisspelledWords.Take(10))
+        foreach (var misspelled in result.MisspelledWords.Take(10))
         {
+            var word = misspelled;
             SpellSuggestions.Add(new SpellSuggestionViewModel(
-                misspelled.Word,
-                misspelled.Suggestions,
-                word => ApplySpellingSuggestion(misspelled.Word, word),
-                word => AddToPersonalDictionary(word)));
+                word,
+                replacement => ApplySpellingSuggestion(word, replacement),
+                () => AddToPersonalDictionary(word.Word)));
         }
         ShowSpellSuggestions = true;
     }
 
-    private void ApplySpellingSuggestion(string misspelled, string replacement)
+    /// <summary>
+    /// Replaces the one occurrence the spell checker flagged. A text-wide Replace would also rewrite
+    /// every other match, including the word as a substring of a correctly spelled one.
+    /// </summary>
+    private void ApplySpellingSuggestion(MisspelledWord misspelled, string replacement)
     {
-        Summary = Summary.Replace(misspelled, replacement);
+        var text = Summary;
+        var start = misspelled.StartIndex;
+        var length = misspelled.Length;
+
+        if (start < 0 || length <= 0 || start + length > text.Length ||
+            !string.Equals(text.Substring(start, length), misspelled.Word, StringComparison.Ordinal))
+        {
+            StatusMessage = "The text changed - re-run the spell check";
+            ShowSpellSuggestions = false;
+            CheckSummarySpelling();
+            return;
+        }
+
+        Summary = text.Remove(start, length).Insert(start, replacement);
         ShowSpellSuggestions = false;
         CheckSummarySpelling();
     }
@@ -1020,15 +1314,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private void AddToPersonalDictionary(string word)
     {
         _services?.SpellChecker?.AddToPersonalDictionary(word);
+        ShowSpellSuggestions = false;
         CheckSummarySpelling();
         StatusMessage = $"Added '{word}' to personal dictionary";
     }
 
     [RelayCommand]
-    private void CloseSpellSuggestions()
-    {
-        ShowSpellSuggestions = false;
-    }
+    private void CloseSpellSuggestions() => ShowSpellSuggestions = false;
 
     [RelayCommand]
     private void ToggleSpellCheck()
@@ -1047,28 +1339,75 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    // AI Commands
-    partial void OnAiApiKeyChanged(string value)
+    // ---------------------------------------------------------------- AI
+
+    [RelayCommand]
+    private void ApplyAiSettings()
     {
-        if (!string.IsNullOrWhiteSpace(value) && value.Length > 10)
+        if (_services?.AiService is not LocalAiService ai)
+            return;
+
+        var baseUrl = string.IsNullOrWhiteSpace(AiBaseUrl) ? LocalAiService.OpenAiBaseUrl : AiBaseUrl.Trim();
+        var model = string.IsNullOrWhiteSpace(AiModel) ? LocalAiService.DefaultModel : AiModel.Trim();
+
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
         {
-            _services?.AiService?.Configure(value);
-            IsAiConfigured = _services?.AiService?.IsConfigured ?? false;
-            if (IsAiConfigured)
-                AiStatusMessage = "AI service configured";
+            AiStatusMessage = "That base URL is not a valid absolute URL";
+            return;
         }
-        else
+
+        if (!uri.IsLoopback && string.IsNullOrWhiteSpace(AiApiKey))
         {
-            IsAiConfigured = false;
+            AiStatusMessage = "A remote endpoint needs an API key";
+            return;
         }
+
+        // ConfigureLocal is the only way to move the endpoint; Configure then attaches the key.
+        ai.ConfigureLocal(baseUrl, model);
+
+        if (!string.IsNullOrWhiteSpace(AiApiKey))
+        {
+            ai.Configure(AiApiKey.Trim(), model);
+        }
+
+        IsAiConfigured = ai.IsConfigured;
+        UpdateAiPrivacyNotice();
+        AiStatusMessage = $"Ready - using {ai.Model} at {ai.BaseUrl}";
+    }
+
+    [RelayCommand]
+    private void UseLocalAiEndpoint()
+    {
+        AiBaseUrl = "http://localhost:11434/v1";
+        AiModel = "llama3";
+        AiApiKey = "";
+        ApplyAiSettings();
+    }
+
+    [RelayCommand]
+    private void UseOpenAiEndpoint()
+    {
+        AiBaseUrl = LocalAiService.OpenAiBaseUrl;
+        AiModel = LocalAiService.DefaultModel;
+    }
+
+    private void UpdateAiPrivacyNotice()
+    {
+        if (_services?.AiService is not LocalAiService ai)
+            return;
+
+        IsAiLocal = ai.IsLocal;
+        AiPrivacyNotice = ai.IsLocal
+            ? $"Requests go to {ai.BaseUrl} on this machine. Nothing leaves your computer, and no API key is needed."
+            : $"Your resume text is sent to {ai.BaseUrl} (model {ai.Model}). The API key is held in memory for this session only and is never written to disk.";
     }
 
     [RelayCommand]
     private async Task GenerateAiSummaryAsync()
     {
-        if (_services?.AiService == null || !_services.AiService.IsConfigured)
+        if (_services?.AiService is not { IsConfigured: true } ai)
         {
-            AiStatusMessage = "Please configure AI API key first";
+            AiStatusMessage = "Configure the AI endpoint first";
             return;
         }
 
@@ -1087,24 +1426,23 @@ public partial class MainWindowViewModel : ViewModelBase
                 .Select(s => s.Name)
                 .ToList();
 
-            var result = await _services.AiService.GenerateSummaryAsync(
-                JobTitle,
-                experiences,
-                skills);
+            var result = await ai.GenerateSummaryAsync(JobTitle, experiences, skills);
 
             if (result.Success && result.Data != null)
             {
                 AiGeneratedSummary = result.Data;
-                AiStatusMessage = "Summary generated! Click 'Apply' to use it.";
+                AiStatusMessage = "Summary generated - click Apply to use it.";
             }
             else
             {
                 AiStatusMessage = result.ErrorMessage ?? "Failed to generate summary";
+                await DialogService.ShowErrorAsync("AI request failed", AiStatusMessage);
             }
         }
         catch (Exception ex)
         {
-            AiStatusMessage = $"Error: {ex.Message}";
+            AiStatusMessage = ex.Message;
+            await DialogService.ShowErrorAsync("AI request failed", ex.Message);
         }
         finally
         {
@@ -1118,7 +1456,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(AiGeneratedSummary))
         {
             Summary = AiGeneratedSummary;
-            AiStatusMessage = "Summary applied!";
+            AiStatusMessage = "Summary applied";
             AiGeneratedSummary = null;
         }
     }
@@ -1126,9 +1464,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task SuggestAiSkillsAsync()
     {
-        if (_services?.AiService == null || !_services.AiService.IsConfigured)
+        if (_services?.AiService is not { IsConfigured: true } ai)
         {
-            AiStatusMessage = "Please configure AI API key first";
+            AiStatusMessage = "Configure the AI endpoint first";
             return;
         }
 
@@ -1147,10 +1485,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 .Select(e => e.Description)
                 .ToList();
 
-            var result = await _services.AiService.SuggestSkillsAsync(
-                JobTitle,
-                currentSkills,
-                experiences);
+            var result = await ai.SuggestSkillsAsync(JobTitle, currentSkills, experiences);
 
             if (result.Success && result.Data != null)
             {
@@ -1164,11 +1499,13 @@ public partial class MainWindowViewModel : ViewModelBase
             else
             {
                 AiStatusMessage = result.ErrorMessage ?? "Failed to suggest skills";
+                await DialogService.ShowErrorAsync("AI request failed", AiStatusMessage);
             }
         }
         catch (Exception ex)
         {
-            AiStatusMessage = $"Error: {ex.Message}";
+            AiStatusMessage = ex.Message;
+            await DialogService.ShowErrorAsync("AI request failed", ex.Message);
         }
         finally
         {
@@ -1181,36 +1518,89 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(skillName)) return;
 
-        var skill = new SkillViewModel(new Skill { Name = skillName, Order = Skills.Count }, OnSubViewModelChanged);
-        Skills.Add(skill);
+        Skills.Add(new SkillViewModel(new Skill { Name = skillName, Order = Skills.Count }, OnSubViewModelChanged, this));
         AiSkillSuggestions.Remove(skillName);
-        OnSubViewModelChanged();
+        OnEditorChanged();
         StatusMessage = $"Added skill: {skillName}";
     }
 
     [RelayCommand]
-    private void DismissSuggestedSkill(string skillName)
+    private void DismissSuggestedSkill(string skillName) => AiSkillSuggestions.Remove(skillName);
+
+    // ---------------------------------------------------------------- Tailor to job
+
+    partial void OnJobDescriptionTextChanged(string value)
     {
-        AiSkillSuggestions.Remove(skillName);
+        if (_isLoadingEditor) return;
+
+        // The posting is part of the resume, but it never shows up in the rendered document, so
+        // there is nothing for the preview to redraw.
+        CurrentResume.JobDescription = value;
+        MarkDirty();
     }
 
-    // Keyword Optimization Commands
-    private readonly KeywordAnalyzer _keywordAnalyzer = new();
+    partial void OnTargetRoleTextChanged(string value)
+    {
+        if (_isLoadingEditor) return;
+
+        CurrentResume.TargetRole = value;
+        MarkDirty();
+    }
 
     [RelayCommand]
-    private void AnalyzeKeywords()
+    private async Task TailorToJobAsync()
     {
         if (string.IsNullOrWhiteSpace(JobDescriptionText))
         {
-            StatusMessage = "Please paste a job description first";
+            StatusMessage = "Paste a job description first";
             return;
         }
 
-        // Build resume content for analysis
-        var resumeContent = BuildResumeTextContent();
+        SyncEditorToResume();
 
-        var result = _keywordAnalyzer.Analyze(resumeContent, JobDescriptionText);
+        IsTailoring = true;
+        StatusMessage = "Tailoring to the job...";
 
+        try
+        {
+            var result = await _services.TailoringService.TailorAsync(CurrentResume, JobDescriptionText);
+
+            ApplyKeywordAnalysis(result.Analysis);
+
+            TailoredEdits.Clear();
+            foreach (var edit in result.Edits)
+            {
+                TailoredEdits.Add(new TailoredEditViewModel(edit, DescribeEditTarget(edit)));
+            }
+            HasTailoredEdits = result.HasAiEdits;
+
+            TailorSuggestedSkills.Clear();
+            foreach (var skill in result.SuggestedSkills)
+            {
+                TailorSuggestedSkills.Add(skill);
+            }
+
+            // The keyword analysis stands on its own, so an AI failure is reported beside it rather
+            // than replacing it.
+            TailorAiError = result.AiError;
+
+            StatusMessage = result.HasAiEdits
+                ? $"{KeywordMatchScore}% match - {TailoredEdits.Count} rewrite(s) proposed"
+                : $"{KeywordMatchScore}% keyword match";
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Tailoring failed", ex.Message);
+            StatusMessage = "Tailoring failed";
+        }
+        finally
+        {
+            IsTailoring = false;
+        }
+    }
+
+    private void ApplyKeywordAnalysis(KeywordAnalysisResult result)
+    {
         KeywordMatchScore = result.MatchScore;
 
         MatchedKeywords.Clear();
@@ -1244,107 +1634,188 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         HasKeywordAnalysis = true;
-        StatusMessage = $"Keyword analysis complete: {KeywordMatchScore}% match";
     }
 
-    private string BuildResumeTextContent()
+    [RelayCommand]
+    private void ApplyAcceptedEdits()
     {
-        var sb = new System.Text.StringBuilder();
-
-        sb.AppendLine($"{FirstName} {LastName}");
-        sb.AppendLine(JobTitle);
-        sb.AppendLine(Summary);
-
-        foreach (var exp in Experiences)
+        var accepted = TailoredEdits.Where(e => e.Accepted).Select(e => e.Edit).ToList();
+        if (accepted.Count == 0)
         {
-            sb.AppendLine($"{exp.JobTitle} at {exp.Company}");
-            sb.AppendLine(exp.Description);
-            sb.AppendLine(exp.Achievements);
+            StatusMessage = "Tick at least one rewrite to apply";
+            return;
         }
 
-        foreach (var edu in EducationList)
-        {
-            sb.AppendLine($"{edu.Degree} in {edu.FieldOfStudy}");
-            sb.AppendLine(edu.Institution);
-        }
+        SyncEditorToResume();
 
-        foreach (var skill in Skills)
-        {
-            sb.AppendLine(skill.Name);
-            if (!string.IsNullOrEmpty(skill.Category))
-                sb.AppendLine(skill.Category);
-        }
+        // Undo entries are built from the edits themselves rather than a snapshot, so they survive
+        // the editor reload below and revert exactly the fields that were rewritten.
+        var undoActions = accepted
+            .Select(edit => (IUndoableAction)new TextEditAction(
+                $"Tailor.{edit.Target}.{edit.ItemIndex}.{edit.SubIndex}",
+                edit.Original,
+                edit.Proposed,
+                value => SetTailoredValue(edit, value),
+                $"Tailor {DescribeEditTarget(edit)}"))
+            .ToList();
 
-        foreach (var proj in Projects)
-        {
-            sb.AppendLine(proj.Name);
-            sb.AppendLine(proj.Description);
-            sb.AppendLine(proj.Technologies);
-        }
+        var applied = JobTailoringService.Apply(CurrentResume, accepted);
 
-        foreach (var cert in Certifications)
-        {
-            sb.AppendLine(cert.Name);
-            sb.AppendLine(cert.IssuingOrganization);
-        }
+        LoadResumeIntoEditor(CurrentResume);
+        MarkDirty();
+        UpdatePreviewDebounced();
 
-        return sb.ToString();
+        _services.UndoRedoManager.RecordAction(
+            new CompositeAction($"Apply {applied} tailored edit(s)", undoActions));
+
+        foreach (var editViewModel in TailoredEdits.Where(e => e.Accepted).ToList())
+        {
+            TailoredEdits.Remove(editViewModel);
+        }
+        HasTailoredEdits = TailoredEdits.Count > 0;
+
+        StatusMessage = $"Applied {applied} tailored edit(s) - Ctrl+Z to revert";
     }
+
+    /// <summary>
+    /// Writes a tailored value back through the editor rather than straight into the model, so undo
+    /// and redo update what the user is looking at; the editor then syncs the model as usual.
+    /// </summary>
+    private void SetTailoredValue(TailoredEdit edit, string value)
+    {
+        switch (edit.Target)
+        {
+            case TailoredEditTarget.Summary:
+                Summary = value;
+                break;
+
+            case TailoredEditTarget.ExperienceDescription
+                when edit.ItemIndex >= 0 && edit.ItemIndex < Experiences.Count:
+                Experiences[edit.ItemIndex].Description = value;
+                break;
+
+            case TailoredEditTarget.ExperienceAchievement
+                when edit.ItemIndex >= 0 && edit.ItemIndex < Experiences.Count:
+                SetAchievementLine(Experiences[edit.ItemIndex], edit.SubIndex, value);
+                break;
+        }
+    }
+
+    private static void SetAchievementLine(ExperienceViewModel experience, int index, string value)
+    {
+        experience.Achievements = AchievementLines.ReplaceAt(experience.Achievements, index, value);
+    }
+
+    private string DescribeEditTarget(TailoredEdit edit) => edit.Target switch
+    {
+        TailoredEditTarget.Summary => "summary",
+        TailoredEditTarget.ExperienceDescription when edit.ItemIndex < Experiences.Count =>
+            $"description for {Experiences[edit.ItemIndex].JobTitle}",
+        TailoredEditTarget.ExperienceAchievement when edit.ItemIndex < Experiences.Count =>
+            $"bullet {edit.SubIndex + 1} of {Experiences[edit.ItemIndex].JobTitle}",
+        _ => "experience"
+    };
 
     [RelayCommand]
     private void AddMissingKeywordAsSkill(string keyword)
     {
         if (string.IsNullOrWhiteSpace(keyword)) return;
 
-        var skill = new SkillViewModel(new Skill { Name = keyword, Order = Skills.Count }, OnSubViewModelChanged);
-        Skills.Add(skill);
+        Skills.Add(new SkillViewModel(new Skill { Name = keyword, Order = Skills.Count }, OnSubViewModelChanged, this));
         MissingKeywords.Remove(keyword);
-        OnSubViewModelChanged();
+        TailorSuggestedSkills.Remove(keyword);
+        OnEditorChanged();
         StatusMessage = $"Added skill: {keyword}";
-
-        // Re-analyze to update scores
-        if (HasKeywordAnalysis)
-            AnalyzeKeywords();
     }
 
     [RelayCommand]
-    private void ClearKeywordAnalysis()
+    private async Task SaveAsVariantAsync()
+    {
+        if (string.IsNullOrWhiteSpace(JobDescriptionText))
+        {
+            StatusMessage = "Paste a job description first";
+            return;
+        }
+
+        SyncEditorToResume();
+
+        // CreateVariantAsync branches from a persisted row, so an unsaved resume has to land first.
+        if (CurrentResume.Id == 0 || IsDirty)
+        {
+            if (!await SaveAsync(isAutoSave: false))
+                return;
+        }
+
+        var targetRole = string.IsNullOrWhiteSpace(TargetRoleText) ? JobTitle : TargetRoleText;
+
+        try
+        {
+            var variant = await _services.Repository.CreateVariantAsync(
+                CurrentResume.Id, targetRole.Trim(), JobDescriptionText);
+
+            await LoadSavedResumesAsync();
+            StatusMessage = $"Saved variant: {variant.Name}";
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Could not save the variant", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private void ClearTailoring()
     {
         JobDescriptionText = "";
+        TargetRoleText = "";
         KeywordMatchScore = 0;
         MatchedKeywords.Clear();
         MissingKeywords.Clear();
         KeywordSuggestions.Clear();
         KeywordWarnings.Clear();
+        TailoredEdits.Clear();
+        TailorSuggestedSkills.Clear();
+        TailorAiError = null;
+        HasTailoredEdits = false;
         HasKeywordAnalysis = false;
     }
 
-    // Sync Commands
+    // ---------------------------------------------------------------- Sync
+
+    partial void OnSelectedConflictResolutionChanged(ConflictResolution value)
+    {
+        if (_services?.SyncService is LocalFolderSyncService sync)
+        {
+            sync.ConflictResolution = value;
+        }
+    }
+
     [RelayCommand]
     private async Task ConfigureSyncAsync()
     {
         if (string.IsNullOrWhiteSpace(SyncFolderPath))
         {
-            StatusMessage = "Please specify a sync folder path";
+            StatusMessage = "Choose a sync folder first";
             return;
         }
 
         if (_services?.SyncService == null)
             return;
 
-        var result = await _services.SyncService.ConfigureAsync(SyncFolderPath);
-        IsSyncConfigured = result;
+        var configured = await _services.SyncService.ConfigureAsync(SyncFolderPath);
+        IsSyncConfigured = configured;
 
-        if (result)
+        if (configured)
         {
-            SyncStatusText = "Configured - Ready to sync";
-            StatusMessage = "Sync configured successfully";
+            OnSelectedConflictResolutionChanged(SelectedConflictResolution);
+            SyncStatusText = "Configured - ready to sync";
+            StatusMessage = "Sync configured";
             await RefreshRemoteResumesAsync();
         }
         else
         {
             SyncStatusText = "Configuration failed";
-            StatusMessage = "Failed to configure sync folder";
+            await DialogService.ShowErrorAsync("Sync setup failed",
+                $"Could not use '{SyncFolderPath}' as a sync folder. Check that the path is valid and writable.");
         }
     }
 
@@ -1353,11 +1824,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow
-                : null;
-
+            var topLevel = MainWindow;
             if (topLevel == null) return;
 
             var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(
@@ -1374,17 +1841,55 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error selecting folder: {ex.Message}";
+            await DialogService.ShowErrorAsync("Could not open folder picker", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task SyncAllAsync()
+    {
+        if (_services?.SyncService == null || !IsSyncConfigured)
+        {
+            StatusMessage = "Sync is not configured";
+            return;
+        }
+
+        if (IsDirty && !await SaveAsync(isAutoSave: false))
+            return;
+
+        IsSyncing = true;
+        SyncStatusText = "Syncing...";
+
+        try
+        {
+            var result = await _services.SyncService.SyncAllAsync();
+            await ApplySyncResultAsync(result);
+        }
+        catch (Exception ex)
+        {
+            SyncStatusText = "Sync failed";
+            await DialogService.ShowErrorAsync("Sync failed", ex.Message);
+        }
+        finally
+        {
+            IsSyncing = false;
         }
     }
 
     [RelayCommand]
     private async Task SyncCurrentResumeAsync()
     {
-        if (_services?.SyncService == null || !IsSyncConfigured || CurrentResume == null)
+        if (_services?.SyncService == null || !IsSyncConfigured)
         {
-            StatusMessage = "Sync not configured or no resume selected";
+            StatusMessage = "Sync is not configured";
             return;
+        }
+
+        // A resume that has never been saved has no id for the sync service to work with.
+        if (CurrentResume.Id == 0 || IsDirty)
+        {
+            if (!await SaveAsync(isAutoSave: false))
+                return;
         }
 
         IsSyncing = true;
@@ -1392,35 +1897,52 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            // Export current resume as JSON
-            var json = System.Text.Json.JsonSerializer.Serialize(CurrentResume, new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-
-            var fileName = $"{SanitizeFileName(CurrentResume.Name ?? "Untitled")}.json";
-            var result = await _services.SyncService.UploadAsync(json, fileName);
-
-            if (result)
-            {
-                SyncStatusText = $"Synced: {DateTime.Now:HH:mm}";
-                StatusMessage = "Resume synced successfully";
-                await RefreshRemoteResumesAsync();
-            }
-            else
-            {
-                SyncStatusText = "Sync failed";
-                StatusMessage = "Failed to sync resume";
-            }
+            var result = await _services.SyncService.SyncResumeAsync(CurrentResume.Id);
+            await ApplySyncResultAsync(result);
         }
         catch (Exception ex)
         {
-            SyncStatusText = "Error";
-            StatusMessage = $"Sync error: {ex.Message}";
+            SyncStatusText = "Sync failed";
+            await DialogService.ShowErrorAsync("Sync failed", ex.Message);
         }
         finally
         {
             IsSyncing = false;
+        }
+    }
+
+    private async Task ApplySyncResultAsync(SyncResult result)
+    {
+        SyncUploadedCount = result.UploadedCount;
+        SyncDownloadedCount = result.DownloadedCount;
+        HasSyncResult = true;
+
+        SyncConflicts.Clear();
+        foreach (var conflict in result.Conflicts)
+        {
+            SyncConflicts.Add(new SyncConflictViewModel
+            {
+                ResumeName = conflict.ResumeName,
+                LocalModified = conflict.LocalModified,
+                RemoteModified = conflict.RemoteModified
+            });
+        }
+
+        SyncStatusText = result.Message ?? result.Status.ToString();
+        StatusMessage = $"Sync: {SyncStatusText}";
+
+        await LoadSavedResumesAsync();
+        await RefreshRemoteResumesAsync();
+
+        if (result.Errors.Count > 0)
+        {
+            await DialogService.ShowErrorAsync("Sync finished with errors", string.Join("\n", result.Errors));
+        }
+
+        // A download can overwrite the row the editor is showing.
+        if (result.DownloadedCount > 0 && CurrentResume.Id != 0)
+        {
+            await ReloadCurrentResumeAsync();
         }
     }
 
@@ -1448,7 +1970,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error listing remote files: {ex.Message}";
+            await DialogService.ShowErrorAsync("Could not list remote resumes", ex.Message);
         }
     }
 
@@ -1458,6 +1980,9 @@ public partial class MainWindowViewModel : ViewModelBase
         if (_services?.SyncService == null || string.IsNullOrEmpty(remotePath))
             return;
 
+        if (!await ConfirmDiscardChangesAsync())
+            return;
+
         IsSyncing = true;
 
         try
@@ -1465,22 +1990,23 @@ public partial class MainWindowViewModel : ViewModelBase
             var json = await _services.SyncService.DownloadAsync(remotePath);
             if (json == null)
             {
-                StatusMessage = "Failed to download resume";
+                await DialogService.ShowErrorAsync("Import failed", $"Could not read '{remotePath}' from the sync folder.");
                 return;
             }
 
-            var resume = System.Text.Json.JsonSerializer.Deserialize<Resume>(json);
-            if (resume != null)
+            var resume = JsonSerializer.Deserialize<Resume>(json);
+            if (resume == null)
             {
-                CurrentResume = resume;
-                LoadResumeIntoEditor(resume);
-                UpdatePreviewDebounced();
-                StatusMessage = "Resume imported from sync folder";
+                await DialogService.ShowErrorAsync("Import failed", $"'{remotePath}' is not a valid resume file.");
+                return;
             }
+
+            AdoptImportedResume(resume, preserveSyncId: true);
+            StatusMessage = "Resume imported from the sync folder";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Import error: {ex.Message}";
+            await DialogService.ShowErrorAsync("Import failed", ex.Message);
         }
         finally
         {
@@ -1488,73 +2014,151 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private static string SanitizeFileName(string name)
-    {
-        var invalid = Path.GetInvalidFileNameChars();
-        return string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
-    }
-
-    partial void OnSummaryChanged(string value)
-    {
-        SyncEditorToResume();
-        UpdatePreviewDebounced();
-        CheckSpellingDebounced();
-    }
+    // ---------------------------------------------------------------- Preview
 
     private void UpdatePreviewDebounced()
     {
-        _previewDebounceTimer?.Stop();
-        _previewDebounceTimer?.Dispose();
-
-        _previewDebounceTimer = new System.Timers.Timer(300);
-        _previewDebounceTimer.Elapsed += (s, e) =>
+        if (_previewDebounceTimer == null)
         {
-            _previewDebounceTimer?.Stop();
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(UpdatePreview);
-        };
-        _previewDebounceTimer.AutoReset = false;
+            _previewDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+            _previewDebounceTimer.Tick += (_, _) =>
+            {
+                _previewDebounceTimer!.Stop();
+                _ = UpdatePreviewAsync();
+            };
+        }
+
+        _previewDebounceTimer.Stop();
         _previewDebounceTimer.Start();
     }
 
-    private void UpdatePreview()
+    private async Task UpdatePreviewAsync()
     {
+        if (_services == null) return;
+
+        SyncEditorToResume();
+
+        var templateId = SelectedTemplate?.Id ?? "modern";
+        string json;
+
         try
         {
-            SyncEditorToResume();
-
-            var templateId = SelectedTemplate?.Id ?? "modern";
-            var template = _services.TemplateRegistry.GetTemplateOrDefault(templateId);
-            var document = template.CreateDocument(CurrentResume);
-
-            var images = document.GenerateImages(new ImageGenerationSettings
-            {
-                ImageFormat = ImageFormat.Png,
-                RasterDpi = 100
-            });
-
-            var pageList = new ObservableCollection<Bitmap>();
-            foreach (var pageBytes in images)
-            {
-                using var stream = new MemoryStream(pageBytes);
-                pageList.Add(new Bitmap(stream));
-            }
-            PreviewPages = pageList;
-
-            // Keep first page for backward compatibility
-            PreviewImage = pageList.FirstOrDefault();
+            json = JsonSerializer.Serialize(CurrentResume);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Preview error: {ex.Message}";
+            await DialogService.ShowErrorAsync("Preview failed", ex.Message);
+            return;
+        }
+
+        var signature = $"{templateId}|{json}";
+        if (signature == _renderedSignature)
+            return;
+
+        _previewCts?.Cancel();
+        _previewCts?.Dispose();
+        var cts = new CancellationTokenSource();
+        _previewCts = cts;
+
+        try
+        {
+            // Render off a snapshot: the editor keeps mutating CurrentResume while this runs.
+            var snapshot = JsonSerializer.Deserialize<Resume>(json)!;
+            var registry = _services.TemplateRegistry;
+
+            var pages = await Task.Run(() =>
+            {
+                var template = registry.GetTemplateOrDefault(templateId);
+                var document = template.CreateDocument(snapshot);
+                return document.GenerateImages(new ImageGenerationSettings
+                {
+                    ImageFormat = ImageFormat.Png,
+                    RasterDpi = 100
+                }).ToList();
+            }, cts.Token);
+
+            if (cts.IsCancellationRequested)
+                return;
+
+            var rendered = new ObservableCollection<Bitmap>();
+            foreach (var pageBytes in pages)
+            {
+                using var stream = new MemoryStream(pageBytes);
+                rendered.Add(new Bitmap(stream));
+            }
+
+            var superseded = PreviewPages.ToList();
+
+            PreviewPages = rendered;
+            PreviewImage = rendered.FirstOrDefault();
+            _renderedSignature = signature;
+
+            // Dispose only after the bindings have picked up the new pages.
+            Dispatcher.UIThread.Post(() =>
+            {
+                foreach (var bitmap in superseded)
+                {
+                    bitmap.Dispose();
+                }
+            }, DispatcherPriority.Background);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Preview failed";
+            await DialogService.ShowErrorAsync("Preview failed", ex.Message);
         }
     }
 
-    [RelayCommand]
-    private async Task SaveCurrentResumeAsync()
+    // ---------------------------------------------------------------- Save / open / delete
+
+    private void SetupAutoSave()
     {
+        // A DispatcherTimer keeps the save on the UI thread, where the bound collections live.
+        _autoSaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _autoSaveTimer.Tick += async (_, _) =>
+        {
+            await AutoSaveAsync();
+            await AutoSaveCoverLetterAsync();
+        };
+        _autoSaveTimer.Start();
+    }
+
+    private async Task AutoSaveAsync()
+    {
+        if (!IsDirty || IsSaving)
+            return;
+
+        // Never let the timer create a record for an untouched blank resume.
+        if (CurrentResume.Id == 0 && !HasMeaningfulContent())
+            return;
+
+        await SaveAsync(isAutoSave: true);
+    }
+
+    [RelayCommand]
+    private async Task SaveCurrentResumeAsync() => await SaveAsync(isAutoSave: false);
+
+    private async Task<bool> SaveAsync(bool isAutoSave)
+    {
+        if (isAutoSave)
+        {
+            if (!await _saveGate.WaitAsync(0))
+                return false;
+        }
+        else
+        {
+            await _saveGate.WaitAsync();
+        }
+
         try
         {
             SyncEditorToResume();
+
+            IsSaving = true;
+            UpdateSaveState();
 
             if (CurrentResume.Id == 0)
             {
@@ -1565,86 +2169,242 @@ public partial class MainWindowViewModel : ViewModelBase
                 await _services.Repository.UpdateAsync(CurrentResume);
             }
 
+            IsDirty = false;
+            _lastSavedAt = DateTime.Now;
+
             await LoadSavedResumesAsync();
-            StatusMessage = $"Saved at {DateTime.Now:HH:mm:ss}";
+            StatusMessage = isAutoSave
+                ? $"Auto-saved at {_lastSavedAt:HH:mm:ss}"
+                : $"Saved at {_lastSavedAt:HH:mm:ss}";
+            return true;
+        }
+        catch (ResumeConcurrencyException ex)
+        {
+            var reload = await DialogService.ConfirmAsync(
+                "Resume changed elsewhere",
+                $"{ex.Message}\n\nReload the saved version? Your unsaved changes to this resume will be lost.",
+                "Reload saved version",
+                "Keep editing");
+
+            if (reload)
+            {
+                await ReloadCurrentResumeAsync();
+            }
+            return false;
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Save failed: {ex.Message}";
+            await DialogService.ShowErrorAsync("Save failed", ex.Message);
+            return false;
+        }
+        finally
+        {
+            IsSaving = false;
+            UpdateSaveState();
+            _saveGate.Release();
         }
     }
 
     [RelayCommand]
+    private async Task SaveAsAsync()
+    {
+        var name = await DialogService.PromptAsync("Save As", "Name for the new resume:", ResumeName);
+        if (name == null) return;
+
+        try
+        {
+            SyncEditorToResume();
+
+            var copy = ResumeRepository.DeepClone(CurrentResume);
+            ResumeRepository.ResetIdentity(copy);
+            copy.SyncId = Guid.NewGuid();
+            copy.Name = name;
+
+            await _services.Repository.CreateAsync(copy);
+
+            _services.UndoRedoManager.Clear();
+            CurrentResume = copy;
+            LoadResumeIntoEditor(copy);
+
+            IsDirty = false;
+            _lastSavedAt = DateTime.Now;
+            UpdateSaveState();
+
+            await LoadSavedResumesAsync();
+            StatusMessage = $"Saved as: {name}";
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Save As failed", ex.Message);
+        }
+    }
+
+    private async Task ReloadCurrentResumeAsync()
+    {
+        if (CurrentResume.Id == 0) return;
+
+        var reloaded = await _services.Repository.GetByIdAsync(CurrentResume.Id);
+        if (reloaded == null)
+        {
+            StatusMessage = "This resume no longer exists";
+            return;
+        }
+
+        _services.UndoRedoManager.Clear();
+        CurrentResume = reloaded;
+        LoadResumeIntoEditor(reloaded);
+        IsDirty = false;
+        _lastSavedAt = DateTime.Now;
+        UpdateSaveState();
+        UpdatePreviewDebounced();
+    }
+
+    /// <summary>
+    /// Returns false when the user backs out; callers must abandon the operation in that case.
+    /// </summary>
+    public async Task<bool> ConfirmDiscardChangesAsync()
+    {
+        if (!IsDirty)
+            return true;
+
+        var choice = await DialogService.ConfirmUnsavedChangesAsync(ResumeName);
+        return choice switch
+        {
+            UnsavedChangesChoice.Save => await SaveAsync(isAutoSave: false),
+            UnsavedChangesChoice.Discard => true,
+            _ => false
+        };
+    }
+
+    [RelayCommand]
+    private async Task CreateNewResumeAsync()
+    {
+        if (!await ConfirmDiscardChangesAsync())
+            return;
+
+        ShowResumeList = false;
+        ResetToNewResume();
+    }
+
+    [RelayCommand]
+    private async Task OpenResumeListAsync()
+    {
+        await LoadSavedResumesAsync();
+        ShowResumeList = true;
+    }
+
+    [RelayCommand]
+    private void CloseResumeList() => ShowResumeList = false;
+
+    [RelayCommand]
     private async Task LoadResumeAsync(Resume resume)
     {
-        var loaded = await _services.Repository.GetByIdAsync(resume.Id);
-        if (loaded != null)
+        if (!await ConfirmDiscardChangesAsync())
+            return;
+
+        try
         {
+            var loaded = await _services.Repository.GetByIdAsync(resume.Id);
+            if (loaded == null)
+            {
+                await DialogService.ShowErrorAsync("Open failed", $"'{resume.Name}' no longer exists.");
+                await LoadSavedResumesAsync();
+                return;
+            }
+
+            _services.UndoRedoManager.Clear();
             CurrentResume = loaded;
-            LoadResumeIntoEditor(CurrentResume);
+            LoadResumeIntoEditor(loaded);
+            IsDirty = false;
+            _lastSavedAt = null;
+            UpdateSaveState();
             UpdatePreviewDebounced();
             ShowResumeList = false;
-            StatusMessage = $"Loaded: {CurrentResume.Name}";
+            StatusMessage = $"Opened: {loaded.Name}";
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Open failed", ex.Message);
         }
     }
 
     [RelayCommand]
     private async Task DeleteResumeAsync(Resume resume)
     {
-        await _services.Repository.DeleteAsync(resume.Id);
-        await LoadSavedResumesAsync();
-        StatusMessage = $"Deleted: {resume.Name}";
+        var confirmed = await DialogService.ConfirmAsync(
+            "Delete resume",
+            $"Delete \"{resume.Name}\"? This cannot be undone.",
+            "Delete",
+            "Cancel");
+
+        if (!confirmed) return;
+
+        try
+        {
+            await _services.Repository.DeleteAsync(resume.Id);
+
+            // The editor is showing the row that just went away; keep the content, drop the identity.
+            if (CurrentResume.Id == resume.Id)
+            {
+                CurrentResume.Id = 0;
+                MarkDirty();
+            }
+
+            await LoadSavedResumesAsync();
+            StatusMessage = $"Deleted: {resume.Name}";
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Delete failed", ex.Message);
+        }
     }
 
     [RelayCommand]
     private async Task DuplicateResumeAsync(Resume resume)
     {
-        await _services.Repository.DuplicateAsync(resume.Id);
-        await LoadSavedResumesAsync();
-        StatusMessage = $"Duplicated: {resume.Name}";
+        try
+        {
+            var copy = await _services.Repository.DuplicateAsync(resume.Id);
+            await LoadSavedResumesAsync();
+            StatusMessage = $"Duplicated: {copy.Name}";
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Duplicate failed", ex.Message);
+        }
     }
 
     [RelayCommand]
     private void SelectTemplate(TemplateInfo template)
     {
         SelectedTemplate = template;
-        CurrentResume.SelectedTemplateId = template.Id;
         ShowTemplateGallery = false;
-        UpdatePreviewDebounced();
         StatusMessage = $"Template: {template.Name}";
     }
+
+    // ---------------------------------------------------------------- Export / import
 
     [RelayCommand]
     private async Task ExportAsync(string format)
     {
         try
         {
-            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow
-                : null;
-
-            if (topLevel == null)
-            {
-                StatusMessage = "Cannot open file dialog";
-                return;
-            }
+            var topLevel = MainWindow;
+            if (topLevel == null) return;
 
             SyncEditorToResume();
 
-            var fileName = $"{CurrentResume.PersonalInfo.FullName.Replace(" ", "_")}_Resume";
             var exporter = _services.ExportService.GetExporter(format);
-
             if (exporter == null)
             {
-                StatusMessage = $"Unknown export format: {format}";
+                await DialogService.ShowErrorAsync("Export failed", $"Unknown export format: {format}");
                 return;
             }
 
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
             {
                 Title = $"Export as {format}",
-                SuggestedFileName = fileName,
+                SuggestedFileName = BuildExportFileName(),
                 FileTypeChoices = new[]
                 {
                     new Avalonia.Platform.Storage.FilePickerFileType(format)
@@ -1656,10 +2416,7 @@ public partial class MainWindowViewModel : ViewModelBase
             });
 
             if (file == null)
-            {
-                // User cancelled
                 return;
-            }
 
             IsLoading = true;
             var filePath = file.Path.LocalPath;
@@ -1669,7 +2426,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Export failed: {ex.Message}";
+            await DialogService.ShowErrorAsync("Export failed", ex.Message);
         }
         finally
         {
@@ -1677,59 +2434,100 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>Falls back through full name, resume name, then a constant, so the file is never nameless.</summary>
+    private string BuildExportFileName()
+    {
+        var candidate = CurrentResume.PersonalInfo.FullName;
+
+        if (string.IsNullOrWhiteSpace(candidate))
+            candidate = CurrentResume.Name;
+
+        if (string.IsNullOrWhiteSpace(candidate) || candidate == DefaultResumeName)
+            return "Resume";
+
+        var sanitized = SanitizeFileName(candidate.Trim()).Replace(" ", "_");
+        return string.IsNullOrWhiteSpace(sanitized) ? "Resume" : $"{sanitized}_Resume";
+    }
+
+    private static string SanitizeFileName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
+    }
+
     [RelayCommand]
-    private async Task ImportJsonResumeAsync()
+    private Task ImportJsonResumeAsync() => ImportAsync(
+        "JSON Resume",
+        new Avalonia.Platform.Storage.FilePickerFileType("JSON Resume")
+        {
+            Patterns = new[] { "*.json" },
+            MimeTypes = new[] { "application/json" }
+        });
+
+    [RelayCommand]
+    private Task ImportLinkedInAsync() => ImportAsync(
+        "LinkedIn",
+        new Avalonia.Platform.Storage.FilePickerFileType("LinkedIn Export (ZIP)")
+        {
+            Patterns = new[] { "*.zip" },
+            MimeTypes = new[] { "application/zip" }
+        });
+
+    [RelayCommand]
+    private Task ImportPdfAsync() => ImportAsync(
+        "PDF",
+        new Avalonia.Platform.Storage.FilePickerFileType("PDF Resume")
+        {
+            Patterns = new[] { "*.pdf" },
+            MimeTypes = new[] { "application/pdf" }
+        });
+
+    private async Task ImportAsync(string importerName, Avalonia.Platform.Storage.FilePickerFileType fileType)
     {
         try
         {
-            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow
-                : null;
-
+            var topLevel = MainWindow;
             if (topLevel == null) return;
+
+            if (!await ConfirmDiscardChangesAsync())
+                return;
 
             var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
             {
-                Title = "Import JSON Resume",
+                Title = $"Import {importerName}",
                 AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
-                    new Avalonia.Platform.Storage.FilePickerFileType("JSON Resume")
-                    {
-                        Patterns = new[] { "*.json" },
-                        MimeTypes = new[] { "application/json" }
-                    }
-                }
+                FileTypeFilter = new[] { fileType }
             });
 
             if (files.Count == 0) return;
 
             IsLoading = true;
-            StatusMessage = "Importing...";
+            StatusMessage = $"Importing {importerName}...";
 
             await using var stream = await files[0].OpenReadAsync();
-            var result = await _services.ExportService.ImportAsync(stream, "JSON Resume");
+            var result = await _services.ExportService.ImportAsync(stream, importerName);
 
-            if (result.Success && result.Data != null)
+            if (!result.Success || result.Data == null)
             {
-                CurrentResume = result.Data;
-                LoadResumeIntoEditor(CurrentResume);
-                UpdatePreviewDebounced();
-
-                var warningText = result.Warnings.Any()
-                    ? $" ({result.Warnings.Count} warnings)"
-                    : "";
-                StatusMessage = $"Imported successfully{warningText}";
+                await DialogService.ShowErrorAsync("Import failed", result.ErrorMessage ?? "The file could not be read.");
+                StatusMessage = "Import failed";
+                return;
             }
-            else
+
+            AdoptImportedResume(result.Data);
+
+            StatusMessage = result.Warnings.Any()
+                ? $"Imported with {result.Warnings.Count} warning(s) - review the result"
+                : "Imported successfully";
+
+            if (result.Warnings.Any())
             {
-                StatusMessage = $"Import failed: {result.ErrorMessage}";
+                await DialogService.ShowErrorAsync("Imported with warnings", string.Join("\n", result.Warnings));
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Import failed: {ex.Message}";
+            await DialogService.ShowErrorAsync("Import failed", ex.Message);
         }
         finally
         {
@@ -1737,726 +2535,164 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    [RelayCommand]
-    private async Task ImportLinkedInAsync()
+    /// <summary>
+    /// An imported resume carries ids from whichever database exported it. Clearing them keeps the
+    /// next save from overwriting the unrelated local row that happens to own those ids.
+    /// </summary>
+    /// <param name="preserveSyncId">
+    /// True when the file came from our own sync folder: it is the same resume, so keeping its
+    /// SyncId lets sync recognize it. A file from anywhere else is a new resume and must get a
+    /// fresh SyncId, or it would collide with the resume it was exported from.
+    /// </param>
+    private void AdoptImportedResume(Resume imported, bool preserveSyncId = false)
     {
-        try
+        var syncId = imported.SyncId;
+
+        ResumeRepository.ResetIdentity(imported);
+
+        if (preserveSyncId && syncId != Guid.Empty)
         {
-            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow
-                : null;
-
-            if (topLevel == null) return;
-
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
-            {
-                Title = "Import LinkedIn Data Export",
-                AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
-                    new Avalonia.Platform.Storage.FilePickerFileType("LinkedIn Export (ZIP)")
-                    {
-                        Patterns = new[] { "*.zip" },
-                        MimeTypes = new[] { "application/zip" }
-                    }
-                }
-            });
-
-            if (files.Count == 0) return;
-
-            IsLoading = true;
-            StatusMessage = "Importing LinkedIn data...";
-
-            await using var stream = await files[0].OpenReadAsync();
-            var result = await _services.ExportService.ImportAsync(stream, "LinkedIn");
-
-            if (result.Success && result.Data != null)
-            {
-                CurrentResume = result.Data;
-                LoadResumeIntoEditor(CurrentResume);
-                UpdatePreviewDebounced();
-
-                var warningText = result.Warnings.Any()
-                    ? $" (with {result.Warnings.Count} notes)"
-                    : "";
-                StatusMessage = $"LinkedIn data imported successfully{warningText}";
-            }
-            else
-            {
-                StatusMessage = $"Import failed: {result.ErrorMessage}";
-            }
+            imported.SyncId = syncId;
         }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Import failed: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
 
-    [RelayCommand]
-    private async Task ImportPdfAsync()
-    {
-        try
-        {
-            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow
-                : null;
+        imported.SectionOrder.EnsureAllSectionsPresent();
 
-            if (topLevel == null) return;
+        if (string.IsNullOrWhiteSpace(imported.Name))
+            imported.Name = DefaultResumeName;
 
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
-            {
-                Title = "Import PDF Resume",
-                AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
-                    new Avalonia.Platform.Storage.FilePickerFileType("PDF Resume")
-                    {
-                        Patterns = new[] { "*.pdf" },
-                        MimeTypes = new[] { "application/pdf" }
-                    }
-                }
-            });
+        _services.UndoRedoManager.Clear();
+        CurrentResume = imported;
+        LoadResumeIntoEditor(imported);
 
-            if (files.Count == 0) return;
-
-            IsLoading = true;
-            StatusMessage = "Importing PDF resume (this may take a moment)...";
-
-            await using var stream = await files[0].OpenReadAsync();
-            var result = await _services.ExportService.ImportAsync(stream, "PDF");
-
-            if (result.Success && result.Data != null)
-            {
-                CurrentResume = result.Data;
-                LoadResumeIntoEditor(CurrentResume);
-                UpdatePreviewDebounced();
-
-                var warningText = result.Warnings.Any()
-                    ? $" ({result.Warnings.Count} sections need review)"
-                    : "";
-                StatusMessage = $"PDF imported successfully{warningText}. Please review extracted data.";
-            }
-            else
-            {
-                StatusMessage = $"Import failed: {result.ErrorMessage}";
-            }
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Import failed: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    [RelayCommand]
-    private void AddExperience()
-    {
-        var exp = new ExperienceViewModel(new Experience { Order = Experiences.Count }, OnSubViewModelChanged);
-        var action = CollectionChangeAction<ExperienceViewModel>.Add(
-            Experiences, exp, -1, "Experience", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void RemoveExperience(ExperienceViewModel exp)
-    {
-        var index = Experiences.IndexOf(exp);
-        if (index < 0) return;
-        var action = CollectionChangeAction<ExperienceViewModel>.Remove(
-            Experiences, exp, index, "Experience", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void AddEducation()
-    {
-        var edu = new EducationViewModel(new Education { Order = EducationList.Count }, OnSubViewModelChanged);
-        var action = CollectionChangeAction<EducationViewModel>.Add(
-            EducationList, edu, -1, "Education", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void RemoveEducation(EducationViewModel edu)
-    {
-        var index = EducationList.IndexOf(edu);
-        if (index < 0) return;
-        var action = CollectionChangeAction<EducationViewModel>.Remove(
-            EducationList, edu, index, "Education", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void AddSkill()
-    {
-        var skill = new SkillViewModel(new Skill { Order = Skills.Count }, OnSubViewModelChanged);
-        var action = CollectionChangeAction<SkillViewModel>.Add(
-            Skills, skill, -1, "Skill", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void RemoveSkill(SkillViewModel skill)
-    {
-        var index = Skills.IndexOf(skill);
-        if (index < 0) return;
-        var action = CollectionChangeAction<SkillViewModel>.Remove(
-            Skills, skill, index, "Skill", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void AddLanguage()
-    {
-        var lang = new LanguageViewModel(new Language { Order = Languages.Count }, OnSubViewModelChanged);
-        var action = CollectionChangeAction<LanguageViewModel>.Add(
-            Languages, lang, -1, "Language", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void RemoveLanguage(LanguageViewModel lang)
-    {
-        var index = Languages.IndexOf(lang);
-        if (index < 0) return;
-        var action = CollectionChangeAction<LanguageViewModel>.Remove(
-            Languages, lang, index, "Language", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void AddCertification()
-    {
-        var cert = new CertificationViewModel(new Certification { Order = Certifications.Count }, OnSubViewModelChanged);
-        var action = CollectionChangeAction<CertificationViewModel>.Add(
-            Certifications, cert, -1, "Certification", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void RemoveCertification(CertificationViewModel cert)
-    {
-        var index = Certifications.IndexOf(cert);
-        if (index < 0) return;
-        var action = CollectionChangeAction<CertificationViewModel>.Remove(
-            Certifications, cert, index, "Certification", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void AddProject()
-    {
-        var proj = new ProjectViewModel(new Project { Order = Projects.Count }, OnSubViewModelChanged);
-        var action = CollectionChangeAction<ProjectViewModel>.Add(
-            Projects, proj, -1, "Project", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    [RelayCommand]
-    private void RemoveProject(ProjectViewModel proj)
-    {
-        var index = Projects.IndexOf(proj);
-        if (index < 0) return;
-        var action = CollectionChangeAction<ProjectViewModel>.Remove(
-            Projects, proj, index, "Project", OnSubViewModelChanged);
-        _services?.UndoRedoManager?.Execute(action);
-    }
-
-    // Item reordering commands
-    [RelayCommand]
-    private void MoveExperienceUp(ExperienceViewModel exp)
-    {
-        var index = Experiences.IndexOf(exp);
-        if (index > 0)
-        {
-            var action = CollectionChangeAction<ExperienceViewModel>.Move(
-                Experiences, index, index - 1, "Experience", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveExperienceDown(ExperienceViewModel exp)
-    {
-        var index = Experiences.IndexOf(exp);
-        if (index < Experiences.Count - 1)
-        {
-            var action = CollectionChangeAction<ExperienceViewModel>.Move(
-                Experiences, index, index + 1, "Experience", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveEducationUp(EducationViewModel edu)
-    {
-        var index = EducationList.IndexOf(edu);
-        if (index > 0)
-        {
-            var action = CollectionChangeAction<EducationViewModel>.Move(
-                EducationList, index, index - 1, "Education", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveEducationDown(EducationViewModel edu)
-    {
-        var index = EducationList.IndexOf(edu);
-        if (index < EducationList.Count - 1)
-        {
-            var action = CollectionChangeAction<EducationViewModel>.Move(
-                EducationList, index, index + 1, "Education", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveSkillUp(SkillViewModel skill)
-    {
-        var index = Skills.IndexOf(skill);
-        if (index > 0)
-        {
-            var action = CollectionChangeAction<SkillViewModel>.Move(
-                Skills, index, index - 1, "Skill", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveSkillDown(SkillViewModel skill)
-    {
-        var index = Skills.IndexOf(skill);
-        if (index < Skills.Count - 1)
-        {
-            var action = CollectionChangeAction<SkillViewModel>.Move(
-                Skills, index, index + 1, "Skill", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveLanguageUp(LanguageViewModel lang)
-    {
-        var index = Languages.IndexOf(lang);
-        if (index > 0)
-        {
-            var action = CollectionChangeAction<LanguageViewModel>.Move(
-                Languages, index, index - 1, "Language", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveLanguageDown(LanguageViewModel lang)
-    {
-        var index = Languages.IndexOf(lang);
-        if (index < Languages.Count - 1)
-        {
-            var action = CollectionChangeAction<LanguageViewModel>.Move(
-                Languages, index, index + 1, "Language", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveCertificationUp(CertificationViewModel cert)
-    {
-        var index = Certifications.IndexOf(cert);
-        if (index > 0)
-        {
-            var action = CollectionChangeAction<CertificationViewModel>.Move(
-                Certifications, index, index - 1, "Certification", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveCertificationDown(CertificationViewModel cert)
-    {
-        var index = Certifications.IndexOf(cert);
-        if (index < Certifications.Count - 1)
-        {
-            var action = CollectionChangeAction<CertificationViewModel>.Move(
-                Certifications, index, index + 1, "Certification", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveProjectUp(ProjectViewModel proj)
-    {
-        var index = Projects.IndexOf(proj);
-        if (index > 0)
-        {
-            var action = CollectionChangeAction<ProjectViewModel>.Move(
-                Projects, index, index - 1, "Project", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveProjectDown(ProjectViewModel proj)
-    {
-        var index = Projects.IndexOf(proj);
-        if (index < Projects.Count - 1)
-        {
-            var action = CollectionChangeAction<ProjectViewModel>.Move(
-                Projects, index, index + 1, "Project", UpdatePreviewDebounced);
-            _services?.UndoRedoManager?.Execute(action);
-        }
-    }
-
-    [RelayCommand]
-    private void ZoomIn()
-    {
-        PreviewZoom = Math.Min(PreviewZoom + 0.1, 2.0);
-    }
-
-    [RelayCommand]
-    private void ZoomOut()
-    {
-        PreviewZoom = Math.Max(PreviewZoom - 0.1, 0.5);
-    }
-
-    [RelayCommand]
-    private void ZoomReset()
-    {
-        PreviewZoom = 1.0;
-    }
-
-    public void TriggerPreviewUpdate()
-    {
+        IsDirty = true;
+        _lastSavedAt = null;
+        UpdateSaveState();
         UpdatePreviewDebounced();
     }
-}
 
-// Sub-ViewModels for collections
-public partial class ExperienceViewModel : ObservableObject
-{
-    [ObservableProperty] private string _jobTitle = "";
-    [ObservableProperty] private string _company = "";
-    [ObservableProperty] private string _location = "";
-    [ObservableProperty] private string? _startMonthName;
-    [ObservableProperty] private int? _startYear;
-    [ObservableProperty] private string? _endMonthName;
-    [ObservableProperty] private int? _endYear;
-    [ObservableProperty] private bool _isCurrentRole;
-    [ObservableProperty] private string _description = "";
-    [ObservableProperty] private string _achievements = "";
+    // ---------------------------------------------------------------- Collections
 
-    private readonly Action? _onChanged;
+    [RelayCommand]
+    private void AddExperience() => ExecuteAdd(Experiences,
+        new ExperienceViewModel(new Experience { Order = Experiences.Count }, OnSubViewModelChanged, this), "Experience");
 
-    public static string[] Months { get; } = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-    public static int[] Years { get; } = Enumerable.Range(1970, DateTime.Now.Year - 1970 + 10).Reverse().ToArray();
+    [RelayCommand]
+    private void RemoveExperience(ExperienceViewModel exp) => ExecuteRemove(Experiences, exp, "Experience");
 
-    public ExperienceViewModel(Experience exp, Action? onChanged = null)
+    [RelayCommand]
+    private void AddEducation() => ExecuteAdd(EducationList,
+        new EducationViewModel(new Education { Order = EducationList.Count }, OnSubViewModelChanged, this), "Education");
+
+    [RelayCommand]
+    private void RemoveEducation(EducationViewModel edu) => ExecuteRemove(EducationList, edu, "Education");
+
+    [RelayCommand]
+    private void AddSkill() => ExecuteAdd(Skills,
+        new SkillViewModel(new Skill { Order = Skills.Count }, OnSubViewModelChanged, this), "Skill");
+
+    [RelayCommand]
+    private void RemoveSkill(SkillViewModel skill) => ExecuteRemove(Skills, skill, "Skill");
+
+    [RelayCommand]
+    private void AddLanguage() => ExecuteAdd(Languages,
+        new LanguageViewModel(new Language { Order = Languages.Count }, OnSubViewModelChanged, this), "Language");
+
+    [RelayCommand]
+    private void RemoveLanguage(LanguageViewModel lang) => ExecuteRemove(Languages, lang, "Language");
+
+    [RelayCommand]
+    private void AddCertification() => ExecuteAdd(Certifications,
+        new CertificationViewModel(new Certification { Order = Certifications.Count }, OnSubViewModelChanged, this), "Certification");
+
+    [RelayCommand]
+    private void RemoveCertification(CertificationViewModel cert) => ExecuteRemove(Certifications, cert, "Certification");
+
+    [RelayCommand]
+    private void AddProject() => ExecuteAdd(Projects,
+        new ProjectViewModel(new Project { Order = Projects.Count }, OnSubViewModelChanged, this), "Project");
+
+    [RelayCommand]
+    private void RemoveProject(ProjectViewModel proj) => ExecuteRemove(Projects, proj, "Project");
+
+    [RelayCommand]
+    private void AddCustomSection() => ExecuteAdd(CustomSections,
+        new CustomSectionViewModel(new CustomSection { Title = "New Section", Order = CustomSections.Count }, OnSubViewModelChanged, this),
+        "Custom Section");
+
+    [RelayCommand]
+    private void RemoveCustomSection(CustomSectionViewModel section) => ExecuteRemove(CustomSections, section, "Custom Section");
+
+    private void ExecuteAdd<T>(ObservableCollection<T> collection, T item, string description) =>
+        _services?.UndoRedoManager?.Execute(
+            CollectionChangeAction<T>.Add(collection, item, -1, description, OnSubViewModelChanged));
+
+    private void ExecuteRemove<T>(ObservableCollection<T> collection, T item, string description)
     {
-        _onChanged = onChanged;
-        JobTitle = exp.JobTitle;
-        Company = exp.Company;
-        Location = exp.Location;
-        if (exp.StartDate.HasValue)
-        {
-            StartMonthName = Months[exp.StartDate.Value.Month - 1];
-            StartYear = exp.StartDate.Value.Year;
-        }
-        if (exp.EndDate.HasValue)
-        {
-            EndMonthName = Months[exp.EndDate.Value.Month - 1];
-            EndYear = exp.EndDate.Value.Year;
-        }
-        IsCurrentRole = exp.IsCurrentRole;
-        Description = exp.Description;
-        Achievements = string.Join("\n", exp.Achievements);
+        var index = collection.IndexOf(item);
+        if (index < 0) return;
+
+        _services?.UndoRedoManager?.Execute(
+            CollectionChangeAction<T>.Remove(collection, item, index, description, OnSubViewModelChanged));
     }
 
-    partial void OnJobTitleChanged(string value) => _onChanged?.Invoke();
-    partial void OnCompanyChanged(string value) => _onChanged?.Invoke();
-    partial void OnLocationChanged(string value) => _onChanged?.Invoke();
-    partial void OnStartMonthNameChanged(string? value) => _onChanged?.Invoke();
-    partial void OnStartYearChanged(int? value) => _onChanged?.Invoke();
-    partial void OnEndMonthNameChanged(string? value) => _onChanged?.Invoke();
-    partial void OnEndYearChanged(int? value) => _onChanged?.Invoke();
-    partial void OnIsCurrentRoleChanged(bool value) => _onChanged?.Invoke();
-    partial void OnDescriptionChanged(string value) => _onChanged?.Invoke();
-    partial void OnAchievementsChanged(string value) => _onChanged?.Invoke();
-
-    private int? MonthNameToNumber(string? monthName) =>
-        monthName != null ? Array.IndexOf(Months, monthName) + 1 : null;
-
-    public Experience ToModel() => new()
+    private void ExecuteMove<T>(ObservableCollection<T> collection, T item, int offset, string description)
     {
-        JobTitle = JobTitle,
-        Company = Company,
-        Location = Location,
-        StartDate = MonthNameToNumber(StartMonthName) is int sm && StartYear.HasValue ? new DateTime(StartYear.Value, sm, 1) : null,
-        EndDate = MonthNameToNumber(EndMonthName) is int em && EndYear.HasValue ? new DateTime(EndYear.Value, em, 1) : null,
-        IsCurrentRole = IsCurrentRole,
-        Description = Description,
-        Achievements = Achievements.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList()
-    };
-}
+        var index = collection.IndexOf(item);
+        var target = index + offset;
+        if (index < 0 || target < 0 || target >= collection.Count) return;
 
-public partial class EducationViewModel : ObservableObject
-{
-    [ObservableProperty] private string _degree = "";
-    [ObservableProperty] private string _fieldOfStudy = "";
-    [ObservableProperty] private string _institution = "";
-    [ObservableProperty] private string _location = "";
-    [ObservableProperty] private int? _startYear;
-    [ObservableProperty] private int? _endYear;
-    [ObservableProperty] private bool _isCurrentlyStudying;
-    [ObservableProperty] private string _grade = "";
-    [ObservableProperty] private string _description = "";
-
-    private readonly Action? _onChanged;
-
-    public static int[] Years { get; } = Enumerable.Range(1970, DateTime.Now.Year - 1970 + 10).Reverse().ToArray();
-
-    public EducationViewModel(Education edu, Action? onChanged = null)
-    {
-        _onChanged = onChanged;
-        Degree = edu.Degree;
-        FieldOfStudy = edu.FieldOfStudy;
-        Institution = edu.Institution;
-        Location = edu.Location;
-        StartYear = edu.StartDate?.Year;
-        EndYear = edu.EndDate?.Year;
-        IsCurrentlyStudying = edu.IsCurrentlyStudying;
-        Grade = edu.Grade;
-        Description = edu.Description;
-    }
-
-    partial void OnDegreeChanged(string value) => _onChanged?.Invoke();
-    partial void OnFieldOfStudyChanged(string value) => _onChanged?.Invoke();
-    partial void OnInstitutionChanged(string value) => _onChanged?.Invoke();
-    partial void OnLocationChanged(string value) => _onChanged?.Invoke();
-    partial void OnStartYearChanged(int? value) => _onChanged?.Invoke();
-    partial void OnEndYearChanged(int? value) => _onChanged?.Invoke();
-    partial void OnIsCurrentlyStudyingChanged(bool value) => _onChanged?.Invoke();
-    partial void OnGradeChanged(string value) => _onChanged?.Invoke();
-    partial void OnDescriptionChanged(string value) => _onChanged?.Invoke();
-
-    public Education ToModel() => new()
-    {
-        Degree = Degree,
-        FieldOfStudy = FieldOfStudy,
-        Institution = Institution,
-        Location = Location,
-        StartDate = StartYear.HasValue ? new DateTime(StartYear.Value, 1, 1) : null,
-        EndDate = EndYear.HasValue ? new DateTime(EndYear.Value, 1, 1) : null,
-        IsCurrentlyStudying = IsCurrentlyStudying,
-        Grade = Grade,
-        Description = Description
-    };
-}
-
-public partial class SkillViewModel : ObservableObject
-{
-    [ObservableProperty] private string _name = "";
-    [ObservableProperty] private string _category = "";
-    [ObservableProperty] private SkillLevel _level = SkillLevel.Intermediate;
-
-    private readonly Action? _onChanged;
-
-    public SkillViewModel(Skill skill, Action? onChanged = null)
-    {
-        _onChanged = onChanged;
-        Name = skill.Name;
-        Category = skill.Category;
-        Level = skill.Level;
-    }
-
-    partial void OnNameChanged(string value) => _onChanged?.Invoke();
-    partial void OnCategoryChanged(string value) => _onChanged?.Invoke();
-    partial void OnLevelChanged(SkillLevel value) => _onChanged?.Invoke();
-
-    public Skill ToModel() => new()
-    {
-        Name = Name,
-        Category = Category,
-        Level = Level
-    };
-}
-
-public partial class LanguageViewModel : ObservableObject
-{
-    [ObservableProperty] private string _name = "";
-    [ObservableProperty] private LanguageProficiency _proficiency = LanguageProficiency.Professional;
-
-    private readonly Action? _onChanged;
-
-    public static LanguageProficiency[] AvailableProficiencies { get; } = new[]
-    {
-        LanguageProficiency.Basic,
-        LanguageProficiency.Conversational,
-        LanguageProficiency.Professional,
-        LanguageProficiency.Fluent,
-        LanguageProficiency.Native
-    };
-
-    public LanguageViewModel(Language lang, Action? onChanged = null)
-    {
-        _onChanged = onChanged;
-        Name = lang.Name;
-        Proficiency = lang.Proficiency;
-    }
-
-    partial void OnNameChanged(string value) => _onChanged?.Invoke();
-    partial void OnProficiencyChanged(LanguageProficiency value) => _onChanged?.Invoke();
-
-    public Language ToModel() => new()
-    {
-        Name = Name,
-        Proficiency = Proficiency
-    };
-}
-
-public partial class CertificationViewModel : ObservableObject
-{
-    [ObservableProperty] private string _name = "";
-    [ObservableProperty] private string _issuingOrganization = "";
-    [ObservableProperty] private DateTimeOffset? _issueDate;
-
-    private readonly Action? _onChanged;
-
-    public CertificationViewModel(Certification cert, Action? onChanged = null)
-    {
-        _onChanged = onChanged;
-        Name = cert.Name;
-        IssuingOrganization = cert.IssuingOrganization;
-        IssueDate = cert.IssueDate.HasValue ? new DateTimeOffset(cert.IssueDate.Value) : null;
-    }
-
-    partial void OnNameChanged(string value) => _onChanged?.Invoke();
-    partial void OnIssuingOrganizationChanged(string value) => _onChanged?.Invoke();
-    partial void OnIssueDateChanged(DateTimeOffset? value) => _onChanged?.Invoke();
-
-    public Certification ToModel() => new()
-    {
-        Name = Name,
-        IssuingOrganization = IssuingOrganization,
-        IssueDate = IssueDate?.DateTime
-    };
-}
-
-public partial class ProjectViewModel : ObservableObject
-{
-    [ObservableProperty] private string _name = "";
-    [ObservableProperty] private string _description = "";
-    [ObservableProperty] private string _url = "";
-    [ObservableProperty] private string _technologies = "";
-
-    private readonly Action? _onChanged;
-
-    public ProjectViewModel(Project proj, Action? onChanged = null)
-    {
-        _onChanged = onChanged;
-        Name = proj.Name;
-        Description = proj.Description;
-        Url = proj.Url;
-        Technologies = string.Join(", ", proj.Technologies);
-    }
-
-    partial void OnNameChanged(string value) => _onChanged?.Invoke();
-    partial void OnDescriptionChanged(string value) => _onChanged?.Invoke();
-    partial void OnUrlChanged(string value) => _onChanged?.Invoke();
-    partial void OnTechnologiesChanged(string value) => _onChanged?.Invoke();
-
-    public Project ToModel() => new()
-    {
-        Name = Name,
-        Description = Description,
-        Url = Url,
-        Technologies = Technologies.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(t => t.Trim()).ToList()
-    };
-}
-
-public partial class SectionViewModel : ObservableObject
-{
-    [ObservableProperty] private SectionType _sectionType;
-    [ObservableProperty] private string _displayName = "";
-    [ObservableProperty] private bool _isVisible = true;
-    [ObservableProperty] private int _order;
-
-    private readonly Action? _onChanged;
-
-    public SectionViewModel(SectionType type, bool isVisible, int order, Action? onChanged = null)
-    {
-        SectionType = type;
-        DisplayName = SectionOrder.GetSectionDisplayName(type);
-        IsVisible = isVisible;
-        Order = order;
-        _onChanged = onChanged;
-    }
-
-    partial void OnIsVisibleChanged(bool value)
-    {
-        _onChanged?.Invoke();
-    }
-}
-
-public partial class SpellSuggestionViewModel : ObservableObject
-{
-    [ObservableProperty] private string _misspelledWord = "";
-    [ObservableProperty] private ObservableCollection<string> _suggestions = new();
-
-    private readonly Action<string> _onApply;
-    private readonly Action<string> _onAddToDictionary;
-
-    public SpellSuggestionViewModel(string word, IEnumerable<string> suggestions,
-        Action<string> onApply, Action<string> onAddToDictionary)
-    {
-        MisspelledWord = word;
-        Suggestions = new ObservableCollection<string>(suggestions);
-        _onApply = onApply;
-        _onAddToDictionary = onAddToDictionary;
+        _services?.UndoRedoManager?.Execute(
+            CollectionChangeAction<T>.Move(collection, index, target, description, OnSubViewModelChanged));
     }
 
     [RelayCommand]
-    private void ApplySuggestion(string suggestion)
-    {
-        _onApply(suggestion);
-    }
+    private void MoveExperienceUp(ExperienceViewModel exp) => ExecuteMove(Experiences, exp, -1, "Experience");
 
     [RelayCommand]
-    private void AddToDictionary()
-    {
-        _onAddToDictionary(MisspelledWord);
-    }
-}
+    private void MoveExperienceDown(ExperienceViewModel exp) => ExecuteMove(Experiences, exp, 1, "Experience");
 
-public class KeywordMatchViewModel
-{
-    public string Keyword { get; init; } = "";
-    public string Category { get; init; } = "";
-    public int JobCount { get; init; }
-    public int ResumeCount { get; init; }
-}
+    [RelayCommand]
+    private void MoveEducationUp(EducationViewModel edu) => ExecuteMove(EducationList, edu, -1, "Education");
 
-public class RemoteResumeViewModel
-{
-    public string Name { get; init; } = "";
-    public string Path { get; init; } = "";
-    public DateTime LastModified { get; init; }
-    public long Size { get; init; }
+    [RelayCommand]
+    private void MoveEducationDown(EducationViewModel edu) => ExecuteMove(EducationList, edu, 1, "Education");
 
-    public string SizeDisplay => Size < 1024
-        ? $"{Size} B"
-        : Size < 1024 * 1024
-            ? $"{Size / 1024.0:F1} KB"
-            : $"{Size / (1024.0 * 1024.0):F1} MB";
+    [RelayCommand]
+    private void MoveSkillUp(SkillViewModel skill) => ExecuteMove(Skills, skill, -1, "Skill");
 
-    public string LastModifiedDisplay => LastModified.ToString("g");
+    [RelayCommand]
+    private void MoveSkillDown(SkillViewModel skill) => ExecuteMove(Skills, skill, 1, "Skill");
+
+    [RelayCommand]
+    private void MoveLanguageUp(LanguageViewModel lang) => ExecuteMove(Languages, lang, -1, "Language");
+
+    [RelayCommand]
+    private void MoveLanguageDown(LanguageViewModel lang) => ExecuteMove(Languages, lang, 1, "Language");
+
+    [RelayCommand]
+    private void MoveCertificationUp(CertificationViewModel cert) => ExecuteMove(Certifications, cert, -1, "Certification");
+
+    [RelayCommand]
+    private void MoveCertificationDown(CertificationViewModel cert) => ExecuteMove(Certifications, cert, 1, "Certification");
+
+    [RelayCommand]
+    private void MoveProjectUp(ProjectViewModel proj) => ExecuteMove(Projects, proj, -1, "Project");
+
+    [RelayCommand]
+    private void MoveProjectDown(ProjectViewModel proj) => ExecuteMove(Projects, proj, 1, "Project");
+
+    // ---------------------------------------------------------------- Zoom
+
+    [RelayCommand]
+    private void ZoomIn() => PreviewZoom = Math.Min(PreviewZoom + 0.1, 2.0);
+
+    [RelayCommand]
+    private void ZoomOut() => PreviewZoom = Math.Max(PreviewZoom - 0.1, 0.5);
+
+    [RelayCommand]
+    private void ZoomReset() => PreviewZoom = 1.0;
+
+    private static Avalonia.Controls.Window? MainWindow =>
+        (Avalonia.Application.Current?.ApplicationLifetime
+            as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
 }

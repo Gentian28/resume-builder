@@ -1,27 +1,40 @@
+using System.Linq.Expressions;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ResumeBuilder.Core.Models;
 
 namespace ResumeBuilder.Data;
 
 public class ResumeDbContext : DbContext
 {
+    /// <summary>Kept in step with <c>ResumeValidator</c>'s summary limit.</summary>
+    public const int SummaryMaxLength = 5000;
+
     public DbSet<Resume> Resumes => Set<Resume>();
+    public DbSet<CoverLetter> CoverLetters => Set<CoverLetter>();
 
     private readonly string _dbPath;
 
     public ResumeDbContext()
+    {
+        _dbPath = DefaultDatabasePath();
+    }
+
+    public ResumeDbContext(DbContextOptions<ResumeDbContext> options) : base(options)
+    {
+        _dbPath = "resumes.db";
+    }
+
+    public static string DefaultDatabasePath()
     {
         var appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "ResumeBuilder");
 
         Directory.CreateDirectory(appDataPath);
-        _dbPath = Path.Combine(appDataPath, "resumes.db");
-    }
-
-    public ResumeDbContext(DbContextOptions<ResumeDbContext> options) : base(options)
-    {
-        _dbPath = "resumes.db";
+        return Path.Combine(appDataPath, "resumes.db");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -43,7 +56,11 @@ public class ResumeDbContext : DbContext
             entity.Property(r => r.SelectedTemplateId).HasMaxLength(50);
             entity.Property(r => r.AccentColor).HasMaxLength(20);
             entity.Property(r => r.FontFamily).HasMaxLength(100);
-            entity.Property(r => r.Summary).HasMaxLength(5000);
+            entity.Property(r => r.Summary).HasMaxLength(SummaryMaxLength);
+
+            // Optimistic concurrency: the repository rotates this on every update and matches on
+            // the original value, so a stale writer fails loudly instead of clobbering.
+            entity.Property(r => r.RowVersion).IsConcurrencyToken();
 
             // Store PersonalInfo as owned entity
             entity.OwnsOne(r => r.PersonalInfo, pi =>
@@ -62,51 +79,79 @@ public class ResumeDbContext : DbContext
                 pi.Property(p => p.GitHub).HasMaxLength(300);
             });
 
-            // Store collections as JSON
-            entity.Property(r => r.Experiences)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Experience>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Experience>());
+            // Collections and settings objects are stored as JSON columns. Each needs a
+            // ValueComparer, otherwise EF compares by reference and never notices in-place edits
+            // (list.Add(...), settings.AccentColor = ...) — those changes would silently not save.
+            entity.JsonList(r => r.Experiences);
+            entity.JsonList(r => r.EducationList);
+            entity.JsonList(r => r.Skills);
+            entity.JsonList(r => r.Languages);
+            entity.JsonList(r => r.Certifications);
+            entity.JsonList(r => r.Projects);
+            entity.JsonList(r => r.CustomSections);
+            entity.JsonObject(r => r.TemplateSettings);
+            entity.JsonObject(r => r.SectionOrder);
 
-            entity.Property(r => r.EducationList)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Education>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Education>());
-
-            entity.Property(r => r.Skills)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Skill>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Skill>());
-
-            entity.Property(r => r.Languages)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Language>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Language>());
-
-            entity.Property(r => r.Certifications)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Certification>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Certification>());
-
-            entity.Property(r => r.Projects)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Project>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Project>());
-
-            entity.Property(r => r.CustomSections)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<CustomSection>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<CustomSection>());
-
-            entity.Property(r => r.TemplateSettings)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<TemplateSettings>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new TemplateSettings());
-
-            entity.Property(r => r.SectionOrder)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<SectionOrder>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new SectionOrder());
+            entity.Property(r => r.TargetRole).HasMaxLength(300);
+            entity.HasIndex(r => r.BaseResumeId);
         });
+
+        modelBuilder.Entity<CoverLetter>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(200);
+            entity.Property(c => c.SelectedTemplateId).HasMaxLength(50);
+            entity.Property(c => c.RecipientName).HasMaxLength(200);
+            entity.Property(c => c.RecipientTitle).HasMaxLength(200);
+            entity.Property(c => c.CompanyName).HasMaxLength(200);
+            entity.Property(c => c.CompanyAddress).HasMaxLength(500);
+            entity.Property(c => c.Subject).HasMaxLength(300);
+            entity.Property(c => c.Salutation).HasMaxLength(200);
+            entity.Property(c => c.Closing).HasMaxLength(100);
+            entity.Property(c => c.RowVersion).IsConcurrencyToken();
+
+            entity.OwnsOne(c => c.PersonalInfo);
+
+            entity.JsonList(c => c.Paragraphs);
+            entity.JsonObject(c => c.TemplateSettings);
+
+            entity.HasIndex(c => c.ResumeId);
+        });
+    }
+}
+
+internal static class JsonPropertyBuilderExtensions
+{
+    private static readonly JsonSerializerOptions Options = new();
+
+    public static void JsonList<TEntity, TItem>(
+        this EntityTypeBuilder<TEntity> entity,
+        Expression<Func<TEntity, List<TItem>>> property)
+        where TEntity : class
+    {
+        entity.Property(property)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, Options),
+                v => JsonSerializer.Deserialize<List<TItem>>(v, Options) ?? new List<TItem>(),
+                new ValueComparer<List<TItem>>(
+                    (a, b) => JsonSerializer.Serialize(a, Options) == JsonSerializer.Serialize(b, Options),
+                    v => JsonSerializer.Serialize(v, Options).GetHashCode(),
+                    v => JsonSerializer.Deserialize<List<TItem>>(JsonSerializer.Serialize(v, Options), Options)!));
+    }
+
+    public static void JsonObject<TEntity, TValue>(
+        this EntityTypeBuilder<TEntity> entity,
+        Expression<Func<TEntity, TValue>> property)
+        where TEntity : class
+        where TValue : class, new()
+    {
+        entity.Property(property)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, Options),
+                v => JsonSerializer.Deserialize<TValue>(v, Options) ?? new TValue(),
+                new ValueComparer<TValue>(
+                    (a, b) => JsonSerializer.Serialize(a, Options) == JsonSerializer.Serialize(b, Options),
+                    v => JsonSerializer.Serialize(v, Options).GetHashCode(),
+                    v => JsonSerializer.Deserialize<TValue>(JsonSerializer.Serialize(v, Options), Options)!));
     }
 }

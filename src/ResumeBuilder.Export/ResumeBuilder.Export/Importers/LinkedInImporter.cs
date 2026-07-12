@@ -102,7 +102,7 @@ public class LinkedInImporter : IImporter
                 Description = p.Description ?? "",
                 StartDate = ParseLinkedInDate(p.StartedOn),
                 EndDate = ParseLinkedInDate(p.FinishedOn),
-                IsCurrentRole = string.IsNullOrWhiteSpace(p.FinishedOn)
+                IsCurrentRole = IsOngoingMarker(p.FinishedOn)
             }).ToList();
 
             if (!positions.Any())
@@ -118,7 +118,7 @@ public class LinkedInImporter : IImporter
                 Description = e.Notes ?? "",
                 StartDate = ParseLinkedInDate(e.StartDate),
                 EndDate = ParseLinkedInDate(e.EndDate),
-                IsCurrentlyStudying = string.IsNullOrWhiteSpace(e.EndDate)
+                IsCurrentlyStudying = IsOngoingMarker(e.EndDate)
             }).ToList();
 
             if (!education.Any())
@@ -167,7 +167,7 @@ public class LinkedInImporter : IImporter
                 Url = p.Url ?? "",
                 StartDate = ParseLinkedInDate(p.StartedOn),
                 EndDate = ParseLinkedInDate(p.FinishedOn),
-                IsOngoing = string.IsNullOrWhiteSpace(p.FinishedOn)
+                IsOngoing = IsOngoingMarker(p.FinishedOn)
             }).ToList();
 
             // Set resume name
@@ -235,9 +235,25 @@ public class LinkedInImporter : IImporter
         }
     }
 
-    private static DateTime? ParseLinkedInDate(string? dateStr)
+    /// <summary>
+    /// True only when the export explicitly says the entry is still running. A blank "Finished On"
+    /// means LinkedIn had no end date on file, not that the role is current.
+    /// </summary>
+    private static bool IsOngoingMarker(string? dateStr)
     {
         if (string.IsNullOrWhiteSpace(dateStr))
+            return false;
+
+        return dateStr.Trim().ToLowerInvariant() switch
+        {
+            "present" or "current" or "now" or "ongoing" or "to date" => true,
+            _ => false
+        };
+    }
+
+    private static DateTime? ParseLinkedInDate(string? dateStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateStr) || IsOngoingMarker(dateStr))
             return null;
 
         // LinkedIn uses various date formats: "Jan 2020", "2020", "01/2020", etc.

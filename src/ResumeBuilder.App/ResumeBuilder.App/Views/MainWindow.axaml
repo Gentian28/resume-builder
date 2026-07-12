@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ResumeBuilder.App.ViewModels"
+        xmlns:models="using:ResumeBuilder.Core.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
@@ -16,6 +17,10 @@
         <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}"/>
         <KeyBinding Gesture="Ctrl+Shift+Z" Command="{Binding RedoCommand}"/>
         <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCurrentResumeCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}"/>
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenResumeListCommand}"/>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding CreateNewResumeCommand}"/>
+        <KeyBinding Gesture="Ctrl+T" Command="{Binding ToggleThemeCommand}"/>
     </Window.KeyBindings>
 
     <Design.DataContext>
@@ -26,9 +31,13 @@
         <!-- Menu Bar -->
         <Menu Grid.Row="0">
             <MenuItem Header="_File">
-                <MenuItem Header="_New Resume" Command="{Binding CreateNewResumeCommand}"/>
-                <MenuItem Header="_Open..." Command="{Binding Path=ShowResumeList, Mode=OneWayToSource}" CommandParameter="True"/>
-                <MenuItem Header="_Save" Command="{Binding SaveCurrentResumeCommand}"/>
+                <MenuItem Header="_New Resume" Command="{Binding CreateNewResumeCommand}" InputGesture="Ctrl+N"/>
+                <MenuItem Header="_Open..." Command="{Binding OpenResumeListCommand}" InputGesture="Ctrl+O"/>
+                <MenuItem Header="_Save" Command="{Binding SaveCurrentResumeCommand}" InputGesture="Ctrl+S"/>
+                <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
+                <Separator/>
+                <MenuItem Header="New _Cover Letter" Command="{Binding NewCoverLetterCommand}"/>
+                <MenuItem Header="Cover _Letters..." Command="{Binding OpenCoverLetterListCommand}"/>
                 <Separator/>
                 <MenuItem Header="_Undo" Command="{Binding UndoCommand}"
                           InputGesture="Ctrl+Z"
@@ -86,14 +95,18 @@
                     <MenuItem Header="Suggest Skills" Command="{Binding SuggestAiSkillsCommand}"
                               IsEnabled="{Binding IsAiConfigured}"/>
                 </MenuItem>
-                <MenuItem Header="Keyword Optimizer">
-                    <MenuItem Header="Show Keyword Panel" Click="ToggleKeywordPanel_Click"/>
-                    <MenuItem Header="Analyze Keywords" Command="{Binding AnalyzeKeywordsCommand}"/>
-                    <MenuItem Header="Clear Analysis" Command="{Binding ClearKeywordAnalysisCommand}"/>
+                <MenuItem Header="Tailor to Job">
+                    <MenuItem Header="Show Tailor Panel" Click="ToggleTailorPanel_Click"/>
+                    <MenuItem Header="Tailor to Job" Command="{Binding TailorToJobCommand}"/>
+                    <MenuItem Header="Apply Accepted Rewrites" Command="{Binding ApplyAcceptedEditsCommand}"/>
+                    <MenuItem Header="Save as Variant for This Job" Command="{Binding SaveAsVariantCommand}"/>
+                    <MenuItem Header="Clear Analysis" Command="{Binding ClearTailoringCommand}"/>
                 </MenuItem>
                 <MenuItem Header="Sync">
                     <MenuItem Header="Show Sync Panel" Click="ToggleSyncPanel_Click"/>
                     <Separator/>
+                    <MenuItem Header="Sync All Resumes" Command="{Binding SyncAllCommand}"
+                              IsEnabled="{Binding IsSyncConfigured}"/>
                     <MenuItem Header="Sync Current Resume" Command="{Binding SyncCurrentResumeCommand}"
                               IsEnabled="{Binding IsSyncConfigured}"/>
                     <MenuItem Header="Refresh Remote List" Command="{Binding RefreshRemoteResumesCommand}"
@@ -106,6 +119,9 @@
                 <MenuItem Header="Reset Zoom" Command="{Binding ZoomResetCommand}"/>
                 <Separator/>
                 <MenuItem Header="Theme">
+                    <MenuItem Header="Toggle Light/Dark" Command="{Binding ToggleThemeCommand}"
+                              InputGesture="Ctrl+T"/>
+                    <Separator/>
                     <MenuItem Header="Light" Command="{Binding SetLightThemeCommand}"/>
                     <MenuItem Header="Dark" Command="{Binding SetDarkThemeCommand}"/>
                     <MenuItem Header="System" Command="{Binding SetSystemThemeCommand}"/>
@@ -125,20 +141,44 @@
                         <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
                                 CornerRadius="8" Padding="15" IsVisible="{Binding ShowAiPanel}">
                             <StackPanel Spacing="10">
-                                <Grid ColumnDefinitions="*,Auto">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
                                     <TextBlock Text="AI Assistant" FontWeight="SemiBold" FontSize="14"/>
-                                    <Button Grid.Column="1" Content="X" Padding="4,0"
+                                    <Border Grid.Column="1" Background="#3316a34a" CornerRadius="8"
+                                            Padding="6,1" Margin="8,0,0,0"
+                                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                                            IsVisible="{Binding IsAiLocal}">
+                                        <TextBlock Text="Local" FontSize="10"/>
+                                    </Border>
+                                    <Button Grid.Column="2" Content="X" Padding="4,0"
                                             Click="ToggleAiPanel_Click"/>
                                 </Grid>
 
-                                <!-- API Key Configuration -->
-                                <StackPanel Spacing="5" IsVisible="{Binding !IsAiConfigured}">
-                                    <TextBlock Text="Enter your OpenAI API key to enable AI features:"
+                                <!-- Endpoint Configuration -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Endpoint" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Any OpenAI-compatible server works: OpenAI itself, or a local LLM such as Ollama or LM Studio."
                                                FontSize="11" Opacity="0.7" TextWrapping="Wrap"/>
-                                    <TextBox Watermark="sk-..." Text="{Binding AiApiKey}"
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Button Content="Use OpenAI" Padding="8,3" FontSize="11"
+                                                Command="{Binding UseOpenAiEndpointCommand}"/>
+                                        <Button Content="Use local LLM" Padding="8,3" FontSize="11"
+                                                Command="{Binding UseLocalAiEndpointCommand}"/>
+                                    </StackPanel>
+                                    <TextBox Watermark="Base URL (e.g. https://api.openai.com/v1)"
+                                             Text="{Binding AiBaseUrl}"/>
+                                    <TextBox Watermark="Model (e.g. gpt-4o-mini, llama3)"
+                                             Text="{Binding AiModel}"/>
+                                    <TextBox Watermark="API key (not needed for a local endpoint)"
+                                             Text="{Binding AiApiKey}"
                                              PasswordChar="*"/>
-                                    <TextBlock Text="Key is stored locally and sent directly to OpenAI."
-                                               FontSize="10" Opacity="0.5"/>
+                                    <Button Content="Apply endpoint settings"
+                                            Command="{Binding ApplyAiSettingsCommand}"
+                                            HorizontalAlignment="Left"/>
+                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            CornerRadius="4" Padding="8">
+                                        <TextBlock Text="{Binding AiPrivacyNotice}"
+                                                   FontSize="11" Opacity="0.85" TextWrapping="Wrap"/>
+                                    </Border>
                                 </StackPanel>
 
                                 <!-- AI Features (when configured) -->
@@ -214,18 +254,21 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Keyword Optimization Panel -->
+                        <!-- Tailor to Job Panel -->
                         <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
-                                CornerRadius="8" Padding="15" IsVisible="{Binding ShowKeywordPanel}">
+                                CornerRadius="8" Padding="15" IsVisible="{Binding ShowTailorPanel}">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Keyword Optimizer" FontWeight="SemiBold" FontSize="14"/>
+                                    <TextBlock Text="Tailor to Job" FontWeight="SemiBold" FontSize="14"/>
                                     <Button Grid.Column="1" Content="X" Padding="4,0"
-                                            Click="ToggleKeywordPanel_Click"/>
+                                            Click="ToggleTailorPanel_Click"/>
                                 </Grid>
 
-                                <TextBlock Text="Paste a job description to analyze keyword match:"
+                                <TextBlock Text="Paste the job description. You get a keyword match, and - when AI is configured - proposed rewrites you can accept one by one."
                                            FontSize="11" Opacity="0.7" TextWrapping="Wrap"/>
+
+                                <TextBox Text="{Binding TargetRoleText}"
+                                         Watermark="Target role (e.g. Senior Backend Engineer)"/>
 
                                 <TextBox Text="{Binding JobDescriptionText}"
                                          AcceptsReturn="True"
@@ -234,9 +277,69 @@
                                          MinHeight="100"
                                          MaxHeight="150"/>
 
-                                <Button Content="Analyze Keywords"
-                                        Command="{Binding AnalyzeKeywordsCommand}"
-                                        HorizontalAlignment="Left"/>
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <Button Content="Tailor"
+                                            Command="{Binding TailorToJobCommand}"
+                                            IsEnabled="{Binding !IsTailoring}"/>
+                                    <Button Content="Save as variant for this job"
+                                            Command="{Binding SaveAsVariantCommand}"
+                                            ToolTip.Tip="Branches this resume into a variant tailored for this posting"/>
+                                </StackPanel>
+
+                                <ProgressBar IsIndeterminate="True" Height="4"
+                                             IsVisible="{Binding IsTailoring}"/>
+
+                                <!-- AI status (never blocks the keyword analysis below) -->
+                                <Border Background="#33FFA500" CornerRadius="4" Padding="8"
+                                        IsVisible="{Binding TailorAiError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                    <TextBlock Text="{Binding TailorAiError}"
+                                               FontSize="11" TextWrapping="Wrap"/>
+                                </Border>
+
+                                <!-- Proposed rewrites -->
+                                <StackPanel Spacing="8" IsVisible="{Binding HasTailoredEdits}">
+                                    <TextBlock Text="Proposed rewrites" FontWeight="SemiBold" FontSize="12"/>
+                                    <ItemsControl ItemsSource="{Binding TailoredEdits}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:TailoredEditViewModel">
+                                                <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                        CornerRadius="4" Padding="10" Margin="0,3">
+                                                    <StackPanel Spacing="6">
+                                                        <Grid ColumnDefinitions="Auto,*">
+                                                            <CheckBox Grid.Column="0" IsChecked="{Binding Accepted}"
+                                                                      VerticalAlignment="Center"
+                                                                      ToolTip.Tip="Accept this rewrite"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding TargetDescription}"
+                                                                       FontWeight="SemiBold" FontSize="12"
+                                                                       TextWrapping="Wrap"
+                                                                       VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                        <Grid ColumnDefinitions="*,8,*">
+                                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                                <TextBlock Text="Original" FontSize="10" Opacity="0.6"/>
+                                                                <TextBlock Text="{Binding Original}" FontSize="11"
+                                                                           TextWrapping="Wrap"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2" Spacing="2">
+                                                                <TextBlock Text="Proposed" FontSize="10" Opacity="0.6"/>
+                                                                <TextBlock Text="{Binding Proposed}" FontSize="11"
+                                                                           TextWrapping="Wrap"
+                                                                           Foreground="{DynamicResource SystemAccentColor}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding Rationale}" FontSize="10"
+                                                                   Opacity="0.7" TextWrapping="Wrap"
+                                                                   IsVisible="{Binding Rationale, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Content="Apply accepted"
+                                            Command="{Binding ApplyAcceptedEditsCommand}"
+                                            ToolTip.Tip="Applies the ticked rewrites; Ctrl+Z reverts them"
+                                            HorizontalAlignment="Left"/>
+                                </StackPanel>
 
                                 <!-- Results (when available) -->
                                 <StackPanel Spacing="10" IsVisible="{Binding HasKeywordAnalysis}">
@@ -330,8 +433,31 @@
                                         </ItemsControl>
                                     </Expander>
 
+                                    <!-- Suggested Skills -->
+                                    <Expander Header="Suggested Skills"
+                                              IsVisible="{Binding TailorSuggestedSkills.Count}">
+                                        <StackPanel Spacing="4" Margin="0,5,0,0">
+                                            <TextBlock Text="Click to add as a skill:" FontSize="11" Opacity="0.7"/>
+                                            <ItemsControl ItemsSource="{Binding TailorSuggestedSkills}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="{Binding}"
+                                                                Margin="0,0,4,4" Padding="8,4" FontSize="11"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).AddMissingKeywordAsSkillCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Expander>
+
                                     <Button Content="Clear Analysis"
-                                            Command="{Binding ClearKeywordAnalysisCommand}"
+                                            Command="{Binding ClearTailoringCommand}"
                                             HorizontalAlignment="Left"/>
                                 </StackPanel>
                             </StackPanel>
@@ -347,7 +473,7 @@
                                             Click="ToggleSyncPanel_Click"/>
                                 </Grid>
 
-                                <TextBlock Text="Sync your resumes to a local folder (can be a cloud-synced folder like Dropbox, OneDrive, or Google Drive)."
+                                <TextBlock Text="Two-way sync with a local folder (which can itself be a cloud-synced folder like Dropbox, OneDrive, or Google Drive). Newer changes are copied in both directions."
                                            FontSize="11" Opacity="0.7" TextWrapping="Wrap"/>
 
                                 <!-- Configuration -->
@@ -360,6 +486,10 @@
                                                 Command="{Binding BrowseSyncFolderCommand}"
                                                 Margin="5,0,0,0"/>
                                     </Grid>
+                                    <TextBlock Text="When both sides changed:" FontSize="12" Margin="0,5,0,0"/>
+                                    <ComboBox ItemsSource="{Binding ConflictResolutions}"
+                                              SelectedItem="{Binding SelectedConflictResolution}"
+                                              HorizontalAlignment="Stretch"/>
                                     <Button Content="Configure Sync"
                                             Command="{Binding ConfigureSyncCommand}"
                                             HorizontalAlignment="Left"/>
@@ -372,7 +502,14 @@
                                         <Grid ColumnDefinitions="*,Auto">
                                             <TextBlock Text="Status:" FontWeight="SemiBold"/>
                                             <TextBlock Grid.Column="1" Text="{Binding SyncStatusText}"
-                                                       Opacity="0.8"/>
+                                                       Opacity="0.8" TextWrapping="Wrap"/>
+                                        </Grid>
+                                        <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasSyncResult}">
+                                            <TextBlock Text="{Binding SyncUploadedCount, StringFormat='Uploaded: {0}'}"
+                                                       FontSize="11" Opacity="0.8"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding SyncDownloadedCount, StringFormat='Downloaded: {0}'}"
+                                                       FontSize="11" Opacity="0.8"/>
                                         </Grid>
                                         <ProgressBar IsIndeterminate="True"
                                                      IsVisible="{Binding IsSyncing}"
@@ -380,10 +517,33 @@
                                     </StackPanel>
                                 </Border>
 
+                                <!-- Conflicts -->
+                                <Border Background="#33FFA500" CornerRadius="4" Padding="10"
+                                        IsVisible="{Binding SyncConflicts.Count}">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Conflicts" FontWeight="SemiBold" FontSize="12"/>
+                                        <TextBlock Text="These resumes changed on both sides. The losing version was kept next to the winner as a .conflict.json file in the sync folder."
+                                                   FontSize="11" Opacity="0.8" TextWrapping="Wrap"/>
+                                        <ItemsControl ItemsSource="{Binding SyncConflicts}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:SyncConflictViewModel">
+                                                    <StackPanel Margin="0,4,0,0">
+                                                        <TextBlock Text="{Binding ResumeName}" FontSize="12" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding Detail}" FontSize="11" Opacity="0.7"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+
                                 <!-- Sync Actions (when configured) -->
                                 <StackPanel Spacing="10" IsVisible="{Binding IsSyncConfigured}">
                                     <StackPanel Orientation="Horizontal" Spacing="5">
-                                        <Button Content="Sync Current Resume"
+                                        <Button Content="Sync All"
+                                                Command="{Binding SyncAllCommand}"
+                                                IsEnabled="{Binding !IsSyncing}"/>
+                                        <Button Content="Sync Current"
                                                 Command="{Binding SyncCurrentResumeCommand}"
                                                 IsEnabled="{Binding !IsSyncing}"/>
                                         <Button Content="Refresh"
@@ -427,6 +587,24 @@
                                             </ItemsControl>
                                         </StackPanel>
                                     </Expander>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Resume Name -->
+                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Resume Name" FontWeight="SemiBold" FontSize="14"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SaveStateText}"
+                                               FontSize="11" Opacity="0.7" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBox Watermark="Untitled Resume" Text="{Binding ResumeName}"/>
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <Button Content="Save" Command="{Binding SaveCurrentResumeCommand}"/>
+                                    <Button Content="Save As..." Command="{Binding SaveAsCommand}"/>
+                                    <Button Content="Open..." Command="{Binding OpenResumeListCommand}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -588,7 +766,7 @@
                                 </Grid>
 
                                 <StackPanel Spacing="5" IsVisible="{Binding ShowSectionOrderPanel}">
-                                    <TextBlock Text="Drag sections to reorder, toggle visibility"
+                                    <TextBlock Text="Use the arrows to reorder sections; untick one to hide it"
                                                FontSize="11" Opacity="0.6" Margin="0,0,0,5"/>
                                     <ItemsControl ItemsSource="{Binding Sections}">
                                         <ItemsControl.ItemTemplate>
@@ -808,21 +986,21 @@
                                                     <TextBox Watermark="Location" Text="{Binding Location}"/>
                                                     <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
                                                         <ComboBox Grid.Column="0" Width="70"
-                                                                  ItemsSource="{x:Static vm:ExperienceViewModel.Months}"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
                                                                   SelectedItem="{Binding StartMonthName}"
                                                                   PlaceholderText="Month"/>
                                                         <ComboBox Grid.Column="2" Width="80"
-                                                                  ItemsSource="{x:Static vm:ExperienceViewModel.Years}"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
                                                                   SelectedItem="{Binding StartYear}"
                                                                   PlaceholderText="Year"/>
                                                         <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
                                                         <ComboBox Grid.Column="4" Width="70"
-                                                                  ItemsSource="{x:Static vm:ExperienceViewModel.Months}"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
                                                                   SelectedItem="{Binding EndMonthName}"
                                                                   IsEnabled="{Binding !IsCurrentRole}"
                                                                   PlaceholderText="Month"/>
-                                                        <ComboBox Grid.Column="5" Width="80"
-                                                                  ItemsSource="{x:Static vm:ExperienceViewModel.Years}"
+                                                        <ComboBox Grid.Column="6" Width="80"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
                                                                   SelectedItem="{Binding EndYear}"
                                                                   IsEnabled="{Binding !IsCurrentRole}"
                                                                   PlaceholderText="Year"/>
@@ -871,17 +1049,23 @@
                                                     </Grid>
                                                     <TextBox Watermark="Field of Study" Text="{Binding FieldOfStudy}"/>
                                                     <TextBox Watermark="Institution" Text="{Binding Institution}"/>
-                                                    <Grid ColumnDefinitions="Auto,20,Auto">
+                                                    <TextBox Watermark="Location" Text="{Binding Location}"/>
+                                                    <Grid ColumnDefinitions="Auto,20,Auto,10,*">
                                                         <ComboBox Grid.Column="0" Width="80"
-                                                                  ItemsSource="{x:Static vm:EducationViewModel.Years}"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
                                                                   SelectedItem="{Binding StartYear}"
                                                                   PlaceholderText="Start Year"/>
                                                         <ComboBox Grid.Column="2" Width="80"
-                                                                  ItemsSource="{x:Static vm:EducationViewModel.Years}"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
                                                                   SelectedItem="{Binding EndYear}"
+                                                                  IsEnabled="{Binding !IsCurrentlyStudying}"
                                                                   PlaceholderText="End Year"/>
+                                                        <CheckBox Grid.Column="4" Content="Currently studying"
+                                                                  IsChecked="{Binding IsCurrentlyStudying}"/>
                                                     </Grid>
                                                     <TextBox Watermark="Grade/GPA" Text="{Binding Grade}"/>
+                                                    <TextBox Watermark="Description" Text="{Binding Description}"
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -901,18 +1085,22 @@
                                 <ItemsControl ItemsSource="{Binding Skills}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SkillViewModel">
-                                            <Grid ColumnDefinitions="*,10,*,Auto,Auto,Auto" Margin="0,3">
+                                            <Grid ColumnDefinitions="*,10,*,10,Auto,Auto,Auto,Auto" Margin="0,3">
                                                 <TextBox Grid.Column="0" Watermark="Skill Name" Text="{Binding Name}"/>
                                                 <TextBox Grid.Column="2" Watermark="Category" Text="{Binding Category}"/>
-                                                <Button Grid.Column="3" Content="^" Width="28" Margin="5,0,0,0"
+                                                <ComboBox Grid.Column="4" Width="120"
+                                                          ToolTip.Tip="Proficiency level"
+                                                          ItemsSource="{x:Static vm:SkillViewModel.AvailableLevels}"
+                                                          SelectedItem="{Binding Level}"/>
+                                                <Button Grid.Column="5" Content="^" Width="28" Margin="5,0,0,0"
                                                         ToolTip.Tip="Move Up"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSkillUpCommand}"
                                                         CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="4" Content="v" Width="28" Margin="2,0,0,0"
+                                                <Button Grid.Column="6" Content="v" Width="28" Margin="2,0,0,0"
                                                         ToolTip.Tip="Move Down"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSkillDownCommand}"
                                                         CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="5" Content="X" Margin="5,0,0,0"
+                                                <Button Grid.Column="7" Content="X" Margin="5,0,0,0"
                                                         ToolTip.Tip="Remove"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveSkillCommand}"
                                                         CommandParameter="{Binding}"/>
@@ -990,8 +1178,32 @@
                                                     </Grid>
                                                     <TextBox Watermark="Description" Text="{Binding Description}"
                                                              AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+                                                    <TextBox Watermark="Highlights (one per line)" Text="{Binding Highlights}"
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
                                                     <TextBox Watermark="Technologies (comma separated)" Text="{Binding Technologies}"/>
                                                     <TextBox Watermark="URL" Text="{Binding Url}"/>
+                                                    <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
+                                                        <ComboBox Grid.Column="0" Width="70"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                  SelectedItem="{Binding StartMonthName}"
+                                                                  PlaceholderText="Month"/>
+                                                        <ComboBox Grid.Column="2" Width="80"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding StartYear}"
+                                                                  PlaceholderText="Year"/>
+                                                        <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
+                                                        <ComboBox Grid.Column="4" Width="70"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                  SelectedItem="{Binding EndMonthName}"
+                                                                  IsEnabled="{Binding !IsOngoing}"
+                                                                  PlaceholderText="Month"/>
+                                                        <ComboBox Grid.Column="6" Width="80"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding EndYear}"
+                                                                  IsEnabled="{Binding !IsOngoing}"
+                                                                  PlaceholderText="Year"/>
+                                                        <CheckBox Grid.Column="8" Content="Ongoing" IsChecked="{Binding IsOngoing}"/>
+                                                    </Grid>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -1011,22 +1223,133 @@
                                 <ItemsControl ItemsSource="{Binding Certifications}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:CertificationViewModel">
-                                            <Grid ColumnDefinitions="*,10,*,Auto,Auto,Auto" Margin="0,3">
-                                                <TextBox Grid.Column="0" Watermark="Certification Name" Text="{Binding Name}"/>
-                                                <TextBox Grid.Column="2" Watermark="Issuing Organization" Text="{Binding IssuingOrganization}"/>
-                                                <Button Grid.Column="3" Content="^" Width="28" Margin="5,0,0,0"
-                                                        ToolTip.Tip="Move Up"
-                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveCertificationUpCommand}"
-                                                        CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="4" Content="v" Width="28" Margin="2,0,0,0"
-                                                        ToolTip.Tip="Move Down"
-                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveCertificationDownCommand}"
-                                                        CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="5" Content="X" Margin="5,0,0,0"
-                                                        ToolTip.Tip="Remove"
-                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCertificationCommand}"
-                                                        CommandParameter="{Binding}"/>
-                                            </Grid>
+                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                    CornerRadius="4" Padding="10" Margin="0,5">
+                                                <StackPanel Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                                        <TextBox Grid.Column="0" Watermark="Certification Name" Text="{Binding Name}"/>
+                                                        <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Move Up"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveCertificationUpCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Grid.Column="2" Content="v" Width="28" Margin="2,0,0,0"
+                                                                ToolTip.Tip="Move Down"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveCertificationDownCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Grid.Column="3" Content="X" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Remove"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCertificationCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </Grid>
+                                                    <TextBox Watermark="Issuing Organization" Text="{Binding IssuingOrganization}"/>
+                                                    <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
+                                                        <ComboBox Grid.Column="0" Width="70"
+                                                                  ToolTip.Tip="Issued"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                  SelectedItem="{Binding IssueMonthName}"
+                                                                  PlaceholderText="Month"/>
+                                                        <ComboBox Grid.Column="2" Width="80"
+                                                                  ToolTip.Tip="Issued"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding IssueYear}"
+                                                                  PlaceholderText="Year"/>
+                                                        <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
+                                                        <ComboBox Grid.Column="4" Width="70"
+                                                                  ToolTip.Tip="Expires"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                  SelectedItem="{Binding ExpirationMonthName}"
+                                                                  IsEnabled="{Binding !DoesNotExpire}"
+                                                                  PlaceholderText="Month"/>
+                                                        <ComboBox Grid.Column="6" Width="80"
+                                                                  ToolTip.Tip="Expires"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding ExpirationYear}"
+                                                                  IsEnabled="{Binding !DoesNotExpire}"
+                                                                  PlaceholderText="Year"/>
+                                                        <CheckBox Grid.Column="8" Content="No expiry"
+                                                                  IsChecked="{Binding DoesNotExpire}"/>
+                                                    </Grid>
+                                                    <Grid ColumnDefinitions="*,10,*">
+                                                        <TextBox Grid.Column="0" Watermark="Credential ID" Text="{Binding CredentialId}"/>
+                                                        <TextBox Grid.Column="2" Watermark="Credential URL" Text="{Binding CredentialUrl}"/>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Custom Sections -->
+                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Custom Sections" FontWeight="SemiBold" FontSize="14"/>
+                                    <Button Grid.Column="1" Content="+ Add Section" Command="{Binding AddCustomSectionCommand}"/>
+                                </Grid>
+                                <TextBlock Text="Anything the standard sections do not cover: publications, awards, volunteering..."
+                                           FontSize="11" Opacity="0.6"/>
+                                <ItemsControl ItemsSource="{Binding CustomSections}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:CustomSectionViewModel">
+                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                    CornerRadius="4" Padding="10" Margin="0,5">
+                                                <StackPanel Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBox Grid.Column="0" Watermark="Section Title" Text="{Binding Title}"/>
+                                                        <Button Grid.Column="1" Content="X" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Remove section"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCustomSectionCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </Grid>
+
+                                                    <ItemsControl ItemsSource="{Binding Items}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:CustomSectionItemViewModel">
+                                                                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                                                                        CornerRadius="4" Padding="8" Margin="0,4">
+                                                                    <StackPanel Spacing="6">
+                                                                        <Grid ColumnDefinitions="*,Auto">
+                                                                            <TextBox Grid.Column="0" Watermark="Item Title" Text="{Binding Title}"/>
+                                                                            <Button Grid.Column="1" Content="X" Margin="5,0,0,0"
+                                                                                    ToolTip.Tip="Remove item"
+                                                                                    Command="{Binding $parent[ItemsControl].((vm:CustomSectionViewModel)DataContext).RemoveItemCommand}"
+                                                                                    CommandParameter="{Binding}"/>
+                                                                        </Grid>
+                                                                        <TextBox Watermark="Subtitle" Text="{Binding Subtitle}"/>
+                                                                        <TextBox Watermark="Description" Text="{Binding Description}"
+                                                                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50"/>
+                                                                        <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto">
+                                                                            <ComboBox Grid.Column="0" Width="70"
+                                                                                      ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                                      SelectedItem="{Binding StartMonthName}"
+                                                                                      PlaceholderText="Month"/>
+                                                                            <ComboBox Grid.Column="2" Width="80"
+                                                                                      ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                                      SelectedItem="{Binding StartYear}"
+                                                                                      PlaceholderText="Year"/>
+                                                                            <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
+                                                                            <ComboBox Grid.Column="4" Width="70"
+                                                                                      ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                                      SelectedItem="{Binding EndMonthName}"
+                                                                                      PlaceholderText="Month"/>
+                                                                            <ComboBox Grid.Column="6" Width="80"
+                                                                                      ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                                      SelectedItem="{Binding EndYear}"
+                                                                                      PlaceholderText="Year"/>
+                                                                        </Grid>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <Button Content="+ Add Item" HorizontalAlignment="Left"
+                                                            Command="{Binding AddItemCommand}"/>
+                                                </StackPanel>
+                                            </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -1104,9 +1427,14 @@
         <!-- Status Bar -->
         <Border Grid.Row="2" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
                 Padding="10,5">
-            <Grid ColumnDefinitions="*,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto">
                 <TextBlock Text="{Binding StatusMessage}" FontSize="12"/>
-                <TextBlock Grid.Column="1" Text="{Binding SelectedTemplate.Name, StringFormat='Template: {0}'}"
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="10,0">
+                    <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                             Fill="#f59e0b" IsVisible="{Binding IsDirty}"/>
+                    <TextBlock Text="{Binding SaveStateText}" FontSize="12" Opacity="0.8"/>
+                </StackPanel>
+                <TextBlock Grid.Column="2" Text="{Binding SelectedTemplate.Name, StringFormat='Template: {0}'}"
                            FontSize="12" Opacity="0.7"/>
             </Grid>
         </Border>
@@ -1159,12 +1487,26 @@
                     <ScrollViewer Grid.Row="1">
                         <ItemsControl ItemsSource="{Binding SavedResumes}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="models:Resume">
                                     <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                                            CornerRadius="8" Padding="15" Margin="0,5">
+                                            CornerRadius="8" Padding="15"
+                                            Margin="{Binding IsVariant, Converter={x:Static vm:MainWindowViewModel.VariantIndentConverter}}"
+                                            BorderBrush="{DynamicResource SystemAccentColor}"
+                                            BorderThickness="{Binding IsVariant, Converter={x:Static vm:MainWindowViewModel.VariantBorderConverter}}">
                                         <Grid ColumnDefinitions="*,Auto">
                                             <StackPanel Grid.Column="0" Spacing="3">
-                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Border Background="#332563eb" CornerRadius="8" Padding="6,1"
+                                                            VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsVariant}">
+                                                        <TextBlock Text="Variant" FontSize="10"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding TargetRole, StringFormat='Tailored for: {0}'}"
+                                                           FontSize="11" Opacity="0.8"
+                                                           IsVisible="{Binding TargetRole, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                                 <TextBlock Text="{Binding PersonalInfo.FullName}" FontSize="12" Opacity="0.7"/>
                                                 <TextBlock Text="{Binding UpdatedAt, StringFormat='Last updated: {0:g}'}"
                                                            FontSize="11" Opacity="0.5"/>
@@ -1172,6 +1514,9 @@
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
                                                 <Button Content="Open"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).LoadResumeCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Content="Duplicate"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DuplicateResumeCommand}"
                                                         CommandParameter="{Binding}"/>
                                                 <Button Content="Delete"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DeleteResumeCommand}"
@@ -1185,8 +1530,182 @@
                     </ScrollViewer>
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" Spacing="10">
-                        <Button Content="New Resume" Command="{Binding CreateNewResumeCommand}" Click="CloseResumeList_Click"/>
-                        <Button Content="Cancel" Click="CloseResumeList_Click"/>
+                        <Button Content="New Resume" Command="{Binding CreateNewResumeCommand}"/>
+                        <Button Content="Cancel" Command="{Binding CloseResumeListCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- Cover Letter Editor Overlay -->
+        <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowCoverLetterEditor}">
+            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                    CornerRadius="12" Margin="40" Padding="20">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Cover Letter" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding LetterSaveStateText}" FontSize="12" Opacity="0.7"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
+                            <Button Content="Draft with AI"
+                                    Command="{Binding DraftCoverLetterWithAiCommand}"
+                                    IsEnabled="{Binding !IsDraftingLetter}"
+                                    ToolTip.Tip="Works without an API key: falls back to a draft built from your resume"/>
+                            <Button Content="Save" Command="{Binding SaveCoverLetterCommand}"/>
+                            <SplitButton Content="Export PDF"
+                                         Command="{Binding ExportCoverLetterCommand}" CommandParameter="PDF">
+                                <SplitButton.Flyout>
+                                    <MenuFlyout>
+                                        <MenuItem Header="PDF" Command="{Binding ExportCoverLetterCommand}" CommandParameter="PDF"/>
+                                        <MenuItem Header="Word (DOCX)" Command="{Binding ExportCoverLetterCommand}" CommandParameter="DOCX"/>
+                                        <MenuItem Header="Plain Text" Command="{Binding ExportCoverLetterCommand}" CommandParameter="TEXT"/>
+                                    </MenuFlyout>
+                                </SplitButton.Flyout>
+                            </SplitButton>
+                            <Button Content="Close" Command="{Binding CloseCoverLetterEditorCommand}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="420,*">
+                        <!-- Letter Editor -->
+                        <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto" Margin="0,0,15,0">
+                            <StackPanel Spacing="10">
+                                <ProgressBar IsIndeterminate="True" Height="4"
+                                             IsVisible="{Binding IsDraftingLetter}"/>
+
+                                <TextBox Watermark="Letter name" Text="{Binding LetterName}"/>
+
+                                <TextBlock Text="Recipient" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
+                                <Grid ColumnDefinitions="*,10,*">
+                                    <TextBox Grid.Column="0" Watermark="Recipient name"
+                                             Text="{Binding LetterRecipientName}"/>
+                                    <TextBox Grid.Column="2" Watermark="Recipient title"
+                                             Text="{Binding LetterRecipientTitle}"/>
+                                </Grid>
+                                <TextBox Watermark="Company" Text="{Binding LetterCompanyName}"/>
+                                <TextBox Watermark="Company address"
+                                         Text="{Binding LetterCompanyAddress}"
+                                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50"/>
+
+                                <TextBlock Text="Letter" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
+                                <DatePicker SelectedDate="{Binding LetterDate}" HorizontalAlignment="Stretch"/>
+                                <TextBox Watermark="Subject" Text="{Binding LetterSubject}"/>
+                                <TextBox Watermark="{Binding LetterSalutationPlaceholder}"
+                                         Text="{Binding LetterSalutation}"
+                                         ToolTip.Tip="Leave empty to use the fallback shown here"/>
+
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
+                                    <TextBlock Text="Body Paragraphs" FontWeight="SemiBold" FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Content="+ Add"
+                                            Command="{Binding AddLetterParagraphCommand}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding LetterParagraphs}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LetterParagraphViewModel">
+                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                    CornerRadius="4" Padding="8" Margin="0,3">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBox Grid.Column="0" Text="{Binding Text}"
+                                                             AcceptsReturn="True" TextWrapping="Wrap"
+                                                             MinHeight="70"
+                                                             Watermark="Paragraph text..."/>
+                                                    <StackPanel Grid.Column="1" Spacing="2" Margin="5,0,0,0">
+                                                        <Button Content="^" Width="28" Height="28" Padding="0"
+                                                                ToolTip.Tip="Move Up"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLetterParagraphUpCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Content="v" Width="28" Height="28" Padding="0"
+                                                                ToolTip.Tip="Move Down"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLetterParagraphDownCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Content="X" Width="28" Height="28" Padding="0"
+                                                                ToolTip.Tip="Remove"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveLetterParagraphCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBox Watermark="Closing (e.g. Sincerely,)" Text="{Binding LetterClosing}"/>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Letter Preview -->
+                        <Border Grid.Column="1" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                CornerRadius="8">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding LetterPreviewPages}" HorizontalAlignment="Center">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="20,10" Background="White" BoxShadow="0 4 20 0 #40000000">
+                                                <Image Source="{Binding}"
+                                                       Stretch="Uniform"
+                                                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Grid.Row="2" Margin="0,15,0,0" FontSize="11" Opacity="0.6"
+                               Text="The letter inherits the sender block and styling of the resume it was created from."/>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- Cover Letter List Overlay -->
+        <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowCoverLetterList}">
+            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                    CornerRadius="12" Margin="100" Padding="20" MaxWidth="600">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Row="0" Text="Your Cover Letters" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                    <ScrollViewer Grid.Row="1">
+                        <StackPanel>
+                            <TextBlock Text="No cover letters yet - create one from the current resume."
+                                       FontSize="12" Opacity="0.6"
+                                       IsVisible="{Binding !CoverLetters.Count}"/>
+                            <ItemsControl ItemsSource="{Binding CoverLetters}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:CoverLetter">
+                                        <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                CornerRadius="8" Padding="15" Margin="0,5">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Grid.Column="0" Spacing="3">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding CompanyName}" FontSize="12" Opacity="0.7"
+                                                               IsVisible="{Binding CompanyName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                    <TextBlock Text="{Binding UpdatedAt, StringFormat='Last updated: {0:g}'}"
+                                                               FontSize="11" Opacity="0.5"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
+                                                    <Button Content="Open"
+                                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).LoadCoverLetterCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Content="Delete"
+                                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DeleteCoverLetterCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" Spacing="10">
+                        <Button Content="New Cover Letter" Command="{Binding NewCoverLetterCommand}"/>
+                        <Button Content="Cancel" Command="{Binding CloseCoverLetterListCommand}"/>
                     </StackPanel>
                 </Grid>
             </Border>

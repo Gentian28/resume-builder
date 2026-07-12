@@ -1,0 +1,46 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup Label="UI">
+    <PackageVersion Include="Avalonia" Version="11.3.10" />
+    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="11.3.10" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.3.10" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.10" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.10" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.10" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <!-- Pinned directly: Avalonia.Desktop pulls in 0.21.2 transitively (Linux D-Bus transport),
+         which carries GHSA-xrw6-gwf8-vvr9. 0.21.3 is the patch for that line. -->
+    <PackageVersion Include="Tmds.DBus.Protocol" Version="0.21.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Persistence">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+    <!-- Pinned directly: EF Core 8.0.11 pulls in 2.1.6 transitively, which carries the
+         GHSA-2m69-gcr7-jv3q advisory. -->
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Documents">
+    <PackageVersion Include="CsvHelper" Version="33.1.0" />
+    <PackageVersion Include="DocumentFormat.OpenXml" Version="3.3.0" />
+    <PackageVersion Include="PdfPig" Version="0.1.13" />
+    <PackageVersion Include="QuestPDF" Version="2025.12.1" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.1" />
+    <PackageVersion Include="WeCantSpell.Hunspell" Version="7.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing">
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="FluentAssertions" Version="8.8.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+</Project>

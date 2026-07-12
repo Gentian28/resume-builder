@@ -31,100 +31,136 @@ public class AcademicTemplate : BaseTemplate
         {
             column.Spacing(SectionSpacing);
 
-            // Header
-            column.Item().Element(c => ComposeHeader(c, resume.PersonalInfo));
-
-            // Education first (important for academics)
-            if (resume.EducationList.Any())
+            foreach (var sectionType in GetOrderedSections())
             {
-                column.Item().Element(c => ComposeSection(c, "EDUCATION", ct =>
-                {
-                    foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
-                    {
-                        ct.Item().Element(e => ComposeEducation(e, edu));
-                        ct.Item().Height(10);
-                    }
-                }));
-            }
+                if (!ShouldRenderSection(sectionType, resume))
+                    continue;
 
-            // Research/Professional Experience
-            if (resume.Experiences.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "RESEARCH & PROFESSIONAL EXPERIENCE", ct =>
+                switch (sectionType)
                 {
-                    foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
-                    {
-                        ct.Item().Element(e => ComposeExperience(e, exp));
-                        ct.Item().Height(10);
-                    }
-                }));
-            }
+                    case SectionType.PersonalInfo:
+                        column.Item().Element(c => ComposeHeader(c, resume.PersonalInfo));
+                        break;
 
-            // Projects (as Research Projects/Publications)
-            if (resume.Projects.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "RESEARCH PROJECTS", ct =>
-                {
-                    foreach (var proj in resume.Projects.OrderBy(p => p.Order))
-                    {
-                        ct.Item().Element(e => ComposeProject(e, proj));
-                        ct.Item().Height(8);
-                    }
-                }));
-            }
-
-            // Skills (as Areas of Expertise)
-            if (resume.Skills.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "AREAS OF EXPERTISE", ct =>
-                {
-                    var grouped = resume.Skills.GroupBy(s => s.Category).ToList();
-
-                    foreach (var group in grouped)
-                    {
-                        ct.Item().Row(row =>
+                    case SectionType.Summary:
+                        column.Item().Element(c => ComposeSection(c, "RESEARCH STATEMENT", ct =>
                         {
-                            if (!string.IsNullOrWhiteSpace(group.Key))
+                            ct.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing);
+                        }));
+                        break;
+
+                    case SectionType.Education:
+                        column.Item().Element(c => ComposeSection(c, "EDUCATION", ct =>
+                        {
+                            foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
-                                row.ConstantItem(120).Text(group.Key + ":").Bold().FontSize(10 * FontSizeScale);
+                                ct.Item().Element(e => ComposeEducation(e, edu));
+                                ct.Item().Height(10);
                             }
-                            row.RelativeItem().Text(string.Join(", ", group.Select(s => s.Name))).FontSize(10 * FontSizeScale);
-                        });
-                    }
-                }));
-            }
+                        }));
+                        break;
 
-            // Certifications (as Honors & Awards)
-            if (resume.Certifications.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "HONORS, AWARDS & CERTIFICATIONS", ct =>
-                {
-                    foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
-                    {
-                        ct.Item().Row(row =>
+                    case SectionType.Experience:
+                        column.Item().Element(c => ComposeSection(c, "RESEARCH & PROFESSIONAL EXPERIENCE", ct =>
                         {
-                            row.AutoItem().MinWidth(60).Text(cert.IssueDate?.ToString("yyyy") ?? "").FontSize(10 * FontSizeScale);
-                            row.RelativeItem().Text(text =>
+                            foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
-                                text.DefaultTextStyle(x => x.FontSize(10 * FontSizeScale));
-                                text.Span(cert.Name).Bold();
-                                if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
-                                    text.Span($", {cert.IssuingOrganization}");
-                            });
-                        });
-                    }
-                }));
-            }
+                                ct.Item().Element(e => ComposeExperience(e, exp));
+                                ct.Item().Height(10);
+                            }
+                        }));
+                        break;
 
-            // Languages
-            if (resume.Languages.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "LANGUAGES", ct =>
-                {
-                    ct.Item().Text(string.Join("; ", resume.Languages.OrderBy(l => l.Order)
-                        .Select(l => $"{l.Name} ({GetLanguageProficiencyText(l.Proficiency)})"))).FontSize(10 * FontSizeScale);
-                }));
+                    case SectionType.Projects:
+                        column.Item().Element(c => ComposeSection(c, "RESEARCH PROJECTS", ct =>
+                        {
+                            foreach (var proj in resume.Projects.OrderBy(p => p.Order))
+                            {
+                                ct.Item().Element(e => ComposeProject(e, proj));
+                                ct.Item().Height(8);
+                            }
+                        }));
+                        break;
+
+                    case SectionType.Skills:
+                        column.Item().Element(c => ComposeSection(c, "AREAS OF EXPERTISE", ct =>
+                        {
+                            foreach (var group in resume.Skills.GroupBy(s => s.Category))
+                            {
+                                ct.Item().Row(row =>
+                                {
+                                    if (!string.IsNullOrWhiteSpace(group.Key))
+                                    {
+                                        row.ConstantItem(120).Text(group.Key + ":").Bold().FontSize(10 * FontSizeScale);
+                                    }
+                                    row.RelativeItem().Text(string.Join(", ", group.OrderBy(s => s.Order).Select(s => s.Name)))
+                                        .FontSize(10 * FontSizeScale);
+                                });
+                            }
+                        }));
+                        break;
+
+                    case SectionType.Certifications:
+                        column.Item().Element(c => ComposeSection(c, "HONORS, AWARDS & CERTIFICATIONS", ct =>
+                        {
+                            foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
+                            {
+                                ct.Item().Row(row =>
+                                {
+                                    row.AutoItem().MinWidth(60).Text(ResumeDateFormat.Year(cert.IssueDate)).FontSize(10 * FontSizeScale);
+                                    row.RelativeItem().Text(text =>
+                                    {
+                                        text.DefaultTextStyle(x => x.FontSize(10 * FontSizeScale));
+                                        text.Span(cert.Name).Bold();
+                                        if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
+                                            text.Span($", {cert.IssuingOrganization}");
+                                    });
+                                });
+                            }
+                        }));
+                        break;
+
+                    case SectionType.Languages:
+                        column.Item().Element(c => ComposeSection(c, "LANGUAGES", ct =>
+                        {
+                            ct.Item().Text(string.Join("; ", resume.Languages.OrderBy(l => l.Order)
+                                .Select(l => $"{l.Name} ({GetLanguageProficiencyText(l.Proficiency)})"))).FontSize(10 * FontSizeScale);
+                        }));
+                        break;
+
+                    case SectionType.CustomSections:
+                        foreach (var custom in GetVisibleCustomSections(resume))
+                        {
+                            column.Item().Element(c => ComposeSection(c, custom.Title.ToUpper(), ct =>
+                            {
+                                foreach (var item in custom.Items.OrderBy(i => i.Order))
+                                {
+                                    ct.Item().PaddingBottom(6).Element(e => ComposeCustomItem(e, item));
+                                }
+                            }));
+                        }
+                        break;
+                }
             }
+        });
+    }
+
+    private void ComposeCustomItem(IContainer container, CustomSectionItem item)
+    {
+        container.Row(row =>
+        {
+            row.AutoItem().MinWidth(80).Text(FormatCustomItemDateRange(item)).FontSize(10 * FontSizeScale);
+
+            row.RelativeItem().Column(col =>
+            {
+                col.Item().Text(item.Title).Bold().FontSize(10 * FontSizeScale);
+
+                if (!string.IsNullOrWhiteSpace(item.Subtitle))
+                    col.Item().Text(item.Subtitle).FontSize(10 * FontSizeScale);
+
+                if (!string.IsNullOrWhiteSpace(item.Description))
+                    col.Item().PaddingTop(2).Text(item.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
+            });
         });
     }
 
@@ -159,8 +195,13 @@ public class AcademicTemplate : BaseTemplate
             if (contacts.Any())
                 column.Item().AlignCenter().Text(string.Join("  |  ", contacts)).FontSize(10 * FontSizeScale);
 
-            if (!string.IsNullOrWhiteSpace(info.Website))
-                column.Item().AlignCenter().Text(info.Website).FontSize(10 * FontSizeScale);
+            var links = new List<string>();
+            if (!string.IsNullOrWhiteSpace(info.Website)) links.Add(info.Website);
+            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) links.Add(FormatLinkedInDisplay(info.LinkedIn));
+            if (!string.IsNullOrWhiteSpace(info.GitHub)) links.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
+
+            if (links.Any())
+                column.Item().AlignCenter().Text(string.Join("  |  ", links)).FontSize(10 * FontSizeScale);
 
             column.Item().Height(8);
             column.Item().LineHorizontal(1).LineColor(Colors.Black);
@@ -239,21 +280,13 @@ public class AcademicTemplate : BaseTemplate
 
                 if (exp.Achievements.Any())
                 {
-                    col.Item().PaddingTop(3).Column(achCol =>
-                    {
-                        foreach (var ach in exp.Achievements)
-                        {
-                            achCol.Item().Row(achRow =>
-                            {
-                                achRow.AutoItem().Text("• ").FontSize(9 * FontSizeScale);
-                                achRow.RelativeItem().Text(ach).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
-                            });
-                        }
-                    });
+                    col.Item().PaddingTop(3).Element(c => ComposeBulletList(c, exp.Achievements, Entry));
                 }
             });
         });
     }
+
+    private static readonly EntryStyle Entry = new();
 
     private void ComposeProject(IContainer container, Project proj)
     {
@@ -275,6 +308,20 @@ public class AcademicTemplate : BaseTemplate
                 if (!string.IsNullOrWhiteSpace(proj.Description))
                 {
                     col.Item().Text(proj.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
+                }
+
+                if (!string.IsNullOrWhiteSpace(proj.Url))
+                {
+                    col.Item().Text(proj.Url).FontSize(9 * FontSizeScale).Italic();
+                }
+
+                if (proj.Technologies.Any())
+                {
+                    col.Item().PaddingTop(2).Text(text =>
+                    {
+                        text.Span("Methods & tools: ").Bold().FontSize(9 * FontSizeScale);
+                        text.Span(string.Join(", ", proj.Technologies)).FontSize(9 * FontSizeScale);
+                    });
                 }
 
                 if (proj.Highlights.Any())

@@ -173,7 +173,12 @@ public class CollectionChangeAction<T> : IUndoableAction
         switch (_changeType)
         {
             case CollectionChangeType.Add:
-                _collection.Remove(_item!);
+                // Remove by position, not by value: two equal items (e.g. two blank skills) would
+                // otherwise make Remove(item) delete the wrong one.
+                if (_oldIndex >= 0 && _oldIndex < _collection.Count)
+                    _collection.RemoveAt(_oldIndex);
+                else
+                    _collection.Remove(_item!);
                 break;
 
             case CollectionChangeType.Remove:

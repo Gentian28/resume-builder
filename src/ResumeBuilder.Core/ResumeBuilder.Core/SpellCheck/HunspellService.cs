@@ -5,9 +5,10 @@ namespace ResumeBuilder.Core.SpellCheck;
 
 public class HunspellService : ISpellChecker, IDisposable
 {
+    private readonly HashSet<string> _personalDictionary = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _personalDictionaryLock = new();
+    private readonly string _dictionaryPath;
     private WordList? _dictionary;
-    private HashSet<string> _personalDictionary = new(StringComparer.OrdinalIgnoreCase);
-    private string _dictionaryPath;
     private bool _disposed;
 
     public bool IsInitialized => _dictionary != null;
@@ -21,7 +22,23 @@ public class HunspellService : ISpellChecker, IDisposable
             "Dictionaries");
     }
 
-    public async Task InitializeAsync(string language = "en_US")
+    private const string FallbackLanguage = "en_US";
+
+    /// <summary>Languages with a known LibreOffice dictionary. Anything else falls back to en_US.</summary>
+    public static IReadOnlyDictionary<string, string> SupportedLanguages { get; } =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["en_US"] = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/en/en_US",
+            ["en_GB"] = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/en/en_GB",
+            ["de_DE"] = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/de/de_DE_frami",
+            ["fr_FR"] = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/fr_FR/fr",
+            ["es_ES"] = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/es/es_ES",
+            ["it_IT"] = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/it_IT/it_IT",
+            ["pt_PT"] = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/pt_PT/pt_PT",
+            ["nl_NL"] = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/nl_NL/nl_NL"
+        };
+
+    public async Task InitializeAsync(string language = FallbackLanguage)
     {
         if (_disposed) throw new ObjectDisposedException(nameof(HunspellService));
 
@@ -29,19 +46,23 @@ public class HunspellService : ISpellChecker, IDisposable
         {
             Directory.CreateDirectory(_dictionaryPath);
 
-            var dicPath = Path.Combine(_dictionaryPath, $"{language}.dic");
-            var affPath = Path.Combine(_dictionaryPath, $"{language}.aff");
+            // Resolve the fallback up front. Previously the download silently fell back to en_US
+            // filenames while this method kept looking for the requested language's files, so an
+            // unsupported language downloaded a dictionary and then never loaded it.
+            var resolved = SupportedLanguages.ContainsKey(language) ? language : FallbackLanguage;
 
-            // Download dictionaries if not present
+            var dicPath = Path.Combine(_dictionaryPath, $"{resolved}.dic");
+            var affPath = Path.Combine(_dictionaryPath, $"{resolved}.aff");
+
             if (!File.Exists(dicPath) || !File.Exists(affPath))
             {
-                await DownloadDictionaryAsync(language);
+                await DownloadDictionaryAsync(resolved);
             }
 
             if (File.Exists(dicPath) && File.Exists(affPath))
             {
                 _dictionary = WordList.CreateFromFiles(dicPath, affPath);
-                CurrentLanguage = language;
+                CurrentLanguage = resolved;
                 LoadPersonalDictionary();
             }
         }
@@ -54,34 +75,18 @@ public class HunspellService : ISpellChecker, IDisposable
 
     private async Task DownloadDictionaryAsync(string language)
     {
-        // Dictionary URLs from LibreOffice dictionaries
-        var baseUrl = language switch
-        {
-            "en_US" => "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/en/en_US",
-            "en_GB" => "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/en/en_GB",
-            "de_DE" => "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/de/de_DE_frami",
-            "fr_FR" => "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/fr_FR/fr",
-            "es_ES" => "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/es/es_ES",
-            _ => null
-        };
-
-        if (baseUrl == null)
-        {
-            // Fall back to en_US
-            baseUrl = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/en/en_US";
-            language = "en_US";
-        }
+        var baseUrl = SupportedLanguages.TryGetValue(language, out var url)
+            ? url
+            : SupportedLanguages[FallbackLanguage];
 
         using var httpClient = new HttpClient();
         httpClient.Timeout = TimeSpan.FromSeconds(30);
 
         try
         {
-            // Download .dic file
             var dicContent = await httpClient.GetByteArrayAsync($"{baseUrl}.dic");
             await File.WriteAllBytesAsync(Path.Combine(_dictionaryPath, $"{language}.dic"), dicContent);
 
-            // Download .aff file
             var affContent = await httpClient.GetByteArrayAsync($"{baseUrl}.aff");
             await File.WriteAllBytesAsync(Path.Combine(_dictionaryPath, $"{language}.aff"), affContent);
         }
@@ -98,8 +103,11 @@ public class HunspellService : ISpellChecker, IDisposable
             return true;
 
         // Skip if in personal dictionary
-        if (_personalDictionary.Contains(word))
-            return true;
+        lock (_personalDictionaryLock)
+        {
+            if (_personalDictionary.Contains(word))
+                return true;
+        }
 
         // Skip numbers, emails, URLs
         if (IsSpecialWord(word))
@@ -158,18 +166,22 @@ public class HunspellService : ISpellChecker, IDisposable
 
         foreach (Match match in matches)
         {
+            // Trimming apostrophes shifts the word, so the reported offset has to shift with it —
+            // otherwise the caller underlines (or replaces) the wrong span of text.
             var word = match.Value;
-
-            // Skip words with apostrophes at weird positions
+            var leadingQuotes = word.Length - word.TrimStart('\'').Length;
             word = word.Trim('\'');
+
+            if (word.Length == 0)
+                continue;
 
             if (!Check(word))
             {
                 result.MisspelledWords.Add(new MisspelledWord
                 {
                     Word = word,
-                    StartIndex = match.Index,
-                    Length = match.Length,
+                    StartIndex = match.Index + leadingQuotes,
+                    Length = word.Length,
                     Suggestions = Suggest(word).ToList()
                 });
             }
@@ -183,17 +195,43 @@ public class HunspellService : ISpellChecker, IDisposable
         if (string.IsNullOrWhiteSpace(word))
             return;
 
-        _personalDictionary.Add(word);
-        SavePersonalDictionary();
+        lock (_personalDictionaryLock)
+        {
+            // Merge with whatever is on disk first, so a second instance's additions aren't lost.
+            foreach (var existing in ReadPersonalDictionary())
+            {
+                _personalDictionary.Add(existing);
+            }
+
+            _personalDictionary.Add(word.Trim());
+            SavePersonalDictionary();
+        }
     }
 
     private void LoadPersonalDictionary()
     {
-        var personalDicPath = Path.Combine(_dictionaryPath, "personal.dic");
-        if (File.Exists(personalDicPath))
+        lock (_personalDictionaryLock)
         {
-            var words = File.ReadAllLines(personalDicPath);
-            _personalDictionary = new HashSet<string>(words, StringComparer.OrdinalIgnoreCase);
+            foreach (var word in ReadPersonalDictionary())
+            {
+                _personalDictionary.Add(word);
+            }
+        }
+    }
+
+    private IEnumerable<string> ReadPersonalDictionary()
+    {
+        var personalDicPath = Path.Combine(_dictionaryPath, "personal.dic");
+        if (!File.Exists(personalDicPath))
+            return Enumerable.Empty<string>();
+
+        try
+        {
+            return File.ReadAllLines(personalDicPath).Where(w => !string.IsNullOrWhiteSpace(w));
+        }
+        catch (IOException)
+        {
+            return Enumerable.Empty<string>();
         }
     }
 
@@ -201,12 +239,13 @@ public class HunspellService : ISpellChecker, IDisposable
     {
         try
         {
+            Directory.CreateDirectory(_dictionaryPath);
             var personalDicPath = Path.Combine(_dictionaryPath, "personal.dic");
-            File.WriteAllLines(personalDicPath, _personalDictionary);
+            File.WriteAllLines(personalDicPath, _personalDictionary.OrderBy(w => w, StringComparer.OrdinalIgnoreCase));
         }
-        catch
+        catch (IOException)
         {
-            // Ignore save errors
+            // Ignore save errors - the personal dictionary is a convenience, not required state.
         }
     }
 

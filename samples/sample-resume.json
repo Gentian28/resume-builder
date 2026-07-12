@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Jane Doe",
+    "label": "Software Engineer",
+    "email": "jane.doe@example.com",
+    "phone": "+1 555 0100",
+    "url": "https://example.com",
+    "summary": "Software engineer with 8 years of experience building web and data platforms across the full stack. Leads small teams, designs service architectures, and ships products in fintech and SaaS.",
+    "location": {
+      "city": "Springfield",
+      "countryCode": "US",
+      "region": "Illinois"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "jane-doe",
+        "url": "https://www.linkedin.com/in/jane-doe/"
+      },
+      {
+        "network": "GitHub",
+        "username": "janedoe",
+        "url": "https://github.com/janedoe"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Northwind Systems",
+      "position": "Senior Software Engineer",
+      "startDate": "2022-03",
+      "summary": "Data platform team, ingesting and normalizing feeds from 150+ partners daily.",
+      "highlights": [
+        "Rewrote the ingestion pipeline, cutting end-to-end processing from 18 hours to under 5 minutes",
+        "Introduced schema validation that caught malformed partner feeds before they reached production",
+        "Mentored three engineers through their first year on the team"
+      ],
+      "location": "Springfield, IL"
+    },
+    {
+      "name": "Contoso Digital",
+      "position": "Software Engineer",
+      "startDate": "2019-01",
+      "endDate": "2022-02",
+      "summary": "Payments and integrations for a consumer marketplace.",
+      "highlights": [
+        "Split a payments monolith into services, removing deploy-time downtime",
+        "Built a shared caching library adopted by four teams",
+        "Designed a notification service fronting three third-party SMS providers"
+      ],
+      "location": "Chicago, IL"
+    },
+    {
+      "name": "Initech",
+      "position": "Junior Developer",
+      "startDate": "2017-06",
+      "endDate": "2018-12",
+      "summary": "Internal tooling and reporting for an enterprise leasing product.",
+      "highlights": [
+        "Added index maintenance jobs where no maintenance strategy had existed",
+        "Automated monthly report generation and delivery"
+      ],
+      "location": "Chicago, IL"
+    }
+  ],
+  "education": [
+    {
+      "institution": "State University",
+      "area": "Computer Science",
+      "studyType": "Bachelor of Science",
+      "startDate": "2013-09",
+      "endDate": "2017-05"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Backend",
+      "level": "Expert",
+      "keywords": ["C#", ".NET", "ASP.NET Core", "Entity Framework"]
+    },
+    {
+      "name": "Cloud & Data",
+      "level": "Advanced",
+      "keywords": ["AWS", "Docker", "PostgreSQL", "CI/CD"]
+    },
+    {
+      "name": "Frontend",
+      "level": "Intermediate",
+      "keywords": ["TypeScript", "React", "HTML", "CSS"]
+    }
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "fluency": "Native speaker"
+    },
+    {
+      "language": "Spanish",
+      "fluency": "Professional working proficiency"
+    }
+  ],
+  "certificates": [
+    {
+      "name": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "date": "2023-04"
+    }
+  ],
+  "meta": {
+    "version": "v1.0.0",
+    "lastModified": "2026-01-01"
+  }
+}

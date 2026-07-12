@@ -10,35 +10,44 @@ namespace ResumeBuilder.App.Services;
 
 public class AppServices
 {
-    public ResumeDbContext DbContext { get; }
     public IResumeRepository Repository { get; }
+    public ICoverLetterRepository CoverLetterRepository { get; }
     public TemplateRegistry TemplateRegistry { get; }
     public ExportService ExportService { get; }
+    public CoverLetterExportService CoverLetterExportService { get; }
     public ThemeService ThemeService { get; }
     public ISpellChecker SpellChecker { get; }
     public UndoRedoManager UndoRedoManager { get; }
     public IAiService AiService { get; }
     public ISyncService SyncService { get; }
+    public JobTailoringService TailoringService { get; }
+    public CoverLetterService CoverLetterService { get; }
 
     public AppServices(
-        ResumeDbContext dbContext,
         IResumeRepository repository,
+        ICoverLetterRepository coverLetterRepository,
         TemplateRegistry templateRegistry,
         ExportService exportService,
+        CoverLetterExportService coverLetterExportService,
         ThemeService themeService,
         ISpellChecker spellChecker,
         UndoRedoManager undoRedoManager,
         IAiService aiService,
-        ISyncService syncService)
+        ISyncService syncService,
+        JobTailoringService tailoringService,
+        CoverLetterService coverLetterService)
     {
-        DbContext = dbContext;
         Repository = repository;
+        CoverLetterRepository = coverLetterRepository;
         TemplateRegistry = templateRegistry;
         ExportService = exportService;
+        CoverLetterExportService = coverLetterExportService;
         ThemeService = themeService;
         SpellChecker = spellChecker;
         UndoRedoManager = undoRedoManager;
         AiService = aiService;
         SyncService = syncService;
+        TailoringService = tailoringService;
+        CoverLetterService = coverLetterService;
     }
 }

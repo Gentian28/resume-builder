@@ -99,7 +99,7 @@ public class MinimalTemplate : BaseTemplate
                                     if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
                                         text.Span($"  /  {cert.IssuingOrganization}");
                                     if (cert.IssueDate.HasValue)
-                                        text.Span($"  /  {cert.IssueDate.Value:yyyy}").FontColor(Colors.Grey.Darken1);
+                                        text.Span($"  /  {ResumeDateFormat.Year(cert.IssueDate)}").FontColor(Colors.Grey.Darken1);
                                 });
                             }
                         }));
@@ -114,6 +114,14 @@ public class MinimalTemplate : BaseTemplate
                                 ct.Item().Height(12);
                             }
                         }));
+                        break;
+
+                    case SectionType.CustomSections:
+                        foreach (var custom in GetVisibleCustomSections(resume))
+                        {
+                            column.Item().Element(c => ComposeSection(c, custom.Title, ct =>
+                                ComposeCustomSectionItems(ct, custom, 11, 9)));
+                        }
                         break;
                 }
             }

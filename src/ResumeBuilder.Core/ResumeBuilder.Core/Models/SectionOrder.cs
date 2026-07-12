@@ -9,12 +9,14 @@ public enum SectionType
     Skills,
     Languages,
     Certifications,
-    Projects
+    Projects,
+    CustomSections
 }
 
 public class SectionOrder
 {
-    public List<SectionType> OrderedSections { get; set; } = new()
+    /// <summary>Every section in its canonical order — the seed for new resumes and the source for repair.</summary>
+    public static readonly IReadOnlyList<SectionType> AllSections = new[]
     {
         SectionType.PersonalInfo,
         SectionType.Summary,
@@ -23,20 +25,14 @@ public class SectionOrder
         SectionType.Skills,
         SectionType.Languages,
         SectionType.Certifications,
-        SectionType.Projects
+        SectionType.Projects,
+        SectionType.CustomSections
     };
 
-    public Dictionary<SectionType, bool> Visibility { get; set; } = new()
-    {
-        { SectionType.PersonalInfo, true },
-        { SectionType.Summary, true },
-        { SectionType.Experience, true },
-        { SectionType.Education, true },
-        { SectionType.Skills, true },
-        { SectionType.Languages, true },
-        { SectionType.Certifications, true },
-        { SectionType.Projects, true }
-    };
+    public List<SectionType> OrderedSections { get; set; } = AllSections.ToList();
+
+    public Dictionary<SectionType, bool> Visibility { get; set; } =
+        AllSections.ToDictionary(s => s, _ => true);
 
     public bool IsSectionVisible(SectionType section)
     {
@@ -59,6 +55,29 @@ public class SectionOrder
         OrderedSections.Insert(toIndex, section);
     }
 
+    /// <summary>
+    /// Adds any section missing from a persisted order (e.g. one introduced after the resume was
+    /// saved) and drops duplicates, so older data still renders every section.
+    /// </summary>
+    public void EnsureAllSectionsPresent()
+    {
+        var seen = new HashSet<SectionType>();
+        OrderedSections = OrderedSections.Where(s => Enum.IsDefined(s) && seen.Add(s)).ToList();
+
+        foreach (var section in AllSections)
+        {
+            if (seen.Add(section))
+            {
+                OrderedSections.Add(section);
+            }
+
+            if (!Visibility.ContainsKey(section))
+            {
+                Visibility[section] = true;
+            }
+        }
+    }
+
     public static SectionOrder Default => new();
 
     public static string GetSectionDisplayName(SectionType section) => section switch
@@ -71,6 +90,7 @@ public class SectionOrder
         SectionType.Languages => "Languages",
         SectionType.Certifications => "Certifications",
         SectionType.Projects => "Projects",
+        SectionType.CustomSections => "Custom Sections",
         _ => section.ToString()
     };
 }

@@ -82,7 +82,8 @@ public class InfographicTemplate : BaseTemplate
                     if (!string.IsNullOrWhiteSpace(info.Email)) contacts.Add(info.Email);
                     if (!string.IsNullOrWhiteSpace(info.Phone)) contacts.Add(info.Phone);
                     if (!string.IsNullOrWhiteSpace(info.Location)) contacts.Add(info.Location);
-                    if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(info.LinkedIn);
+                    if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(FormatLinkedInDisplay(info.LinkedIn));
+                    if (!string.IsNullOrWhiteSpace(info.GitHub)) contacts.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
                     if (!string.IsNullOrWhiteSpace(info.Website)) contacts.Add(info.Website);
 
                     nameCol.Item().Text(string.Join("  |  ", contacts))
@@ -161,6 +162,14 @@ public class InfographicTemplate : BaseTemplate
                             ct.Item().Element(e => ComposeProject(e, project));
                     }));
                     break;
+
+                case SectionType.CustomSections:
+                    foreach (var custom in GetVisibleCustomSections(resume))
+                    {
+                        right.Item().Element(c => ComposeTextSection(c, custom.Title.ToUpper(), ct =>
+                            ComposeCustomSectionItems(ct, custom, 10, 8)));
+                    }
+                    break;
             }
         }
     }
@@ -189,7 +198,7 @@ public class InfographicTemplate : BaseTemplate
                 .FontSize(12 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.05f);
             col.Item().Height(8);
 
-            foreach (var skill in skills.OrderBy(s => s.Order).Take(10))
+            foreach (var skill in skills.OrderBy(s => s.Order))
             {
                 col.Item().PaddingBottom(6).Column(skillCol =>
                 {
@@ -236,12 +245,16 @@ public class InfographicTemplate : BaseTemplate
                     });
                     langCol.Item().Height(3);
 
-                    // Horizontal proficiency bar
+                    // Horizontal proficiency bar. The remainder item is omitted at 100% because
+                    // QuestPDF rejects RelativeItem(0).
                     var pct = GetLanguageProficiencyPercent(lang.Proficiency);
                     langCol.Item().Height(6).Background(lightGrey).Row(bar =>
                     {
-                        bar.RelativeItem(pct).Background(accent);
-                        bar.RelativeItem(100 - pct);
+                        if (pct > 0)
+                            bar.RelativeItem(pct).Background(accent);
+
+                        if (pct < 100)
+                            bar.RelativeItem(100 - pct);
                     });
                 });
             }
@@ -279,7 +292,7 @@ public class InfographicTemplate : BaseTemplate
                         if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
                             cardCol.Item().Text(cert.IssuingOrganization).FontSize(8 * FontSizeScale).FontColor(accent);
                         if (cert.IssueDate.HasValue)
-                            cardCol.Item().Text(cert.IssueDate.Value.ToString("MMM yyyy"))
+                            cardCol.Item().Text(ResumeDateFormat.MonthYear(cert.IssueDate))
                                 .FontSize(7 * FontSizeScale).FontColor(Colors.Grey.Darken1);
                     });
             }

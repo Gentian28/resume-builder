@@ -15,7 +15,6 @@ using ResumeBuilder.Core.UndoRedo;
 using ResumeBuilder.Data;
 using ResumeBuilder.Templates;
 using ResumeBuilder.Export;
-using Microsoft.EntityFrameworkCore;
 
 namespace ResumeBuilder.App;
 
@@ -35,22 +34,37 @@ public partial class App : Application
             DisableAvaloniaDataAnnotationValidation();
 
             // Initialize services
-            var dbContext = new ResumeDbContext();
-            dbContext.Database.EnsureCreated();
+            var contextFactory = ResumeDbContextFactory.CreateInitialized();
 
-            var repository = new ResumeRepository(dbContext);
+            var repository = new ResumeRepository(contextFactory);
+            var coverLetterRepository = new CoverLetterRepository(contextFactory);
             var templateRegistry = new TemplateRegistry();
             var exportService = new ExportService(templateRegistry);
+            var coverLetterExportService = new CoverLetterExportService(templateRegistry);
             var themeService = new ThemeService();
             var spellChecker = new HunspellService();
             var undoRedoManager = new UndoRedoManager();
             var aiService = new LocalAiService();
-            var syncService = new LocalFolderSyncService();
+            var syncService = new LocalFolderSyncService(repository, new SyncStateStore());
+            var tailoringService = new JobTailoringService(aiService);
+            var coverLetterService = new CoverLetterService(aiService);
 
             // Apply saved theme preference
             RequestedThemeVariant = themeService.CurrentTheme;
 
-            Services = new AppServices(dbContext, repository, templateRegistry, exportService, themeService, spellChecker, undoRedoManager, aiService, syncService);
+            Services = new AppServices(
+                repository,
+                coverLetterRepository,
+                templateRegistry,
+                exportService,
+                coverLetterExportService,
+                themeService,
+                spellChecker,
+                undoRedoManager,
+                aiService,
+                syncService,
+                tailoringService,
+                coverLetterService);
 
             // Initialize spell checker in background
             _ = spellChecker.InitializeAsync();

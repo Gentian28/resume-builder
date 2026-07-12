@@ -7,7 +7,9 @@ namespace ResumeBuilder.Core.UndoRedo;
 /// </summary>
 public class UndoRedoManager : INotifyPropertyChanged
 {
-    private readonly Stack<IUndoableAction> _undoStack = new();
+    // A linked list rather than a Stack: trimming the oldest entry is O(1) here, where popping the
+    // bottom of a Stack meant rebuilding the whole thing on every push past the limit.
+    private readonly LinkedList<IUndoableAction> _undoStack = new();
     private readonly Stack<IUndoableAction> _redoStack = new();
     private readonly int _maxHistorySize;
     private bool _isExecutingAction;
@@ -27,7 +29,7 @@ public class UndoRedoManager : INotifyPropertyChanged
     public int UndoCount => _undoStack.Count;
     public int RedoCount => _redoStack.Count;
 
-    public string? NextUndoDescription => _undoStack.TryPeek(out var action) ? action.Description : null;
+    public string? NextUndoDescription => _undoStack.First?.Value.Description;
     public string? NextRedoDescription => _redoStack.TryPeek(out var action) ? action.Description : null;
 
     /// <summary>
@@ -48,11 +50,8 @@ public class UndoRedoManager : INotifyPropertyChanged
         {
             _isExecutingAction = true;
             action.Execute();
-            _undoStack.Push(action);
+            PushUndo(action);
             _redoStack.Clear();
-
-            // Trim history if needed
-            TrimHistory();
 
             OnPropertyChanged(nameof(CanUndo));
             OnPropertyChanged(nameof(CanRedo));
@@ -78,9 +77,8 @@ public class UndoRedoManager : INotifyPropertyChanged
         if (_isExecutingAction)
             return;
 
-        _undoStack.Push(action);
+        PushUndo(action);
         _redoStack.Clear();
-        TrimHistory();
 
         OnPropertyChanged(nameof(CanUndo));
         OnPropertyChanged(nameof(CanRedo));
@@ -101,7 +99,8 @@ public class UndoRedoManager : INotifyPropertyChanged
         try
         {
             _isExecutingAction = true;
-            var action = _undoStack.Pop();
+            var action = _undoStack.First!.Value;
+            _undoStack.RemoveFirst();
             action.Undo();
             _redoStack.Push(action);
 
@@ -133,7 +132,7 @@ public class UndoRedoManager : INotifyPropertyChanged
             _isExecutingAction = true;
             var action = _redoStack.Pop();
             action.Execute();
-            _undoStack.Push(action);
+            _undoStack.AddFirst(action);
 
             OnPropertyChanged(nameof(CanUndo));
             OnPropertyChanged(nameof(CanRedo));
@@ -182,16 +181,22 @@ public class UndoRedoManager : INotifyPropertyChanged
         return _redoStack.ToArray();
     }
 
-    private void TrimHistory()
+    /// <summary>
+    /// Adds to the undo history, letting the most recent action absorb this one when it can
+    /// (consecutive keystrokes in one field), and dropping the oldest entry past the limit.
+    /// </summary>
+    private void PushUndo(IUndoableAction action)
     {
+        if (_undoStack.First?.Value is IMergeableAction mergeable && mergeable.TryMerge(action))
+        {
+            return;
+        }
+
+        _undoStack.AddFirst(action);
+
         while (_undoStack.Count > _maxHistorySize)
         {
-            var items = _undoStack.ToArray();
-            _undoStack.Clear();
-            for (int i = 0; i < _maxHistorySize; i++)
-            {
-                _undoStack.Push(items[_maxHistorySize - 1 - i]);
-            }
+            _undoStack.RemoveLast();
         }
     }
 

@@ -19,6 +19,18 @@ public class TechnicalTemplate : BaseTemplate
         DefaultFontFamily = "Consolas"
     };
 
+    // Sections rendered in the left sidebar; everything else goes in the main column.
+    // PersonalInfo appears in both: contact details in the sidebar, name and title in the main header.
+    private static readonly SectionType[] SidebarSections =
+    {
+        SectionType.PersonalInfo,
+        SectionType.Skills,
+        SectionType.Languages,
+        SectionType.Certifications
+    };
+
+    private static readonly SectionType[] MainOnlySections = { SectionType.PersonalInfo };
+
     protected override void ComposeContent(IContainer container, Resume resume)
     {
         container.Row(row =>
@@ -42,225 +54,273 @@ public class TechnicalTemplate : BaseTemplate
     {
         sidebar.Spacing(15);
 
-        // Contact
-        sidebar.Item().Column(col =>
+        foreach (var sectionType in GetOrderedSections())
+        {
+            if (!SidebarSections.Contains(sectionType) || !ShouldRenderSection(sectionType, resume))
+                continue;
+
+            switch (sectionType)
+            {
+                case SectionType.PersonalInfo:
+                    sidebar.Item().Element(c => ComposeContact(c, resume.PersonalInfo));
+                    break;
+
+                case SectionType.Skills:
+                    sidebar.Item().Element(c => ComposeSkillBadges(c, resume.Skills));
+                    break;
+
+                case SectionType.Languages:
+                    sidebar.Item().Column(col =>
+                    {
+                        col.Item().Text("// LANGUAGES").FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                        col.Item().Height(6);
+
+                        foreach (var lang in resume.Languages.OrderBy(l => l.Order))
+                        {
+                            col.Item().Text(FormatLanguage(lang, ": ")).FontSize(8 * FontSizeScale);
+                        }
+                    });
+                    break;
+
+                case SectionType.Certifications:
+                    sidebar.Item().Column(col =>
+                    {
+                        col.Item().Text("// CERTIFICATIONS").FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                        col.Item().Height(6);
+
+                        foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
+                        {
+                            col.Item().PaddingBottom(3).Column(certCol =>
+                            {
+                                certCol.Item().Text(cert.Name).FontSize(8 * FontSizeScale).Bold();
+                                certCol.Item().Text(cert.IssuingOrganization).FontSize(7 * FontSizeScale).FontColor(Colors.Grey.Darken1);
+                            });
+                        }
+                    });
+                    break;
+            }
+        }
+    }
+
+    private void ComposeContact(IContainer container, PersonalInfo info)
+    {
+        container.Column(col =>
         {
             col.Item().Text("// CONTACT").FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
             col.Item().Height(6);
 
-            if (!string.IsNullOrWhiteSpace(resume.PersonalInfo.Email))
-                col.Item().Text(resume.PersonalInfo.Email).FontSize(8 * FontSizeScale);
-            if (!string.IsNullOrWhiteSpace(resume.PersonalInfo.Phone))
-                col.Item().Text(resume.PersonalInfo.Phone).FontSize(8 * FontSizeScale);
-            if (!string.IsNullOrWhiteSpace(resume.PersonalInfo.Location))
-                col.Item().Text(resume.PersonalInfo.Location).FontSize(8 * FontSizeScale);
-            if (!string.IsNullOrWhiteSpace(resume.PersonalInfo.GitHub))
-                col.Item().Text($"github.com/{resume.PersonalInfo.GitHub}").FontSize(8 * FontSizeScale);
-            if (!string.IsNullOrWhiteSpace(resume.PersonalInfo.LinkedIn))
-                col.Item().Text(resume.PersonalInfo.LinkedIn).FontSize(8 * FontSizeScale);
-            if (!string.IsNullOrWhiteSpace(resume.PersonalInfo.Website))
-                col.Item().Text(resume.PersonalInfo.Website).FontSize(8 * FontSizeScale);
+            if (!string.IsNullOrWhiteSpace(info.Email))
+                col.Item().Text(info.Email).FontSize(8 * FontSizeScale);
+            if (!string.IsNullOrWhiteSpace(info.Phone))
+                col.Item().Text(info.Phone).FontSize(8 * FontSizeScale);
+            if (!string.IsNullOrWhiteSpace(info.Location))
+                col.Item().Text(info.Location).FontSize(8 * FontSizeScale);
+            if (!string.IsNullOrWhiteSpace(info.GitHub))
+                col.Item().Text($"github.com/{FormatGitHubDisplay(info.GitHub)}").FontSize(8 * FontSizeScale);
+            if (!string.IsNullOrWhiteSpace(info.LinkedIn))
+                col.Item().Text(FormatLinkedInDisplay(info.LinkedIn)).FontSize(8 * FontSizeScale);
+            if (!string.IsNullOrWhiteSpace(info.Website))
+                col.Item().Text(info.Website).FontSize(8 * FontSizeScale);
         });
+    }
 
-        // Skills with badges
-        if (resume.Skills.Any())
+    private void ComposeSkillBadges(IContainer container, List<Skill> skills)
+    {
+        container.Column(col =>
         {
-            sidebar.Item().Column(col =>
+            col.Item().Text("// TECH STACK").FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+            col.Item().Height(6);
+
+            foreach (var group in skills.GroupBy(s => s.Category))
             {
-                col.Item().Text("// TECH STACK").FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
-                col.Item().Height(6);
-
-                var grouped = resume.Skills.GroupBy(s => s.Category).ToList();
-
-                foreach (var group in grouped)
+                if (!string.IsNullOrWhiteSpace(group.Key))
                 {
-                    if (!string.IsNullOrWhiteSpace(group.Key))
+                    col.Item().PaddingTop(4).Text(group.Key).FontSize(8 * FontSizeScale).Bold();
+                }
+
+                col.Item().PaddingTop(2).Column(badgeCol =>
+                {
+                    foreach (var skill in group.OrderBy(s => s.Order))
                     {
-                        col.Item().PaddingTop(4).Text(group.Key).FontSize(8 * FontSizeScale).Bold();
+                        badgeCol.Item().PaddingBottom(3)
+                            .Background(ParseColor(AccentColor))
+                            .Padding(3)
+                            .Text(skill.Name)
+                            .FontSize(7 * FontSizeScale)
+                            .FontColor(Colors.White);
                     }
-
-                    col.Item().PaddingTop(2).Row(row =>
-                    {
-                        row.Spacing(4);
-                        row.AutoItem().Column(badgeCol =>
-                        {
-                            int count = 0;
-                            foreach (var skill in group)
-                            {
-                                if (count % 2 == 0 && count > 0)
-                                {
-                                    // New row handled by wrapping
-                                }
-
-                                badgeCol.Item().PaddingBottom(3).Container()
-                                    .Background(ParseColor(AccentColor))
-                                    .Padding(3)
-                                    .Text(skill.Name)
-                                    .FontSize(7 * FontSizeScale)
-                                    .FontColor(Colors.White);
-
-                                count++;
-                            }
-                        });
-                    });
-                }
-            });
-        }
-
-        // Languages
-        if (resume.Languages.Any())
-        {
-            sidebar.Item().Column(col =>
-            {
-                col.Item().Text("// LANGUAGES").FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
-                col.Item().Height(6);
-
-                foreach (var lang in resume.Languages.OrderBy(l => l.Order))
-                {
-                    col.Item().Text($"{lang.Name}: {GetLanguageProficiencyText(lang.Proficiency)}").FontSize(8 * FontSizeScale);
-                }
-            });
-        }
-
-        // Certifications
-        if (resume.Certifications.Any())
-        {
-            sidebar.Item().Column(col =>
-            {
-                col.Item().Text("// CERTIFICATIONS").FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
-                col.Item().Height(6);
-
-                foreach (var cert in resume.Certifications.OrderBy(c => c.Order).Take(5))
-                {
-                    col.Item().PaddingBottom(3).Column(certCol =>
-                    {
-                        certCol.Item().Text(cert.Name).FontSize(8 * FontSizeScale).Bold();
-                        certCol.Item().Text(cert.IssuingOrganization).FontSize(7 * FontSizeScale).FontColor(Colors.Grey.Darken1);
-                    });
-                }
-            });
-        }
+                });
+            }
+        });
     }
 
     private void ComposeMainContent(ColumnDescriptor main, Resume resume)
     {
-        // Header
-        main.Item().Column(header =>
+        foreach (var sectionType in GetOrderedSections())
         {
-            header.Item().Text(resume.PersonalInfo.FullName)
-                .FontSize(24 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+            if (!ShouldRenderSection(sectionType, resume))
+                continue;
 
-            if (!string.IsNullOrWhiteSpace(resume.PersonalInfo.JobTitle))
+            if (SidebarSections.Contains(sectionType) && !MainOnlySections.Contains(sectionType))
+                continue;
+
+            switch (sectionType)
             {
-                header.Item().Text($"<{resume.PersonalInfo.JobTitle} />")
-                    .FontSize(12 * FontSizeScale).FontColor(Colors.Grey.Darken2);
+                case SectionType.PersonalInfo:
+                    main.Item().Column(header => ComposeHeaderText(header, resume.PersonalInfo));
+                    break;
+
+                case SectionType.Summary:
+                    main.Item().Column(col =>
+                    {
+                        col.Item().Element(c => ComposeSectionTitle(c, "About"));
+                        col.Item().Height(4);
+                        col.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
+                    });
+                    break;
+
+                case SectionType.Experience:
+                    main.Item().Column(col =>
+                    {
+                        col.Spacing(12);
+                        col.Item().Element(c => ComposeSectionTitle(c, "Experience"));
+
+                        foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
+                        {
+                            col.Item().Element(c => ComposeExperience(c, exp));
+                        }
+                    });
+                    break;
+
+                case SectionType.Projects:
+                    main.Item().Column(col =>
+                    {
+                        col.Spacing(10);
+                        col.Item().Element(c => ComposeSectionTitle(c, "Projects"));
+
+                        foreach (var proj in resume.Projects.OrderBy(p => p.Order))
+                        {
+                            col.Item().Element(c => ComposeProject(c, proj));
+                        }
+                    });
+                    break;
+
+                case SectionType.Education:
+                    main.Item().Column(col =>
+                    {
+                        col.Spacing(8);
+                        col.Item().Element(c => ComposeSectionTitle(c, "Education"));
+
+                        foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
+                        {
+                            col.Item().Row(r =>
+                            {
+                                r.RelativeItem().Column(eduCol =>
+                                {
+                                    eduCol.Item().Text(edu.DegreeWithField).Bold().FontSize(10 * FontSizeScale);
+                                    eduCol.Item().Text(edu.Institution).FontSize(9 * FontSizeScale);
+                                    if (!string.IsNullOrWhiteSpace(edu.Description))
+                                        eduCol.Item().PaddingTop(2).Text(edu.Description).FontSize(8 * FontSizeScale).LineHeight(LineSpacing);
+                                });
+                                r.AutoItem().Text(edu.DateRange).FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
+                            });
+                        }
+                    });
+                    break;
+
+                case SectionType.CustomSections:
+                    foreach (var custom in GetVisibleCustomSections(resume))
+                    {
+                        main.Item().Column(col =>
+                        {
+                            col.Item().Element(c => ComposeSectionTitle(c, custom.Title));
+                            col.Item().Height(4);
+                            col.Item().Column(ct => ComposeCustomSectionItems(ct, custom));
+                        });
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void ComposeSectionTitle(IContainer container, string title)
+    {
+        container.Text($"/* {title} */").FontSize(10 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+    }
+
+    private void ComposeHeaderText(ColumnDescriptor header, PersonalInfo info)
+    {
+        header.Item().Text(info.FullName)
+            .FontSize(24 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+
+        if (!string.IsNullOrWhiteSpace(info.JobTitle))
+        {
+            header.Item().Text($"<{info.JobTitle} />")
+                .FontSize(12 * FontSizeScale).FontColor(Colors.Grey.Darken2);
+        }
+    }
+
+    private void ComposeExperience(IContainer container, Experience exp)
+    {
+        container.Column(expCol =>
+        {
+            expCol.Item().Row(r =>
+            {
+                r.RelativeItem().Text(exp.JobTitle).Bold().FontSize(11 * FontSizeScale);
+                r.AutoItem().Text(exp.DateRange).FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
+            });
+
+            expCol.Item().Text($"@{exp.Company}").FontSize(9 * FontSizeScale).FontColor(ParseColor(AccentColor));
+
+            if (!string.IsNullOrWhiteSpace(exp.Description))
+                expCol.Item().PaddingTop(4).Text(exp.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
+
+            if (exp.Achievements.Any())
+            {
+                expCol.Item().PaddingTop(4).Column(achCol =>
+                {
+                    foreach (var ach in exp.Achievements)
+                        achCol.Item().Text($"→ {ach}").FontSize(8 * FontSizeScale);
+                });
             }
         });
+    }
 
-        // Summary
-        if (!string.IsNullOrWhiteSpace(resume.Summary))
+    private void ComposeProject(IContainer container, Project proj)
+    {
+        container.Column(projCol =>
         {
-            main.Item().Column(col =>
-            {
-                col.Item().Text("/* About */").FontSize(10 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
-                col.Item().Height(4);
-                col.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
-            });
-        }
+            projCol.Item().Text(proj.Name).Bold().FontSize(10 * FontSizeScale);
 
-        // Experience
-        if (resume.Experiences.Any())
-        {
-            main.Item().Column(col =>
-            {
-                col.Spacing(12);
-                col.Item().Text("/* Experience */").FontSize(10 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+            if (!string.IsNullOrWhiteSpace(proj.Description))
+                projCol.Item().Text(proj.Description).FontSize(8 * FontSizeScale).LineHeight(LineSpacing);
 
-                foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
+            if (!string.IsNullOrWhiteSpace(proj.Url))
+                projCol.Item().Text(proj.Url).FontSize(7 * FontSizeScale).FontColor(Colors.Grey.Darken1);
+
+            if (proj.Highlights.Any())
+            {
+                projCol.Item().PaddingTop(2).Column(hlCol =>
                 {
-                    col.Item().Column(expCol =>
-                    {
-                        expCol.Item().Row(r =>
-                        {
-                            r.RelativeItem().Text(exp.JobTitle).Bold().FontSize(11 * FontSizeScale);
-                            r.AutoItem().Text(exp.DateRange).FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
-                        });
+                    foreach (var hl in proj.Highlights)
+                        hlCol.Item().Text($"→ {hl}").FontSize(8 * FontSizeScale);
+                });
+            }
 
-                        expCol.Item().Text($"@{exp.Company}").FontSize(9 * FontSizeScale).FontColor(ParseColor(AccentColor));
-
-                        if (!string.IsNullOrWhiteSpace(exp.Description))
-                            expCol.Item().PaddingTop(4).Text(exp.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
-
-                        if (exp.Achievements.Any())
-                        {
-                            expCol.Item().PaddingTop(4).Column(achCol =>
-                            {
-                                foreach (var ach in exp.Achievements)
-                                    achCol.Item().Text($"→ {ach}").FontSize(8 * FontSizeScale);
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        // Projects
-        if (resume.Projects.Any())
-        {
-            main.Item().Column(col =>
+            if (proj.Technologies.Any())
             {
-                col.Spacing(10);
-                col.Item().Text("/* Projects */").FontSize(10 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
-
-                foreach (var proj in resume.Projects.OrderBy(p => p.Order))
+                projCol.Item().PaddingTop(3).Row(techRow =>
                 {
-                    col.Item().Column(projCol =>
+                    techRow.Spacing(4);
+                    foreach (var tech in proj.Technologies)
                     {
-                        projCol.Item().Text(proj.Name).Bold().FontSize(10 * FontSizeScale);
-
-                        if (!string.IsNullOrWhiteSpace(proj.Description))
-                            projCol.Item().Text(proj.Description).FontSize(8 * FontSizeScale).LineHeight(LineSpacing);
-
-                        if (proj.Technologies.Any())
-                        {
-                            projCol.Item().PaddingTop(3).Row(techRow =>
-                            {
-                                techRow.Spacing(4);
-                                foreach (var tech in proj.Technologies.Take(6))
-                                {
-                                    techRow.AutoItem()
-                                        .Border(1).BorderColor(ParseColor(AccentColor))
-                                        .Padding(2)
-                                        .Text(tech).FontSize(7 * FontSizeScale).FontColor(ParseColor(AccentColor));
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        // Education
-        if (resume.EducationList.Any())
-        {
-            main.Item().Column(col =>
-            {
-                col.Spacing(8);
-                col.Item().Text("/* Education */").FontSize(10 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
-
-                foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
-                {
-                    col.Item().Row(r =>
-                    {
-                        r.RelativeItem().Column(eduCol =>
-                        {
-                            eduCol.Item().Text(edu.DegreeWithField).Bold().FontSize(10 * FontSizeScale);
-                            eduCol.Item().Text(edu.Institution).FontSize(9 * FontSizeScale);
-                        });
-                        r.AutoItem().Text(edu.DateRange).FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
-                    });
-                }
-            });
-        }
+                        techRow.AutoItem()
+                            .Border(1).BorderColor(ParseColor(AccentColor))
+                            .Padding(2)
+                            .Text(tech).FontSize(7 * FontSizeScale).FontColor(ParseColor(AccentColor));
+                    }
+                });
+            }
+        });
     }
 }

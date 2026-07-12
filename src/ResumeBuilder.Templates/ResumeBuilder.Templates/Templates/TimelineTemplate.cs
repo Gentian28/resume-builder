@@ -49,9 +49,10 @@ public class TimelineTemplate : BaseTemplate
 
                     case SectionType.Experience:
                         column.Item().Element(c => ComposeSectionTitle(c, "EXPERIENCE"));
-                        foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
+                        var experiences = resume.Experiences.OrderBy(e => e.Order).ToList();
+                        foreach (var exp in experiences)
                         {
-                            var isLast = exp == resume.Experiences.OrderBy(e => e.Order).Last();
+                            var isLast = exp == experiences[^1];
                             column.Item().Element(c => ComposeTimelineEntry(c, exp.DateRange,
                                 col =>
                                 {
@@ -84,9 +85,10 @@ public class TimelineTemplate : BaseTemplate
 
                     case SectionType.Education:
                         column.Item().Element(c => ComposeSectionTitle(c, "EDUCATION"));
-                        foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
+                        var educationList = resume.EducationList.OrderBy(e => e.Order).ToList();
+                        foreach (var edu in educationList)
                         {
-                            var isLast = edu == resume.EducationList.OrderBy(e => e.Order).Last();
+                            var isLast = edu == educationList[^1];
                             column.Item().Element(c => ComposeTimelineEntry(c, edu.DateRange,
                                 col =>
                                 {
@@ -127,10 +129,11 @@ public class TimelineTemplate : BaseTemplate
 
                     case SectionType.Certifications:
                         column.Item().Element(c => ComposeSectionTitle(c, "CERTIFICATIONS"));
-                        foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
+                        var certifications = resume.Certifications.OrderBy(c => c.Order).ToList();
+                        foreach (var cert in certifications)
                         {
-                            var isLast = cert == resume.Certifications.OrderBy(c => c.Order).Last();
-                            var dateStr = cert.IssueDate?.ToString("MMM yyyy") ?? "";
+                            var isLast = cert == certifications[^1];
+                            var dateStr = ResumeDateFormat.MonthYear(cert.IssueDate);
                             column.Item().Element(c => ComposeTimelineEntry(c, dateStr,
                                 col =>
                                 {
@@ -146,9 +149,10 @@ public class TimelineTemplate : BaseTemplate
 
                     case SectionType.Projects:
                         column.Item().Element(c => ComposeSectionTitle(c, "PROJECTS"));
-                        foreach (var project in resume.Projects.OrderBy(p => p.Order))
+                        var projects = resume.Projects.OrderBy(p => p.Order).ToList();
+                        foreach (var project in projects)
                         {
-                            var isLast = project == resume.Projects.OrderBy(p => p.Order).Last();
+                            var isLast = project == projects[^1];
                             var dateStr = project.StartDate.HasValue
                                 ? FormatDateRange(project.StartDate, project.EndDate, project.IsOngoing)
                                 : "";
@@ -183,6 +187,31 @@ public class TimelineTemplate : BaseTemplate
                                 }, isLast));
                         }
                         break;
+
+                    case SectionType.CustomSections:
+                        foreach (var custom in GetVisibleCustomSections(resume))
+                        {
+                            column.Item().Element(c => ComposeSectionTitle(c, custom.Title.ToUpper()));
+
+                            var items = custom.Items.OrderBy(i => i.Order).ToList();
+                            if (items.Count == 0)
+                                continue;
+
+                            foreach (var item in items)
+                            {
+                                var isLast = item == items[^1];
+                                column.Item().Element(c => ComposeTimelineEntry(c, FormatCustomItemDateRange(item),
+                                    col =>
+                                    {
+                                        col.Item().Text(item.Title).Bold().FontSize(11 * FontSizeScale);
+                                        if (!string.IsNullOrWhiteSpace(item.Subtitle))
+                                            col.Item().Text(item.Subtitle).SemiBold().FontSize(9 * FontSizeScale);
+                                        if (!string.IsNullOrWhiteSpace(item.Description))
+                                            col.Item().PaddingTop(2).Text(item.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
+                                    }, isLast));
+                            }
+                        }
+                        break;
                 }
             }
         });
@@ -212,7 +241,8 @@ public class TimelineTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.Email)) contacts.Add(info.Email);
             if (!string.IsNullOrWhiteSpace(info.Phone)) contacts.Add(info.Phone);
             if (!string.IsNullOrWhiteSpace(info.Location)) contacts.Add(info.Location);
-            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(info.LinkedIn);
+            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(FormatLinkedInDisplay(info.LinkedIn));
+            if (!string.IsNullOrWhiteSpace(info.GitHub)) contacts.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
             if (!string.IsNullOrWhiteSpace(info.Website)) contacts.Add(info.Website);
 
             column.Item().Text(string.Join("  |  ", contacts))

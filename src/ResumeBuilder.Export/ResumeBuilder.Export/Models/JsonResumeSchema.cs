@@ -113,8 +113,13 @@ public class JsonResumeProfile
 
 public class JsonResumeWork
 {
+    /// <summary>The employer. This is the v1.0.0 field for it; <see cref="Company"/> is the legacy alias.</summary>
     [JsonPropertyName("name")]
     public string? Name { get; set; }
+
+    /// <summary>Pre-v1 schemas wrote the employer here. Read-only fallback so those files still import.</summary>
+    [JsonPropertyName("company")]
+    public string? Company { get; set; }
 
     [JsonPropertyName("position")]
     public string? Position { get; set; }

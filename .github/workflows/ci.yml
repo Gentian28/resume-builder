@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore ResumeBuilder.sln
+
+      - name: Build
+        run: dotnet build ResumeBuilder.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ResumeBuilder.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: "**/TestResults/**/coverage.cobertura.xml"
+          if-no-files-found: ignore
+
+  vulnerable-packages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Fails the job if any package has a known advisory. NU1903 (a high-severity
+      # SQLitePCLRaw advisory) shipped undetected before this check existed.
+      - name: Check for vulnerable packages
+        run: |
+          dotnet restore ResumeBuilder.sln
+          dotnet list ResumeBuilder.sln package --vulnerable --include-transitive 2>&1 | tee vuln.txt
+          if grep -q "has the following vulnerable packages" vuln.txt; then
+            echo "::error::Vulnerable packages found"
+            exit 1
+          fi

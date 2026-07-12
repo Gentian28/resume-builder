@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ResumeBuilder.Core.Models;
 using ResumeBuilder.Export.Models;
 
@@ -5,16 +6,22 @@ namespace ResumeBuilder.Export.Mappers;
 
 public static class JsonResumeMapper
 {
+    // JSON Resume has no domain equivalent for these, so they round-trip through CustomSections
+    // rather than being dropped. Anything not listed here (interests, references) is deliberately
+    // unmapped: the domain model has nowhere to put it.
+    private const string AwardsSection = "Awards";
+    private const string PublicationsSection = "Publications";
+    private const string VolunteerSection = "Volunteer";
+
     public static JsonResumeSchema ToJsonResume(Resume resume)
     {
-        var nameParts = ParseName(resume.PersonalInfo.FullName);
-
         return new JsonResumeSchema
         {
             Basics = new JsonResumeBasics
             {
                 Name = resume.PersonalInfo.FullName,
                 Label = resume.PersonalInfo.JobTitle,
+                Image = ToImageDataUri(resume.PersonalInfo.Photo),
                 Email = resume.PersonalInfo.Email,
                 Phone = resume.PersonalInfo.Phone,
                 Url = resume.PersonalInfo.Website,
@@ -33,8 +40,8 @@ public static class JsonResumeMapper
                 Name = e.Company,
                 Position = e.JobTitle,
                 Location = e.Location,
-                StartDate = e.StartDate?.ToString("yyyy-MM-dd"),
-                EndDate = e.IsCurrentRole ? null : e.EndDate?.ToString("yyyy-MM-dd"),
+                StartDate = FormatDate(e.StartDate),
+                EndDate = e.IsCurrentRole ? "Present" : FormatDate(e.EndDate),
                 Summary = e.Description,
                 Highlights = e.Achievements.Any() ? e.Achievements : null
             }).ToList(),
@@ -43,8 +50,8 @@ public static class JsonResumeMapper
                 Institution = e.Institution,
                 StudyType = e.Degree,
                 Area = e.FieldOfStudy,
-                StartDate = e.StartDate?.ToString("yyyy-MM-dd"),
-                EndDate = e.IsCurrentlyStudying ? null : e.EndDate?.ToString("yyyy-MM-dd"),
+                StartDate = FormatDate(e.StartDate),
+                EndDate = e.IsCurrentlyStudying ? "Present" : FormatDate(e.EndDate),
                 Score = e.Grade
             }).ToList(),
             Skills = GroupSkillsByCategory(resume.Skills),
@@ -57,7 +64,7 @@ public static class JsonResumeMapper
             {
                 Name = c.Name,
                 Issuer = c.IssuingOrganization,
-                Date = c.IssueDate?.ToString("yyyy-MM-dd"),
+                Date = FormatDate(c.IssueDate),
                 Url = c.CredentialUrl
             }).ToList(),
             Projects = resume.Projects.OrderBy(p => p.Order).Select(p => new JsonResumeProject
@@ -65,15 +72,18 @@ public static class JsonResumeMapper
                 Name = p.Name,
                 Description = p.Description,
                 Url = p.Url,
-                StartDate = p.StartDate?.ToString("yyyy-MM-dd"),
-                EndDate = p.IsOngoing ? null : p.EndDate?.ToString("yyyy-MM-dd"),
+                StartDate = FormatDate(p.StartDate),
+                EndDate = p.IsOngoing ? "Present" : FormatDate(p.EndDate),
                 Keywords = p.Technologies.Any() ? p.Technologies : null,
                 Highlights = p.Highlights.Any() ? p.Highlights : null
             }).ToList(),
+            Awards = ToAwards(resume),
+            Publications = ToPublications(resume),
+            Volunteer = ToVolunteer(resume),
             Meta = new JsonResumeMeta
             {
                 Version = "v1.0.0",
-                LastModified = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                LastModified = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", ResumeDateFormat.Culture)
             }
         };
     }
@@ -97,7 +107,8 @@ public static class JsonResumeMapper
                 Address = jsonResume.Basics?.Location?.Address ?? "",
                 City = jsonResume.Basics?.Location?.City ?? "",
                 PostalCode = jsonResume.Basics?.Location?.PostalCode ?? "",
-                Country = jsonResume.Basics?.Location?.CountryCode ?? ""
+                Country = jsonResume.Basics?.Location?.CountryCode ?? "",
+                Photo = FromImageDataUri(jsonResume.Basics?.Image)
             }
         };
 
@@ -120,11 +131,11 @@ public static class JsonResumeMapper
             {
                 Order = i,
                 JobTitle = w.Position ?? "",
-                Company = w.Name ?? "",
+                Company = w.Name ?? w.Company ?? "",
                 Location = w.Location ?? "",
                 StartDate = ParseDate(w.StartDate),
                 EndDate = ParseDate(w.EndDate),
-                IsCurrentRole = string.IsNullOrEmpty(w.EndDate),
+                IsCurrentRole = IsOngoingMarker(w.EndDate),
                 Description = w.Summary ?? "",
                 Achievements = w.Highlights ?? new List<string>()
             }).ToList();
@@ -141,7 +152,7 @@ public static class JsonResumeMapper
                 FieldOfStudy = e.Area ?? "",
                 StartDate = ParseDate(e.StartDate),
                 EndDate = ParseDate(e.EndDate),
-                IsCurrentlyStudying = string.IsNullOrEmpty(e.EndDate),
+                IsCurrentlyStudying = IsOngoingMarker(e.EndDate),
                 Grade = e.Score ?? ""
             }).ToList();
         }
@@ -212,14 +223,126 @@ public static class JsonResumeMapper
                 Url = p.Url ?? "",
                 StartDate = ParseDate(p.StartDate),
                 EndDate = ParseDate(p.EndDate),
-                IsOngoing = string.IsNullOrEmpty(p.EndDate),
+                IsOngoing = IsOngoingMarker(p.EndDate),
                 Technologies = p.Keywords ?? new List<string>(),
                 Highlights = p.Highlights ?? new List<string>()
             }).ToList();
         }
 
+        AddCustomSections(resume, jsonResume);
+
         return resume;
     }
+
+    private static void AddCustomSections(Resume resume, JsonResumeSchema jsonResume)
+    {
+        var order = 0;
+
+        if (jsonResume.Awards?.Any() == true)
+        {
+            resume.CustomSections.Add(new CustomSection
+            {
+                Order = order++,
+                Title = AwardsSection,
+                Items = jsonResume.Awards.Select((a, i) => new CustomSectionItem
+                {
+                    Order = i,
+                    Title = a.Title ?? "",
+                    Subtitle = a.Awarder ?? "",
+                    Description = a.Summary ?? "",
+                    StartDate = ParseDate(a.Date)
+                }).ToList()
+            });
+        }
+
+        if (jsonResume.Publications?.Any() == true)
+        {
+            resume.CustomSections.Add(new CustomSection
+            {
+                Order = order++,
+                Title = PublicationsSection,
+                Items = jsonResume.Publications.Select((p, i) => new CustomSectionItem
+                {
+                    Order = i,
+                    Title = p.Name ?? "",
+                    Subtitle = p.Publisher ?? "",
+                    Description = JoinNonEmpty(p.Summary, p.Url),
+                    StartDate = ParseDate(p.ReleaseDate)
+                }).ToList()
+            });
+        }
+
+        if (jsonResume.Volunteer?.Any() == true)
+        {
+            resume.CustomSections.Add(new CustomSection
+            {
+                Order = order,
+                Title = VolunteerSection,
+                Items = jsonResume.Volunteer.Select((v, i) => new CustomSectionItem
+                {
+                    Order = i,
+                    Title = v.Position ?? "",
+                    Subtitle = v.Organization ?? "",
+                    Description = JoinNonEmpty(v.Summary, v.Highlights == null ? null : string.Join("; ", v.Highlights)),
+                    StartDate = ParseDate(v.StartDate),
+                    EndDate = ParseDate(v.EndDate)
+                }).ToList()
+            });
+        }
+    }
+
+    private static List<JsonResumeAward>? ToAwards(Resume resume)
+    {
+        var section = FindCustomSection(resume, AwardsSection);
+        if (section == null)
+            return null;
+
+        return section.Items.OrderBy(i => i.Order).Select(i => new JsonResumeAward
+        {
+            Title = i.Title,
+            Awarder = i.Subtitle,
+            Summary = i.Description,
+            Date = FormatDate(i.StartDate)
+        }).ToList();
+    }
+
+    private static List<JsonResumePublication>? ToPublications(Resume resume)
+    {
+        var section = FindCustomSection(resume, PublicationsSection);
+        if (section == null)
+            return null;
+
+        return section.Items.OrderBy(i => i.Order).Select(i => new JsonResumePublication
+        {
+            Name = i.Title,
+            Publisher = i.Subtitle,
+            Summary = i.Description,
+            ReleaseDate = FormatDate(i.StartDate)
+        }).ToList();
+    }
+
+    private static List<JsonResumeVolunteer>? ToVolunteer(Resume resume)
+    {
+        var section = FindCustomSection(resume, VolunteerSection);
+        if (section == null)
+            return null;
+
+        return section.Items.OrderBy(i => i.Order).Select(i => new JsonResumeVolunteer
+        {
+            Position = i.Title,
+            Organization = i.Subtitle,
+            Summary = i.Description,
+            StartDate = FormatDate(i.StartDate),
+            EndDate = FormatDate(i.EndDate)
+        }).ToList();
+    }
+
+    private static CustomSection? FindCustomSection(Resume resume, string title) =>
+        resume.CustomSections.FirstOrDefault(s =>
+            s.Title.Equals(title, StringComparison.OrdinalIgnoreCase) && s.Items.Any());
+
+    private static string JoinNonEmpty(params string?[] parts) =>
+        string.Join(" ", parts.Where(p => !string.IsNullOrWhiteSpace(p))).Trim();
 
     private static (string firstName, string lastName) ParseName(string fullName)
     {
@@ -334,14 +457,65 @@ public static class JsonResumeMapper
         _ => LanguageProficiency.Professional
     };
 
-    private static DateTime? ParseDate(string? dateStr)
+    /// <summary>
+    /// True only when the source explicitly says the entry is still running. A missing end date is
+    /// missing data, not a statement that the role is current.
+    /// </summary>
+    private static bool IsOngoingMarker(string? dateStr)
     {
         if (string.IsNullOrWhiteSpace(dateStr))
+            return false;
+
+        return dateStr.Trim().ToLowerInvariant() switch
+        {
+            "present" or "current" or "now" or "ongoing" or "to date" => true,
+            _ => false
+        };
+    }
+
+    private static string? FormatDate(DateTime? date) => date?.ToString("yyyy-MM-dd", ResumeDateFormat.Culture);
+
+    private static DateTime? ParseDate(string? dateStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateStr) || IsOngoingMarker(dateStr))
             return null;
 
-        if (DateTime.TryParse(dateStr, out var date))
+        if (DateTime.TryParse(dateStr, ResumeDateFormat.Culture, System.Globalization.DateTimeStyles.None, out var date))
             return date;
 
+        if (DateTime.TryParse(dateStr, out var fallbackDate))
+            return fallbackDate;
+
         return null;
+    }
+
+    private static readonly Regex DataUriRegex = new(
+        @"^data:(?<mime>[\w/\-\.\+]+)?;base64,(?<data>.+)$",
+        RegexOptions.Compiled | RegexOptions.Singleline);
+
+    private static string? ToImageDataUri(byte[]? photo) =>
+        photo is { Length: > 0 } ? $"data:image/png;base64,{Convert.ToBase64String(photo)}" : null;
+
+    /// <summary>
+    /// Only a base64 data URI can become photo bytes; basics.image may also hold a remote URL, which
+    /// there is no way to store without fetching it.
+    /// </summary>
+    private static byte[]? FromImageDataUri(string? image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+            return null;
+
+        var match = DataUriRegex.Match(image.Trim());
+        if (!match.Success)
+            return null;
+
+        try
+        {
+            return Convert.FromBase64String(match.Groups["data"].Value);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
     }
 }

@@ -19,6 +19,8 @@ public class ModernTemplate : BaseTemplate
         DefaultFontFamily = "Arial"
     };
 
+    private static readonly EntryStyle Entry = new();
+
     protected override void ComposeContent(IContainer container, Resume resume)
     {
         container.Column(column =>
@@ -49,7 +51,7 @@ public class ModernTemplate : BaseTemplate
                         {
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
-                                ct.Item().Element(e => ComposeExperience(e, exp));
+                                ct.Item().Element(e => ComposeExperienceEntry(e, exp, Entry));
                                 ct.Item().Height(10);
                             }
                         }));
@@ -60,7 +62,7 @@ public class ModernTemplate : BaseTemplate
                         {
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
-                                ct.Item().Element(e => ComposeEducation(e, edu));
+                                ct.Item().Element(e => ComposeEducationEntry(e, edu, Entry));
                                 ct.Item().Height(8);
                             }
                         }));
@@ -107,7 +109,7 @@ public class ModernTemplate : BaseTemplate
                                     });
                                     if (cert.IssueDate.HasValue)
                                     {
-                                        row.AutoItem().Text(cert.IssueDate.Value.ToString("MMM yyyy")).FontColor(Colors.Grey.Darken1);
+                                        row.AutoItem().Text(ResumeDateFormat.MonthYear(cert.IssueDate)).FontColor(Colors.Grey.Darken1);
                                     }
                                 });
                             }
@@ -119,10 +121,18 @@ public class ModernTemplate : BaseTemplate
                         {
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
                             {
-                                ct.Item().Element(e => ComposeProject(e, project));
+                                ct.Item().Element(e => ComposeProjectEntry(e, project, Entry));
                                 ct.Item().Height(8);
                             }
                         }));
+                        break;
+
+                    case SectionType.CustomSections:
+                        foreach (var custom in GetVisibleCustomSections(resume))
+                        {
+                            column.Item().Element(c => ComposeSection(c, custom.Title, ct =>
+                                ComposeCustomSectionItems(ct, custom)));
+                        }
                         break;
                 }
             }
@@ -170,7 +180,9 @@ public class ModernTemplate : BaseTemplate
                     if (!string.IsNullOrWhiteSpace(info.Location))
                         contactItems.Add(info.Location);
                     if (!string.IsNullOrWhiteSpace(info.LinkedIn))
-                        contactItems.Add(info.LinkedIn);
+                        contactItems.Add(FormatLinkedInDisplay(info.LinkedIn));
+                    if (!string.IsNullOrWhiteSpace(info.GitHub))
+                        contactItems.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
                     if (!string.IsNullOrWhiteSpace(info.Website))
                         contactItems.Add(info.Website);
 
@@ -200,86 +212,6 @@ public class ModernTemplate : BaseTemplate
         });
     }
 
-    private void ComposeExperience(IContainer container, Experience exp)
-    {
-        container.Column(column =>
-        {
-            column.Item().Row(row =>
-            {
-                row.RelativeItem().Text(text =>
-                {
-                    text.Span(exp.JobTitle).Bold().FontSize(11 * FontSizeScale);
-                });
-                row.AutoItem().Text(exp.DateRange).FontSize(9 * FontSizeScale).FontColor(Colors.Grey.Darken1);
-            });
-
-            column.Item().Text(text =>
-            {
-                text.DefaultTextStyle(x => x.FontSize(10 * FontSizeScale));
-                text.Span(exp.Company).SemiBold();
-                if (!string.IsNullOrWhiteSpace(exp.Location))
-                {
-                    text.Span($"  |  {exp.Location}").FontColor(Colors.Grey.Darken1);
-                }
-            });
-
-            if (!string.IsNullOrWhiteSpace(exp.Description))
-            {
-                column.Item().PaddingTop(4).Text(exp.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
-            }
-
-            if (exp.Achievements.Any())
-            {
-                column.Item().PaddingTop(4).Column(achieveCol =>
-                {
-                    foreach (var achievement in exp.Achievements)
-                    {
-                        achieveCol.Item().Row(row =>
-                        {
-                            row.AutoItem().Text("• ").FontSize(9 * FontSizeScale);
-                            row.RelativeItem().Text(achievement).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
-                        });
-                    }
-                });
-            }
-        });
-    }
-
-    private void ComposeEducation(IContainer container, Education edu)
-    {
-        container.Column(column =>
-        {
-            column.Item().Row(row =>
-            {
-                row.RelativeItem().Text(text =>
-                {
-                    text.Span(edu.DegreeWithField).Bold().FontSize(11 * FontSizeScale);
-                });
-                row.AutoItem().Text(edu.DateRange).FontSize(9 * FontSizeScale).FontColor(Colors.Grey.Darken1);
-            });
-
-            column.Item().Text(text =>
-            {
-                text.DefaultTextStyle(x => x.FontSize(10 * FontSizeScale));
-                text.Span(edu.Institution).SemiBold();
-                if (!string.IsNullOrWhiteSpace(edu.Location))
-                {
-                    text.Span($"  |  {edu.Location}").FontColor(Colors.Grey.Darken1);
-                }
-            });
-
-            if (!string.IsNullOrWhiteSpace(edu.Grade))
-            {
-                column.Item().Text($"Grade: {edu.Grade}").FontSize(9 * FontSizeScale).FontColor(Colors.Grey.Darken1);
-            }
-
-            if (!string.IsNullOrWhiteSpace(edu.Description))
-            {
-                column.Item().PaddingTop(2).Text(edu.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
-            }
-        });
-    }
-
     private void ComposeSkills(IContainer container, List<Skill> skills)
     {
         var groupedSkills = skills.GroupBy(s => s.Category).ToList();
@@ -303,51 +235,6 @@ public class ModernTemplate : BaseTemplate
             else
             {
                 column.Item().Text(string.Join("  •  ", skills.Select(s => s.Name))).FontSize(10 * FontSizeScale);
-            }
-        });
-    }
-
-    private void ComposeProject(IContainer container, Project project)
-    {
-        container.Column(column =>
-        {
-            column.Item().Row(row =>
-            {
-                row.RelativeItem().Text(project.Name).Bold().FontSize(11 * FontSizeScale);
-                if (project.StartDate.HasValue)
-                {
-                    row.AutoItem().Text(FormatDateRange(project.StartDate, project.EndDate, project.IsOngoing))
-                        .FontSize(9 * FontSizeScale).FontColor(Colors.Grey.Darken1);
-                }
-            });
-
-            if (!string.IsNullOrWhiteSpace(project.Description))
-            {
-                column.Item().PaddingTop(2).Text(project.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
-            }
-
-            if (project.Technologies.Any())
-            {
-                column.Item().PaddingTop(2).Text(text =>
-                {
-                    text.Span("Technologies: ").Bold().FontSize(9 * FontSizeScale);
-                    text.Span(string.Join(", ", project.Technologies)).FontSize(9 * FontSizeScale);
-                });
-            }
-
-            if (project.Highlights.Any())
-            {
-                column.Item().PaddingTop(2).Column(highlightCol =>
-                {
-                    foreach (var highlight in project.Highlights)
-                    {
-                        highlightCol.Item().Row(row =>
-                        {
-                            row.AutoItem().Text("• ").FontSize(9 * FontSizeScale);
-                            row.RelativeItem().Text(highlight).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
-                        });
-                    }
-                });
             }
         });
     }

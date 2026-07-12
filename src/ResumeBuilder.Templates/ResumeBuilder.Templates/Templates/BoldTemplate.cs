@@ -108,7 +108,7 @@ public class BoldTemplate : BaseTemplate
                                     if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
                                         text.Span($" — {cert.IssuingOrganization}").FontSize(9 * FontSizeScale);
                                     if (cert.IssueDate.HasValue)
-                                        text.Span($" ({cert.IssueDate.Value:MMM yyyy})")
+                                        text.Span($" ({ResumeDateFormat.MonthYear(cert.IssueDate)})")
                                             .FontSize(9 * FontSizeScale).FontColor(Colors.Grey.Darken1);
                                 });
                             }
@@ -122,6 +122,14 @@ public class BoldTemplate : BaseTemplate
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
                                 ct.Item().Element(e => ComposeProject(e, project));
                         }));
+                        break;
+
+                    case SectionType.CustomSections:
+                        foreach (var custom in GetVisibleCustomSections(resume))
+                        {
+                            column.Item().Element(c => ComposeSection(c, custom.Title.ToUpper(), ct =>
+                                ComposeCustomSectionItems(ct, custom, 11, 9)));
+                        }
                         break;
                 }
             }
@@ -167,7 +175,8 @@ public class BoldTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.Email)) contacts.Add(info.Email);
             if (!string.IsNullOrWhiteSpace(info.Phone)) contacts.Add(info.Phone);
             if (!string.IsNullOrWhiteSpace(info.Location)) contacts.Add(info.Location);
-            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(info.LinkedIn);
+            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(FormatLinkedInDisplay(info.LinkedIn));
+            if (!string.IsNullOrWhiteSpace(info.GitHub)) contacts.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
             if (!string.IsNullOrWhiteSpace(info.Website)) contacts.Add(info.Website);
 
             column.Item().Text(string.Join("  |  ", contacts))

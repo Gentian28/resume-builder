@@ -5,12 +5,17 @@ namespace ResumeBuilder.Templates;
 
 public class TemplateRegistry
 {
+    public const string DefaultCoverLetterTemplateId = "letter-modern";
+
     private readonly Dictionary<string, IResumeTemplate> _templates;
+    private readonly Dictionary<string, ICoverLetterTemplate> _coverLetterTemplates;
 
     public TemplateRegistry()
     {
         _templates = new Dictionary<string, IResumeTemplate>(StringComparer.OrdinalIgnoreCase);
+        _coverLetterTemplates = new Dictionary<string, ICoverLetterTemplate>(StringComparer.OrdinalIgnoreCase);
         RegisterDefaultTemplates();
+        RegisterDefaultCoverLetterTemplates();
     }
 
     private void RegisterDefaultTemplates()
@@ -32,6 +37,21 @@ public class TemplateRegistry
         Register(new BoldTemplate());
         Register(new DarkSidebarTemplate());
         Register(new InfographicTemplate());
+        Register(new AtsPlainTemplate());
+        Register(new FederalTemplate());
+        Register(new EuropassTemplate());
+        Register(new PhotoHeaderTemplate());
+        Register(new DeveloperTemplate());
+        Register(new ChronologyTemplate());
+        Register(new ColorBlockTemplate());
+        Register(new OnePageTemplate());
+    }
+
+    private void RegisterDefaultCoverLetterTemplates()
+    {
+        Register(new CoverLetterTemplate());
+        Register(new ClassicCoverLetterTemplate());
+        Register(new MinimalCoverLetterTemplate());
     }
 
     public void Register(IResumeTemplate template)
@@ -47,6 +67,26 @@ public class TemplateRegistry
     public IResumeTemplate GetTemplateOrDefault(string id)
     {
         return GetTemplate(id) ?? _templates["modern"];
+    }
+
+    public void Register(ICoverLetterTemplate template)
+    {
+        _coverLetterTemplates[template.Info.Id] = template;
+    }
+
+    public ICoverLetterTemplate? GetCoverLetterTemplate(string id)
+    {
+        return _coverLetterTemplates.TryGetValue(id, out var template) ? template : null;
+    }
+
+    public ICoverLetterTemplate GetCoverLetterTemplateOrDefault(string id)
+    {
+        return GetCoverLetterTemplate(id) ?? _coverLetterTemplates[DefaultCoverLetterTemplateId];
+    }
+
+    public IEnumerable<ICoverLetterTemplate> GetAllCoverLetterTemplates()
+    {
+        return _coverLetterTemplates.Values;
     }
 
     public IEnumerable<IResumeTemplate> GetAllTemplates()

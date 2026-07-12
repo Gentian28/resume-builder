@@ -10,12 +10,29 @@ namespace ResumeBuilder.Core.SmartContent;
 /// </summary>
 public class LocalAiService : IAiService, IDisposable
 {
+    public const string OpenAiBaseUrl = "https://api.openai.com/v1";
+    public const string DefaultModel = "gpt-4o-mini";
+
     private readonly HttpClient _httpClient;
     private string? _apiKey;
-    private string _model = "gpt-3.5-turbo";
-    private string _baseUrl = "https://api.openai.com/v1";
+    private string _model = DefaultModel;
+    private string _baseUrl = OpenAiBaseUrl;
 
-    public bool IsConfigured => !string.IsNullOrEmpty(_apiKey) || _baseUrl.Contains("localhost");
+    /// <summary>
+    /// A local server needs no key; a remote one does. Checking the host (rather than searching the
+    /// URL for "localhost") also covers 127.0.0.1 and ::1.
+    /// </summary>
+    public bool IsConfigured => !string.IsNullOrEmpty(_apiKey) || IsLocalEndpoint(_baseUrl);
+
+    /// <summary>The endpoint requests are sent to - surfaced so the UI can say where data goes.</summary>
+    public string BaseUrl => _baseUrl;
+
+    public string Model => _model;
+
+    public bool IsLocal => IsLocalEndpoint(_baseUrl);
+
+    private static bool IsLocalEndpoint(string baseUrl) =>
+        Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && uri.IsLoopback;
 
     public LocalAiService()
     {
@@ -180,6 +197,29 @@ SUGGESTION: [Your specific suggestion]
         return AiResult<IEnumerable<AiSuggestion>>.Succeeded(suggestions);
     }
 
+    /// <summary>Pulls <c>error.message</c> out of an OpenAI-style error body, if it looks like one.</summary>
+    private static string? ExtractErrorMessage(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            if (document.RootElement.TryGetProperty("error", out var error) &&
+                error.TryGetProperty("message", out var message))
+            {
+                return message.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+            // Not JSON - fall through and use the raw body.
+        }
+
+        return body.Length > 200 ? body[..200] : body;
+    }
+
     private async Task<AiResult<string>> SendChatRequestAsync(string prompt, CancellationToken cancellationToken)
     {
         try
@@ -203,8 +243,13 @@ SUGGESTION: [Your specific suggestion]
 
             if (!response.IsSuccessStatusCode)
             {
+                // Surface the provider's message - "invalid api key" is far more useful than "401".
                 var error = await response.Content.ReadAsStringAsync(cancellationToken);
-                return AiResult<string>.Failed($"API error: {response.StatusCode}");
+                var detail = ExtractErrorMessage(error);
+                return AiResult<string>.Failed(
+                    string.IsNullOrWhiteSpace(detail)
+                        ? $"API error: {(int)response.StatusCode} {response.StatusCode}"
+                        : $"API error: {(int)response.StatusCode} {response.StatusCode} - {detail}");
             }
 
             var result = await response.Content.ReadFromJsonAsync<ChatResponse>(cancellationToken: cancellationToken);

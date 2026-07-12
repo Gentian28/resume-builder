@@ -27,13 +27,16 @@ public class ExportService
         Register(new DocxExporter(_templateRegistry));
         Register(new HtmlExporter(_templateRegistry));
         Register(new PngExporter(_templateRegistry));
+        Register(new TextExporter());
         Register(new JsonExporter());
         Register(new JsonResumeExporter());
     }
 
     private void RegisterDefaultImporters()
     {
+        RegisterImporter(new JsonImporter());
         RegisterImporter(new JsonResumeImporter());
+        RegisterImporter(new NativeJsonImporter());
         RegisterImporter(new LinkedInImporter());
         RegisterImporter(new PdfImporter());
     }
@@ -79,6 +82,23 @@ public class ExportService
         await exporter.ExportToFileAsync(resume, resume.SelectedTemplateId, filePath);
     }
 
+    /// <summary>
+    /// One byte array per rendered page. Only PNG produces more than one; every other format returns
+    /// its single document.
+    /// </summary>
+    public async Task<byte[][]> ExportPagesAsync(Resume resume, string format)
+    {
+        var exporter = GetExporter(format)
+            ?? throw new ArgumentException($"Unknown export format: {format}");
+
+        if (exporter is PngExporter png)
+        {
+            return await png.ExportAllPagesAsync(resume, resume.SelectedTemplateId);
+        }
+
+        return new[] { await exporter.ExportAsync(resume, resume.SelectedTemplateId) };
+    }
+
     // Import functionality
     public void RegisterImporter(IImporter importer)
     {
@@ -96,8 +116,13 @@ public class ExportService
         if (!extension.StartsWith("."))
             extension = "." + extension;
 
-        return _importers.Values.FirstOrDefault(i =>
-            i.SupportedExtensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)));
+        var candidates = _importers.Values
+            .Where(i => i.SupportedExtensions.Any(e => e.Equals(extension, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        // Several importers can claim one extension; the one that declares itself the default for it
+        // knows how to tell the formats apart.
+        return candidates.FirstOrDefault(i => i.IsDefaultForExtension) ?? candidates.FirstOrDefault();
     }
 
     public IEnumerable<IImporter> GetAllImporters()

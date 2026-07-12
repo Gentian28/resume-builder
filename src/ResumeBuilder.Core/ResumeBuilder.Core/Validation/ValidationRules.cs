@@ -38,7 +38,10 @@ public class EmailRule : ValidationRule<string>
 
 public class PhoneRule : ValidationRule<string>
 {
-    private static readonly Regex PhoneRegex = new(
+    private const int MinDigits = 7;
+    private const int MaxDigits = 15; // E.164 upper bound
+
+    private static readonly Regex AllowedCharsRegex = new(
         @"^[\d\s\-\+\(\)\.]+$",
         RegexOptions.Compiled);
 
@@ -47,12 +50,20 @@ public class PhoneRule : ValidationRule<string>
         if (string.IsNullOrWhiteSpace(value))
             return ValidationResult.Success();
 
-        if (value.Length < 7)
+        if (!AllowedCharsRegex.IsMatch(value))
+            return ValidationResult.Failure("Invalid phone format");
+
+        // Count digits, not characters: "-------" is seven characters but no phone number, and
+        // "+1 (2) 345-6789" is well past seven digits despite the punctuation.
+        var digits = value.Count(char.IsDigit);
+
+        if (digits < MinDigits)
             return ValidationResult.Failure("Phone number is too short");
 
-        return PhoneRegex.IsMatch(value)
-            ? ValidationResult.Success()
-            : ValidationResult.Failure("Invalid phone format");
+        if (digits > MaxDigits)
+            return ValidationResult.Failure("Phone number is too long");
+
+        return ValidationResult.Success();
     }
 }
 
@@ -63,17 +74,50 @@ public class UrlRule : ValidationRule<string>
         if (string.IsNullOrWhiteSpace(value))
             return ValidationResult.Success();
 
-        // Allow URLs without protocol
-        var urlToCheck = value;
-        if (!value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-            !value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            urlToCheck = "https://" + value;
-        }
+        if (value.Any(char.IsWhiteSpace))
+            return ValidationResult.Failure("Invalid URL format");
 
-        return Uri.TryCreate(urlToCheck, UriKind.Absolute, out _)
-            ? ValidationResult.Success()
-            : ValidationResult.Failure("Invalid URL format");
+        var hasScheme =
+            value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+
+        // Reject other schemes outright. Without this, "javascript:alert(1)" parses as a valid
+        // absolute Uri and later becomes a live href in the HTML export.
+        if (!hasScheme && value.Contains(':') && !value.Contains("://"))
+            return ValidationResult.Failure("Only http and https URLs are supported");
+
+        var urlToCheck = hasScheme ? value : "https://" + value;
+
+        if (!Uri.TryCreate(urlToCheck, UriKind.Absolute, out var uri))
+            return ValidationResult.Failure("Invalid URL format");
+
+        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            return ValidationResult.Failure("Only http and https URLs are supported");
+
+        // A bare word like "developer" would otherwise become the "valid" URL https://developer.
+        if (!uri.Host.Contains('.'))
+            return ValidationResult.Failure("Invalid URL format");
+
+        return ValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Returns a safe absolute http(s) URL for the value, or null if it isn't one. Exporters use
+    /// this so a stored "javascript:" value can never become a clickable link.
+    /// </summary>
+    public static string? ToSafeAbsoluteUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (new UrlRule().Validate(value) is { IsValid: false })
+            return null;
+
+        var hasScheme =
+            value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+
+        return hasScheme ? value : "https://" + value;
     }
 }
 

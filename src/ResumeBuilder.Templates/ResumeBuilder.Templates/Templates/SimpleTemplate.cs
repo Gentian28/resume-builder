@@ -120,7 +120,7 @@ public class SimpleTemplate : BaseTemplate
                                     if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
                                         text.Span($", {cert.IssuingOrganization}");
                                     if (cert.IssueDate.HasValue)
-                                        text.Span($" ({cert.IssueDate.Value:yyyy})");
+                                        text.Span($" ({ResumeDateFormat.Year(cert.IssueDate)})");
                                 });
                             }
                         });
@@ -165,6 +165,18 @@ public class SimpleTemplate : BaseTemplate
                             }
                         });
                         break;
+
+                    case SectionType.CustomSections:
+                        foreach (var custom in GetVisibleCustomSections(resume))
+                        {
+                            column.Item().Column(col =>
+                            {
+                                col.Item().Text(custom.Title.ToUpper()).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                                col.Item().Height(8);
+                                col.Item().Column(ct => ComposeCustomSectionItems(ct, custom, 10, 9));
+                            });
+                        }
+                        break;
                 }
             }
         });
@@ -185,7 +197,8 @@ public class SimpleTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.Email)) contacts.Add(info.Email);
             if (!string.IsNullOrWhiteSpace(info.Phone)) contacts.Add(info.Phone);
             if (!string.IsNullOrWhiteSpace(info.Location)) contacts.Add(info.Location);
-            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(info.LinkedIn);
+            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(FormatLinkedInDisplay(info.LinkedIn));
+            if (!string.IsNullOrWhiteSpace(info.GitHub)) contacts.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
             if (!string.IsNullOrWhiteSpace(info.Website)) contacts.Add(info.Website);
 
             column.Item().Text(string.Join(" | ", contacts)).FontSize(9 * FontSizeScale);

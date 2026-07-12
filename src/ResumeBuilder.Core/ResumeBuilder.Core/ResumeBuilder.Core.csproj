@@ -1,14 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="WeCantSpell.Hunspell" Version="7.0.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="WeCantSpell.Hunspell" />
   </ItemGroup>
 
 </Project>

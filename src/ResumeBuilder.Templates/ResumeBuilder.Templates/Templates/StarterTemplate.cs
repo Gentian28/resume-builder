@@ -25,96 +25,122 @@ public class StarterTemplate : BaseTemplate
         {
             column.Spacing(SectionSpacing);
 
-            // Header
-            column.Item().Element(c => ComposeHeader(c, resume.PersonalInfo));
+            var sections = GetVisibleSections(resume);
 
-            // Summary / Objective (important for entry-level)
-            if (!string.IsNullOrWhiteSpace(resume.Summary))
+            for (var i = 0; i < sections.Count; i++)
             {
-                column.Item().Element(c => ComposeSection(c, "Career Objective", ct =>
-                {
-                    ct.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing);
-                }));
-            }
+                var sectionType = sections[i];
 
-            // Education first (most important for entry-level)
-            if (resume.EducationList.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "Education", ct =>
+                // Languages and Certifications share a row when adjacent.
+                if (sectionType == SectionType.Languages &&
+                    i + 1 < sections.Count && sections[i + 1] == SectionType.Certifications)
                 {
-                    foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
+                    column.Item().Row(row =>
                     {
-                        ct.Item().Element(e => ComposeEducation(e, edu));
-                        ct.Item().Height(10);
-                    }
-                }));
-            }
-
-            // Skills (highlight skills for entry-level)
-            if (resume.Skills.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "Skills & Abilities", ct =>
-                {
-                    ct.Item().Element(e => ComposeSkills(e, resume.Skills));
-                }));
-            }
-
-            // Experience (internships, part-time work)
-            if (resume.Experiences.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "Experience", ct =>
-                {
-                    foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
-                    {
-                        ct.Item().Element(e => ComposeExperience(e, exp));
-                        ct.Item().Height(10);
-                    }
-                }));
-            }
-
-            // Projects (important for entry-level to show practical work)
-            if (resume.Projects.Any())
-            {
-                column.Item().Element(c => ComposeSection(c, "Projects & Portfolio", ct =>
-                {
-                    foreach (var proj in resume.Projects.OrderBy(p => p.Order))
-                    {
-                        ct.Item().Element(e => ComposeProject(e, proj));
-                        ct.Item().Height(8);
-                    }
-                }));
-            }
-
-            // Additional info
-            column.Item().Row(row =>
-            {
-                if (resume.Languages.Any())
-                {
-                    row.RelativeItem().Element(c => ComposeSection(c, "Languages", ct =>
-                    {
-                        foreach (var lang in resume.Languages.OrderBy(l => l.Order))
-                        {
-                            ct.Item().Text($"• {lang.Name} ({GetLanguageProficiencyText(lang.Proficiency)})").FontSize(9 * FontSizeScale);
-                        }
-                    }));
+                        row.RelativeItem().Element(c => ComposeLanguages(c, resume));
+                        row.RelativeItem().Element(c => ComposeCertifications(c, resume));
+                    });
+                    i++;
+                    continue;
                 }
 
-                if (resume.Certifications.Any())
+                switch (sectionType)
                 {
-                    row.RelativeItem().Element(c => ComposeSection(c, "Certifications", ct =>
-                    {
-                        foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
+                    case SectionType.PersonalInfo:
+                        column.Item().Element(c => ComposeHeader(c, resume.PersonalInfo));
+                        break;
+
+                    case SectionType.Summary:
+                        column.Item().Element(c => ComposeSection(c, "Career Objective", ct =>
                         {
-                            ct.Item().PaddingBottom(3).Text(text =>
+                            ct.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing);
+                        }));
+                        break;
+
+                    case SectionType.Education:
+                        column.Item().Element(c => ComposeSection(c, "Education", ct =>
+                        {
+                            foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
-                                text.Span(cert.Name).FontSize(9 * FontSizeScale);
-                                if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
-                                    text.Span($" - {cert.IssuingOrganization}").FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
-                            });
+                                ct.Item().Element(e => ComposeEducation(e, edu));
+                                ct.Item().Height(10);
+                            }
+                        }));
+                        break;
+
+                    case SectionType.Skills:
+                        column.Item().Element(c => ComposeSection(c, "Skills & Abilities", ct =>
+                        {
+                            ct.Item().Element(e => ComposeSkills(e, resume.Skills));
+                        }));
+                        break;
+
+                    case SectionType.Experience:
+                        column.Item().Element(c => ComposeSection(c, "Experience", ct =>
+                        {
+                            foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
+                            {
+                                ct.Item().Element(e => ComposeExperience(e, exp));
+                                ct.Item().Height(10);
+                            }
+                        }));
+                        break;
+
+                    case SectionType.Projects:
+                        column.Item().Element(c => ComposeSection(c, "Projects & Portfolio", ct =>
+                        {
+                            foreach (var proj in resume.Projects.OrderBy(p => p.Order))
+                            {
+                                ct.Item().Element(e => ComposeProject(e, proj));
+                                ct.Item().Height(8);
+                            }
+                        }));
+                        break;
+
+                    case SectionType.Languages:
+                        column.Item().Element(c => ComposeLanguages(c, resume));
+                        break;
+
+                    case SectionType.Certifications:
+                        column.Item().Element(c => ComposeCertifications(c, resume));
+                        break;
+
+                    case SectionType.CustomSections:
+                        foreach (var custom in GetVisibleCustomSections(resume))
+                        {
+                            column.Item().Element(c => ComposeSection(c, custom.Title, ct =>
+                                ComposeCustomSectionItems(ct, custom, 10, 9)));
                         }
-                    }));
+                        break;
                 }
-            });
+            }
+        });
+    }
+
+    private void ComposeLanguages(IContainer container, Resume resume)
+    {
+        ComposeSection(container, "Languages", ct =>
+        {
+            foreach (var lang in resume.Languages.OrderBy(l => l.Order))
+            {
+                ct.Item().Text($"• {lang.Name} ({GetLanguageProficiencyText(lang.Proficiency)})").FontSize(9 * FontSizeScale);
+            }
+        });
+    }
+
+    private void ComposeCertifications(IContainer container, Resume resume)
+    {
+        ComposeSection(container, "Certifications", ct =>
+        {
+            foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
+            {
+                ct.Item().PaddingBottom(3).Text(text =>
+                {
+                    text.Span(cert.Name).FontSize(9 * FontSizeScale);
+                    if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
+                        text.Span($" - {cert.IssuingOrganization}").FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
+                });
+            }
         });
     }
 
@@ -145,8 +171,8 @@ public class StarterTemplate : BaseTemplate
             });
 
             var links = new List<string>();
-            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) links.Add(info.LinkedIn);
-            if (!string.IsNullOrWhiteSpace(info.GitHub)) links.Add(info.GitHub);
+            if (!string.IsNullOrWhiteSpace(info.LinkedIn)) links.Add(FormatLinkedInDisplay(info.LinkedIn));
+            if (!string.IsNullOrWhiteSpace(info.GitHub)) links.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
             if (!string.IsNullOrWhiteSpace(info.Website)) links.Add(info.Website);
 
             if (links.Any())
@@ -196,11 +222,9 @@ public class StarterTemplate : BaseTemplate
 
     private void ComposeSkills(IContainer container, List<Skill> skills)
     {
-        var grouped = skills.GroupBy(s => s.Category).ToList();
-
         container.Column(column =>
         {
-            foreach (var group in grouped)
+            foreach (var group in skills.GroupBy(s => s.Category))
             {
                 column.Item().Row(row =>
                 {
@@ -208,7 +232,7 @@ public class StarterTemplate : BaseTemplate
                     {
                         row.AutoItem().MinWidth(100).Text(group.Key + ":").Bold().FontSize(9 * FontSizeScale);
                     }
-                    row.RelativeItem().Text(string.Join(" • ", group.Select(s => s.Name))).FontSize(9 * FontSizeScale);
+                    row.RelativeItem().Text(string.Join(" • ", group.OrderBy(s => s.Order).Select(s => s.Name))).FontSize(9 * FontSizeScale);
                 });
             }
         });
@@ -259,6 +283,11 @@ public class StarterTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(proj.Description))
             {
                 column.Item().Text(proj.Description).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
+            }
+
+            if (!string.IsNullOrWhiteSpace(proj.Url))
+            {
+                column.Item().Text(proj.Url).FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
             }
 
             if (proj.Technologies.Any())

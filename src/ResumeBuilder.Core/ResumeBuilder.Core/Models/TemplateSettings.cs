@@ -2,18 +2,52 @@ namespace ResumeBuilder.Core.Models;
 
 public class TemplateSettings
 {
-    public string AccentColor { get; set; } = "#2563eb";
+    public const string DefaultAccentColor = "#2563eb";
+    public const string DefaultFontFamily = "Arial";
+
+    public string AccentColor { get; set; } = DefaultAccentColor;
     public string SecondaryColor { get; set; } = "#64748b";
     public string TextColor { get; set; } = "#1f2937";
     public string HeadingColor { get; set; } = "#111827";
 
-    public string FontFamily { get; set; } = "Arial";
-    public string HeadingFontFamily { get; set; } = "Arial";
+    public string FontFamily { get; set; } = DefaultFontFamily;
+    public string HeadingFontFamily { get; set; } = DefaultFontFamily;
 
     public float FontSizeScale { get; set; } = 1.0f;
     public float LineSpacing { get; set; } = 1.4f;
     public float SectionSpacing { get; set; } = 15f;
     public float PageMargin { get; set; } = 30f;
+
+    /// <summary>
+    /// True once the user has explicitly picked an accent color. Until then the selected
+    /// template's <see cref="TemplateInfo.DefaultAccentColor"/> wins.
+    /// </summary>
+    public bool IsAccentColorCustomized { get; set; }
+
+    /// <summary>
+    /// True once the user has explicitly picked a font. Until then the selected
+    /// template's <see cref="TemplateInfo.DefaultFontFamily"/> wins.
+    /// </summary>
+    public bool IsFontCustomized { get; set; }
+
+    /// <summary>
+    /// Applies a template's defaults for any styling the user has not explicitly customized.
+    /// </summary>
+    public void ApplyTemplateDefaults(TemplateInfo template)
+    {
+        if (!IsAccentColorCustomized)
+        {
+            AccentColor = template.DefaultAccentColor;
+        }
+
+        if (!IsFontCustomized)
+        {
+            FontFamily = template.DefaultFontFamily;
+            HeadingFontFamily = template.DefaultFontFamily;
+        }
+    }
+
+    public TemplateSettings Clone() => (TemplateSettings)MemberwiseClone();
 
     public static TemplateSettings Default => new();
 

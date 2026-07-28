@@ -1,7 +1,6 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using ResumeBuilder.App.ViewModels;
@@ -100,43 +99,8 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
-    private void ShowTemplateGallery_Click(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.ShowTemplateGallery = true;
-        }
-    }
 
-    private void CloseTemplateGallery_Click(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.ShowTemplateGallery = false;
-        }
-    }
 
-    private void ToggleAiPanel_Click(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.ShowAiPanel = !vm.ShowAiPanel;
-        }
-    }
 
-    private void ToggleTailorPanel_Click(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.ShowTailorPanel = !vm.ShowTailorPanel;
-        }
-    }
 
-    private void ToggleSyncPanel_Click(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.ShowSyncPanel = !vm.ShowSyncPanel;
-        }
-    }
 }

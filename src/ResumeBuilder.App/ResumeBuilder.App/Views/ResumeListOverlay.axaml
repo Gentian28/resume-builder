@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.ResumeListOverlay"
+             x:DataType="vm:MainWindowViewModel">
+
+        <Border Background="#80000000">
+            <Border Background="{DynamicResource RbSurface1}"
+                    CornerRadius="12" Margin="100" Padding="20" MaxWidth="600">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Row="0" Text="Your Resumes" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsControl ItemsSource="{Binding SavedResumes}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:Resume">
+                                    <Border Background="{DynamicResource RbSurface2}"
+                                            CornerRadius="8" Padding="15"
+                                            Margin="{Binding IsVariant, Converter={x:Static vm:MainWindowViewModel.VariantIndentConverter}}"
+                                            BorderBrush="{DynamicResource RbAccent}"
+                                            BorderThickness="{Binding IsVariant, Converter={x:Static vm:MainWindowViewModel.VariantBorderConverter}}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="3">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Border Background="#332563eb" CornerRadius="8" Padding="6,1"
+                                                            VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsVariant}">
+                                                        <TextBlock Text="Variant" FontSize="10"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding TargetRole, StringFormat='Tailored for: {0}'}"
+                                                           FontSize="11" Opacity="0.8"
+                                                           IsVisible="{Binding TargetRole, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                <TextBlock Text="{Binding PersonalInfo.FullName}" FontSize="12" Opacity="0.7"/>
+                                                <TextBlock Text="{Binding UpdatedAt, StringFormat='Last updated: {0:g}'}"
+                                                           FontSize="11" Opacity="0.5"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
+                                                <Button Content="Open"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).LoadResumeCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Content="Duplicate"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DuplicateResumeCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Content="Delete"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DeleteResumeCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" Spacing="10">
+                        <Button Content="New Resume" Command="{Binding CreateNewResumeCommand}"/>
+                        <Button Content="Cancel" Command="{Binding CloseResumeListCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+</UserControl>

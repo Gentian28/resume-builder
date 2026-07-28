@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.TemplateGalleryOverlay"
+             x:DataType="vm:MainWindowViewModel">
+
+        <Border Background="#80000000">
+            <Border Background="{DynamicResource RbSurface1}"
+                    CornerRadius="12" Margin="50" Padding="20">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Row="0" Text="Choose a Template" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsControl ItemsSource="{Binding TemplateCards}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TemplateCardViewModel">
+                                    <Button Margin="8" Padding="9" Width="178"
+                                            HorizontalContentAlignment="Stretch"
+                                            ToolTip.Tip="{Binding Info.Description}"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).SelectTemplateCommand}"
+                                            CommandParameter="{Binding Info}">
+                                        <StackPanel Spacing="7">
+                                            <!-- Fixed 210:297. A résumé template's whole value is how it
+                                                 uses the page, so the preview must never crop or stretch. -->
+                                            <Border Width="156" Height="220" CornerRadius="4"
+                                                    Background="White" ClipToBounds="True">
+                                                <Panel>
+                                                    <!-- Placeholder while rendering, and the resting
+                                                         state if a template failed to render. -->
+                                                    <!-- IsNull, not "!Thumbnail": negating a Bitmap
+                                                         does not evaluate to false, so the
+                                                         placeholder painted over every preview. -->
+                                                    <TextBlock Text="{Binding Info.Name}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="11" Foreground="#9AA3B2"
+                                                               IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}"/>
+                                                    <Image Source="{Binding Thumbnail}"
+                                                           Stretch="Uniform"
+                                                           IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                                </Panel>
+                                            </Border>
+                                            <StackPanel Spacing="1">
+                                                <TextBlock Text="{Binding Info.Name}" FontWeight="SemiBold" FontSize="12.5"/>
+                                                <TextBlock Text="{Binding Info.Category}" FontSize="10"
+                                                           Foreground="{DynamicResource RbText3}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Button Grid.Row="2" Content="Cancel" HorizontalAlignment="Right" Margin="0,20,0,0"
+                            Command="{Binding CloseTemplateGalleryCommand}"/>
+                </Grid>
+            </Border>
+        </Border>
+
+</UserControl>

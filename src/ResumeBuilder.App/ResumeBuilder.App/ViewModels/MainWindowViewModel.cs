@@ -767,6 +767,25 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             section.IsSelected = section.Key == value;
     }
 
+    // These were Click handlers in MainWindow's code-behind, which tied the markup that uses them
+    // to that one file. As commands they can live in any view, which is what lets the window be
+    // split into UserControls at all.
+
+    [RelayCommand]
+    private void OpenTemplateGallery() => ShowTemplateGallery = true;
+
+    [RelayCommand]
+    private void CloseTemplateGallery() => ShowTemplateGallery = false;
+
+    [RelayCommand]
+    private void ToggleAiPanel() => ShowAiPanel = !ShowAiPanel;
+
+    [RelayCommand]
+    private void ToggleTailorPanel() => ShowTailorPanel = !ShowTailorPanel;
+
+    [RelayCommand]
+    private void ToggleSyncPanel() => ShowSyncPanel = !ShowSyncPanel;
+
     /// <summary>
     /// Subscribes the nav counts to every list that feeds them, and refreshes once immediately.
     ///

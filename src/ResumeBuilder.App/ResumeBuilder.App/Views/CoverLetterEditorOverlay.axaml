@@ -1,0 +1,133 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.CoverLetterEditorOverlay"
+             x:DataType="vm:MainWindowViewModel">
+
+        <Border Background="#80000000">
+            <Border Background="{DynamicResource RbSurface1}"
+                    CornerRadius="12" Margin="40" Padding="20">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Cover Letter" FontSize="24" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding LetterSaveStateText}" FontSize="12" Opacity="0.7"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
+                            <Button Content="Draft with AI"
+                                    Command="{Binding DraftCoverLetterWithAiCommand}"
+                                    IsEnabled="{Binding !IsDraftingLetter}"
+                                    ToolTip.Tip="Works without an API key: falls back to a draft built from your resume"/>
+                            <Button Content="Save" Command="{Binding SaveCoverLetterCommand}"/>
+                            <SplitButton Content="Export PDF"
+                                         Command="{Binding ExportCoverLetterCommand}" CommandParameter="PDF">
+                                <SplitButton.Flyout>
+                                    <MenuFlyout>
+                                        <MenuItem Header="PDF" Command="{Binding ExportCoverLetterCommand}" CommandParameter="PDF"/>
+                                        <MenuItem Header="Word (DOCX)" Command="{Binding ExportCoverLetterCommand}" CommandParameter="DOCX"/>
+                                        <MenuItem Header="Plain Text" Command="{Binding ExportCoverLetterCommand}" CommandParameter="TEXT"/>
+                                    </MenuFlyout>
+                                </SplitButton.Flyout>
+                            </SplitButton>
+                            <Button Content="Close" Command="{Binding CloseCoverLetterEditorCommand}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="420,*">
+                        <!-- Letter Editor -->
+                        <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto" Margin="0,0,15,0">
+                            <StackPanel Spacing="10">
+                                <ProgressBar IsIndeterminate="True" Height="4"
+                                             IsVisible="{Binding IsDraftingLetter}"/>
+
+                                <TextBox Watermark="Letter name" Text="{Binding LetterName}" AutomationProperties.Name="Letter name"/>
+
+                                <TextBlock Text="Recipient" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
+                                <Grid ColumnDefinitions="*,10,*">
+                                    <TextBox Grid.Column="0" Watermark="Recipient name"
+                                             Text="{Binding LetterRecipientName}" AutomationProperties.Name="Recipient name"/>
+                                    <TextBox Grid.Column="2" Watermark="Recipient title"
+                                             Text="{Binding LetterRecipientTitle}" AutomationProperties.Name="Recipient title"/>
+                                </Grid>
+                                <TextBox Watermark="Company" Text="{Binding LetterCompanyName}" AutomationProperties.Name="Company"/>
+                                <TextBox Watermark="Company address"
+                                         Text="{Binding LetterCompanyAddress}"
+                                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" AutomationProperties.Name="Company address"/>
+
+                                <TextBlock Text="Letter" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
+                                <DatePicker SelectedDate="{Binding LetterDate}" HorizontalAlignment="Stretch"/>
+                                <TextBox Watermark="Subject" Text="{Binding LetterSubject}" AutomationProperties.Name="Subject"/>
+                                <TextBox Watermark="{Binding LetterSalutationPlaceholder}"
+                                         Text="{Binding LetterSalutation}"
+                                         ToolTip.Tip="Leave empty to use the fallback shown here" AutomationProperties.Name="{Binding LetterSalutationPlaceholder}"/>
+
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
+                                    <TextBlock Text="Body Paragraphs" FontWeight="SemiBold" FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Content="+ Add"
+                                            Command="{Binding AddLetterParagraphCommand}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding LetterParagraphs}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LetterParagraphViewModel">
+                                            <Border Background="{DynamicResource RbSurface2}"
+                                                    CornerRadius="4" Padding="8" Margin="0,3">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBox Grid.Column="0" Text="{Binding Text}"
+                                                             AcceptsReturn="True" TextWrapping="Wrap"
+                                                             MinHeight="70"
+                                                             Watermark="Paragraph text..." AutomationProperties.Name="Paragraph text"/>
+                                                    <StackPanel Grid.Column="1" Spacing="2" Margin="5,0,0,0">
+                                                        <Button Content="^" Width="28" Height="28" Padding="0"
+                                                                ToolTip.Tip="Move Up"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLetterParagraphUpCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Content="v" Width="28" Height="28" Padding="0"
+                                                                ToolTip.Tip="Move Down"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLetterParagraphDownCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Content="X" Width="28" Height="28" Padding="0"
+                                                                ToolTip.Tip="Remove"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveLetterParagraphCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBox Watermark="Closing (e.g. Sincerely,)" Text="{Binding LetterClosing}" AutomationProperties.Name="Closing"/>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Letter Preview -->
+                        <Border Grid.Column="1" Background="{DynamicResource RbSurface2}"
+                                CornerRadius="8">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding LetterPreviewPages}" HorizontalAlignment="Center">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="20,10" Background="White" BoxShadow="0 4 20 0 #40000000">
+                                                <Image Source="{Binding}"
+                                                       Stretch="Uniform"
+                                                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Grid.Row="2" Margin="0,15,0,0" FontSize="11" Opacity="0.6"
+                               Text="The letter inherits the sender block and styling of the resume it was created from."/>
+                </Grid>
+            </Border>
+        </Border>
+
+</UserControl>

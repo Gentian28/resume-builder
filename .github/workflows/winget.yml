@@ -1,0 +1,78 @@
+name: Submit to winget
+
+# Fires when a GitHub release is *published* (not when the draft is created), because the
+# manifest generator reads the released SHA256SUMS - it needs the assets to be downloadable.
+#
+# Inert until you opt in. Set the repository variable WINGET_AUTO_SUBMIT to "true" and add a
+# WINGET_TOKEN secret. Both prerequisites are in docs/manual-steps.md; until then this job is
+# skipped rather than failing and mailing you about it.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to submit (no leading v), e.g. 1.1.0"
+        required: true
+
+jobs:
+  submit:
+    # Two gates. The variable is the opt-in; the tag check keeps a pre-release or a hand-made
+    # draft from submitting something winget should never see.
+    if: vars.WINGET_AUTO_SUBMIT == 'true'
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The generator copies the newest existing manifest forward as its template, so it
+          # needs the branch rather than the detached tag commit.
+          ref: main
+
+      - name: Resolve version
+        id: v
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            ver="${{ github.event.inputs.version }}"
+          else
+            ver="${{ github.event.release.tag_name }}"
+            ver="${ver#v}"
+          fi
+          if ! echo "$ver" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::version '$ver' is not x.y.z - refusing to submit"
+            exit 1
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+
+      - name: Generate the manifest
+        shell: pwsh
+        # Reads the published checksum, so the hash always matches what people actually
+        # download rather than a rebuild that may differ byte-for-byte.
+        run: .\packaging\winget\new-version.ps1 -Version ${{ steps.v.outputs.version }}
+
+      - name: Commit the manifest
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packaging/winget
+          git commit -m "Add winget manifest for ${{ steps.v.outputs.version }}" || {
+            echo "nothing to commit - manifest already present"
+            exit 0
+          }
+          git push
+
+      - name: Install wingetcreate
+        shell: pwsh
+        run: winget install --id Microsoft.WingetCreate --accept-source-agreements --accept-package-agreements --disable-interactivity
+
+      - name: Submit
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        # Opens the PR against microsoft/winget-pkgs from your fork. The package must already
+        # exist there - the very first submission carries package-identity review and is done
+        # by hand.
+        run: |
+          wingetcreate submit --token $env:WINGET_TOKEN packaging\winget\${{ steps.v.outputs.version }}

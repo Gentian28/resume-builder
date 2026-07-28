@@ -232,3 +232,34 @@ blocker, and the instructions are already on the download page.
   theme foundation implemented. Independent of distribution; the app ships and works today. It is
   also why the download page uses a CSS mockup instead of a screenshot: the current UI is the one
   being replaced.
+
+---
+
+## 4. Turn on automatic winget submission — one-time setup
+
+`.github/workflows/winget.yml` will generate the manifest and open the winget-pkgs PR for you on
+every published release. It is **inert until you opt in**, so it does nothing today.
+
+Do this only after #408983 has merged — the first submission carries package-identity review and
+has to be done by hand.
+
+1. **Create a fine-grained PAT** at github.com/settings/tokens with `public_repo` scope. It needs
+   to push to your fork of microsoft/winget-pkgs.
+2. **Add it as a secret:** repo → Settings → Secrets and variables → Actions → New repository
+   secret → name `WINGET_TOKEN`.
+3. **Flip the switch:** same page, Variables tab → New repository variable → name
+   `WINGET_AUTO_SUBMIT`, value `true`.
+
+From then on, publishing a release opens the winget PR by itself. To check it before trusting it,
+run it by hand once: Actions → Submit to winget → Run workflow → version `1.1.0`.
+
+**This has never run.** The pieces are the ones you already ran by hand for 1.0.3, but the workflow
+around them is untested — watch the first one.
+
+### What is deliberately left manual
+
+- **The changelog.** Auto-generating it from commit subjects produces a log, not release notes.
+  It is the one part users actually read. The release now *fails* if `CHANGELOG.md` has no section
+  for the version being built, which catches forgetting rather than doing it for you.
+- **Publishing the draft.** The release builds automatically but waits for you, because publishing
+  is what pushes an auto-update to everyone already running the app. That is worth one human look.

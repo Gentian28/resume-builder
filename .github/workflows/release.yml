@@ -61,6 +61,19 @@ jobs:
           echo "version=$ver" >> "$GITHUB_OUTPUT"
           echo "building $ver for ${{ matrix.rid }}"
 
+      # Catches the mistake that is only visible after publishing: a release with no notes,
+      # or a version nobody remembered to write up. Costs a second, runs before any building.
+      - name: Changelog must mention this version
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          ver="${{ steps.v.outputs.version }}"
+          if ! grep -qE "^## +$ver( |$)" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## $ver' section. Add one before releasing."
+            exit 1
+          fi
+          echo "changelog entry for $ver found"
+
       - name: Install Linux native deps
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libfontconfig1

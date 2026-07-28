@@ -281,11 +281,41 @@ arithmetic recorded above.
 Verified visually: chrome now renders indigo while the preview page keeps the blue `#2563EB`
 document accent, so the UI-accent-vs-document-accent separation holds in the running app.
 
+### Implemented so far
+
+| Item | State |
+| --- | --- |
+| Design tokens on Semi.Avalonia | Done |
+| Template thumbnails | Done — lazy, disk-cached, 25 files / 1.5 MB |
+| Three-zone flexible layout | Done — 196px nav, editor 1\*, preview 1.15\* |
+| Command bar | Done — template/Tailor/AI/Import promoted out of the menus |
+| Persistent field labels | Partial — Personal Information only; see below |
+| First-run screen | Not started |
+| Split `MainWindow.axaml` | Not started — still ~1,800 lines |
+
+### Why labels are only partly done
+
+`AutomationProperties.Name` is set on all 55 watermarked fields, so the accessibility half is
+complete everywhere. Visible labels are applied to Personal Information only.
+
+The blocker is layout, not effort. In the repeatable entry templates a text box shares a grid row
+with *Move up / Move down / Remove*:
+
+```xml
+<Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+    <TextBox Grid.Column="0" Watermark="Job Title" .../>
+    <Button Grid.Column="1" Content="^" .../>
+```
+
+Stacking a label above that text box pushes the buttons out of vertical alignment. Each of those
+rows needs deciding individually — label above the whole row, or buttons moved into a header —
+which is layout design rather than a mechanical wrap.
+
 ### Next
 
-Template thumbnails via `PngExporter` (highest impact, lowest effort), then the three-zone
-layout, then the command bar. `MainWindow.axaml` is still a 1,722-line monolith; splitting it
-into UserControls should happen before the layout work so those changes land somewhere sensible.
+Splitting `MainWindow.axaml` should come before further section work: the entry editors, the
+first-run screen and the remaining labels all touch it, and at ~1,800 lines each change is harder
+to review than the change deserves.
 
 ## Process: design in Claude Design before any code
 

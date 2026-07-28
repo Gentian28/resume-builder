@@ -26,20 +26,24 @@ point that session at it if you want the markup rather than a description.
 > JavaScript disabled and so someone on Windows can still grab the Linux build.
 >
 > **Download URLs.** Use GitHub's `releases/latest/download/...` form so the links never need
-> updating when I cut a release:
+> updating when I cut a release. These filenames are verified against the published release — copy
+> them exactly, an invented one 404s:
 >
-> | Platform | File |
-> |---|---|
-> | Windows (installer) | `ResumeBuilder-win-Setup.exe` |
-> | Windows (portable) | `ResumeBuilder-win-Portable.zip` |
-> | macOS (Apple Silicon) | `ResumeBuilder-osx-arm64.zip` |
-> | macOS (Intel) | `ResumeBuilder-osx-x64.zip` |
-> | Linux | `ResumeBuilder.AppImage` |
+> | Platform | Primary | Also |
+> |---|---|---|
+> | Windows | `ResumeBuilder-win-Setup.exe` | `ResumeBuilder-win-Portable.zip` |
+> | macOS (Apple Silicon) | `ResumeBuilder-osx-Setup.pkg` | `ResumeBuilder-osx-Portable.zip` |
+> | macOS (Intel) | `ResumeBuilder-osx-x64-Setup.pkg` | `ResumeBuilder-osx-x64-Portable.zip` |
+> | Linux | `ResumeBuilder.AppImage` | — |
 >
 > Base: `https://github.com/Gentian28/resume-builder/releases/latest/download/`
 >
-> Also show the winget line for Windows users who prefer it:
-> `winget install Gentian28.ResumeBuilder`
+> Note the Apple Silicon build has **no** `arm64` in its name — it is plain `osx`, while Intel is
+> `osx-x64`. Easy to get backwards.
+>
+> Checksums are published per platform as `SHA256SUMS-win-x64.txt`, `SHA256SUMS-osx-arm64.txt`,
+> `SHA256SUMS-osx-x64.txt`, `SHA256SUMS-linux-x64.txt` — link the relevant one next to the
+> unsigned-build note so anyone who wants to verify can.
 >
 > **Two things that need saying plainly, because they cost me installs if I don't:**
 >
@@ -61,8 +65,35 @@ point that session at it if you want the markup rather than a description.
 
 ---
 
+## winget — leave it out for now
+
+`winget install Gentian28.ResumeBuilder` **does not work yet.** The submission
+(microsoft/winget-pkgs#408983) is still open awaiting a moderator, so that command currently
+returns *"No package found matching input criteria"*.
+
+Do not put it on the page until the PR merges — a copy-paste command that fails is worse than no
+command, because it reads as a broken project rather than a pending review.
+
+Once it merges, send this follow-up:
+
+> The winget submission went through. On the Windows card, add a package-manager option under the
+> download button:
+>
+> ```
+> winget install Gentian28.ResumeBuilder
+> ```
+>
+> Worth a one-line note that installing this way also skips the SmartScreen prompt, since winget
+> fetches through its own trusted client — that's the main reason a Windows user would prefer it.
+
+---
+
 ## After you cut a release
 
 Nothing on the page needs changing — the `releases/latest/download/` URLs resolve to whatever the
 newest release is. Only revisit it if an asset is renamed, or when the SignPath certificate comes
 through and the SmartScreen section can be deleted.
+
+**But cut 1.1.0 before you build the page.** The links work today and resolve to v1.0.3 — the
+pre-redesign build, without the first-run screen, the three-zone layout, or Anthropic support. A
+page whose screenshots don't match what downloads is a worse first impression than no page.

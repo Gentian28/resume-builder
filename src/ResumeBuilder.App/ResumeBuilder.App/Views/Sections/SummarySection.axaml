@@ -33,11 +33,14 @@
                                                 IsVisible="{Binding SummarySpellErrorCount}"/>
                                     </StackPanel>
                                 </Grid>
-                                <TextBox Watermark="Write a brief summary of your professional background..."
+                                <StackPanel Spacing="3">
+                                    <TextBlock Classes="fieldlabel" Text="Write a brief summary of your professional background"/>
+                                    <TextBox
                                          Text="{Binding Summary}"
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
                                          MinHeight="100" AutomationProperties.Name="Write a brief summary of your professional background"/>
+                                </StackPanel>
 
                                 <!-- Spell Check Suggestions Popup -->
                                 <Border Background="{DynamicResource RbSurface3}"

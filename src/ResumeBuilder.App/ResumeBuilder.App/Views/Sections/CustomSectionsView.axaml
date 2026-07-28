@@ -22,7 +22,10 @@
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Section Title" Text="{Binding Title}" AutomationProperties.Name="Section Title"/>
+                                                        <StackPanel Spacing="3">
+                                                            <TextBlock Classes="fieldlabel" Text="Section Title"/>
+                                                            <TextBox Grid.Column="0" Text="{Binding Title}" AutomationProperties.Name="Section Title"/>
+                                                        </StackPanel>
                                                         <Button Grid.Column="1" Content="X" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Remove section"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCustomSectionCommand}"
@@ -36,15 +39,24 @@
                                                                         CornerRadius="4" Padding="8" Margin="0,4">
                                                                     <StackPanel Spacing="6">
                                                                         <Grid ColumnDefinitions="*,Auto">
-                                                                            <TextBox Grid.Column="0" Watermark="Item Title" Text="{Binding Title}" AutomationProperties.Name="Item Title"/>
+                                                                            <StackPanel Spacing="3">
+                                                                                <TextBlock Classes="fieldlabel" Text="Item Title"/>
+                                                                                <TextBox Grid.Column="0" Text="{Binding Title}" AutomationProperties.Name="Item Title"/>
+                                                                            </StackPanel>
                                                                             <Button Grid.Column="1" Content="X" Margin="5,0,0,0"
                                                                                     ToolTip.Tip="Remove item"
                                                                                     Command="{Binding $parent[ItemsControl].((vm:CustomSectionViewModel)DataContext).RemoveItemCommand}"
                                                                                     CommandParameter="{Binding}"/>
                                                                         </Grid>
-                                                                        <TextBox Watermark="Subtitle" Text="{Binding Subtitle}" AutomationProperties.Name="Subtitle"/>
-                                                                        <TextBox Watermark="Description" Text="{Binding Description}"
+                                                                        <StackPanel Spacing="3">
+                                                                            <TextBlock Classes="fieldlabel" Text="Subtitle"/>
+                                                                            <TextBox Text="{Binding Subtitle}" AutomationProperties.Name="Subtitle"/>
+                                                                        </StackPanel>
+                                                                        <StackPanel Spacing="3">
+                                                                            <TextBlock Classes="fieldlabel" Text="Description"/>
+                                                                            <TextBox Text="{Binding Description}"
                                                                                  AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" AutomationProperties.Name="Description"/>
+                                                                        </StackPanel>
                                                                         <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto">
                                                                             <ComboBox Grid.Column="0" Width="70"
                                                                                       ItemsSource="{x:Static vm:DateOptions.Months}"

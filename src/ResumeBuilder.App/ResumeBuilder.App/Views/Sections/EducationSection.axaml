@@ -20,7 +20,9 @@
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Degree" Text="{Binding Degree}" AutomationProperties.Name="Degree"/>
+                                                        <TextBlock Text="{Binding Degree}" FontSize="12.5" FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                                   Foreground="{DynamicResource RbText2}"/>
                                                         <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Move Up"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveEducationUpCommand}"
@@ -34,9 +36,22 @@
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveEducationCommand}"
                                                                 CommandParameter="{Binding}"/>
                                                     </Grid>
-                                                    <TextBox Watermark="Field of Study" Text="{Binding FieldOfStudy}" AutomationProperties.Name="Field of Study"/>
-                                                    <TextBox Watermark="Institution" Text="{Binding Institution}" AutomationProperties.Name="Institution"/>
-                                                    <TextBox Watermark="Location" Text="{Binding Location}" AutomationProperties.Name="Location"/>
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Classes="fieldlabel" Text="Degree"/>
+                                                        <TextBox Text="{Binding Degree}" AutomationProperties.Name="Degree"/>
+                                                    </StackPanel>
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Classes="fieldlabel" Text="Field of Study"/>
+                                                        <TextBox Text="{Binding FieldOfStudy}" AutomationProperties.Name="Field of Study"/>
+                                                    </StackPanel>
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Classes="fieldlabel" Text="Institution"/>
+                                                        <TextBox Text="{Binding Institution}" AutomationProperties.Name="Institution"/>
+                                                    </StackPanel>
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Classes="fieldlabel" Text="Location"/>
+                                                        <TextBox Text="{Binding Location}" AutomationProperties.Name="Location"/>
+                                                    </StackPanel>
                                                     <Grid ColumnDefinitions="Auto,20,Auto,10,*">
                                                         <ComboBox Grid.Column="0" Width="80"
                                                                   ItemsSource="{x:Static vm:DateOptions.Years}"
@@ -50,9 +65,15 @@
                                                         <CheckBox Grid.Column="4" Content="Currently studying"
                                                                   IsChecked="{Binding IsCurrentlyStudying}"/>
                                                     </Grid>
-                                                    <TextBox Watermark="Grade/GPA" Text="{Binding Grade}" AutomationProperties.Name="Grade/GPA"/>
-                                                    <TextBox Watermark="Description" Text="{Binding Description}"
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Classes="fieldlabel" Text="Grade/GPA"/>
+                                                        <TextBox Text="{Binding Grade}" AutomationProperties.Name="Grade/GPA"/>
+                                                    </StackPanel>
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Classes="fieldlabel" Text="Description"/>
+                                                        <TextBox Text="{Binding Description}"
                                                              AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Description"/>
+                                                    </StackPanel>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>

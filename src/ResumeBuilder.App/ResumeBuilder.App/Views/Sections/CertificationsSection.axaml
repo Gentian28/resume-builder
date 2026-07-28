@@ -20,7 +20,9 @@
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Certification Name" Text="{Binding Name}" AutomationProperties.Name="Certification Name"/>
+                                                        <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                                   Foreground="{DynamicResource RbText2}"/>
                                                         <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Move Up"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveCertificationUpCommand}"
@@ -34,7 +36,14 @@
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCertificationCommand}"
                                                                 CommandParameter="{Binding}"/>
                                                     </Grid>
-                                                    <TextBox Watermark="Issuing Organization" Text="{Binding IssuingOrganization}" AutomationProperties.Name="Issuing Organization"/>
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Classes="fieldlabel" Text="Certification Name"/>
+                                                        <TextBox Text="{Binding Name}" AutomationProperties.Name="Certification Name"/>
+                                                    </StackPanel>
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Classes="fieldlabel" Text="Issuing Organization"/>
+                                                        <TextBox Text="{Binding IssuingOrganization}" AutomationProperties.Name="Issuing Organization"/>
+                                                    </StackPanel>
                                                     <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
                                                         <ComboBox Grid.Column="0" Width="70"
                                                                   ToolTip.Tip="Issued"
@@ -63,8 +72,14 @@
                                                                   IsChecked="{Binding DoesNotExpire}"/>
                                                     </Grid>
                                                     <Grid ColumnDefinitions="*,10,*">
-                                                        <TextBox Grid.Column="0" Watermark="Credential ID" Text="{Binding CredentialId}" AutomationProperties.Name="Credential ID"/>
-                                                        <TextBox Grid.Column="2" Watermark="Credential URL" Text="{Binding CredentialUrl}" AutomationProperties.Name="Credential URL"/>
+                                                        <StackPanel Spacing="3">
+                                                            <TextBlock Classes="fieldlabel" Text="Credential ID"/>
+                                                            <TextBox Grid.Column="0" Text="{Binding CredentialId}" AutomationProperties.Name="Credential ID"/>
+                                                        </StackPanel>
+                                                        <StackPanel Spacing="3">
+                                                            <TextBlock Classes="fieldlabel" Text="Credential URL"/>
+                                                            <TextBox Grid.Column="2" Text="{Binding CredentialUrl}" AutomationProperties.Name="Credential URL"/>
+                                                        </StackPanel>
                                                     </Grid>
                                                 </StackPanel>
                                             </Border>

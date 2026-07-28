@@ -6,68 +6,111 @@
              x:Class="ResumeBuilder.App.Views.Sections.ExperienceSection"
              x:DataType="vm:MainWindowViewModel">
 
-                        <Border Background="{DynamicResource RbSurface1}"
-                                CornerRadius="8" Padding="15">
-                            <StackPanel Spacing="10">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Work Experience" FontWeight="SemiBold" FontSize="14"/>
-                                    <Button Grid.Column="1" Content="+ Add" Command="{Binding AddExperienceCommand}"/>
+    <Border Background="{DynamicResource RbSurface1}"
+            CornerRadius="8" Padding="15">
+        <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="Work Experience" FontWeight="SemiBold" FontSize="14"/>
+                <Button Grid.Column="1" Content="+ Add" Command="{Binding AddExperienceCommand}"/>
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Experiences}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ExperienceViewModel">
+                        <Border Background="{DynamicResource RbSurface2}"
+                                CornerRadius="6" Padding="12" Margin="0,5">
+                            <StackPanel Spacing="9">
+
+                                <!-- Reorder and remove live in their own header row. They used to
+                                     share a row with the job-title box, which is what stopped that
+                                     field taking a label: stacking one above the box pushed the
+                                     buttons out of vertical alignment. The header also names the
+                                     entry, so a long list stays readable while scrolling. -->
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                    <TextBlock Text="{Binding JobTitle}" FontSize="12.5" FontWeight="SemiBold"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource RbText2}"/>
+                                    <Button Grid.Column="1" Content="^" Width="28" Padding="0"
+                                            ToolTip.Tip="Move up" AutomationProperties.Name="Move up"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceUpCommand}"
+                                            CommandParameter="{Binding}"/>
+                                    <Button Grid.Column="2" Content="v" Width="28" Padding="0" Margin="3,0,0,0"
+                                            ToolTip.Tip="Move down" AutomationProperties.Name="Move down"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceDownCommand}"
+                                            CommandParameter="{Binding}"/>
+                                    <Button Grid.Column="3" Content="X" Width="28" Padding="0" Margin="6,0,0,0"
+                                            ToolTip.Tip="Remove" AutomationProperties.Name="Remove"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveExperienceCommand}"
+                                            CommandParameter="{Binding}"/>
                                 </Grid>
-                                <ItemsControl ItemsSource="{Binding Experiences}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:ExperienceViewModel">
-                                            <Border Background="{DynamicResource RbSurface2}"
-                                                    CornerRadius="4" Padding="10" Margin="0,5">
-                                                <StackPanel Spacing="8">
-                                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Job Title" Text="{Binding JobTitle}" AutomationProperties.Name="Job Title"/>
-                                                        <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
-                                                                ToolTip.Tip="Move Up"
-                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceUpCommand}"
-                                                                CommandParameter="{Binding}"/>
-                                                        <Button Grid.Column="2" Content="v" Width="28" Margin="2,0,0,0"
-                                                                ToolTip.Tip="Move Down"
-                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceDownCommand}"
-                                                                CommandParameter="{Binding}"/>
-                                                        <Button Grid.Column="3" Content="X" Margin="5,0,0,0"
-                                                                ToolTip.Tip="Remove"
-                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveExperienceCommand}"
-                                                                CommandParameter="{Binding}"/>
-                                                    </Grid>
-                                                    <TextBox Watermark="Company" Text="{Binding Company}" AutomationProperties.Name="Company"/>
-                                                    <TextBox Watermark="Location" Text="{Binding Location}" AutomationProperties.Name="Location"/>
-                                                    <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
-                                                        <ComboBox Grid.Column="0" Width="70"
-                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
-                                                                  SelectedItem="{Binding StartMonthName}"
-                                                                  PlaceholderText="Month"/>
-                                                        <ComboBox Grid.Column="2" Width="80"
-                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
-                                                                  SelectedItem="{Binding StartYear}"
-                                                                  PlaceholderText="Year"/>
-                                                        <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
-                                                        <ComboBox Grid.Column="4" Width="70"
-                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
-                                                                  SelectedItem="{Binding EndMonthName}"
-                                                                  IsEnabled="{Binding !IsCurrentRole}"
-                                                                  PlaceholderText="Month"/>
-                                                        <ComboBox Grid.Column="6" Width="80"
-                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
-                                                                  SelectedItem="{Binding EndYear}"
-                                                                  IsEnabled="{Binding !IsCurrentRole}"
-                                                                  PlaceholderText="Year"/>
-                                                        <CheckBox Grid.Column="8" Content="Current" IsChecked="{Binding IsCurrentRole}"/>
-                                                    </Grid>
-                                                    <TextBox Watermark="Description" Text="{Binding Description}"
-                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Description"/>
-                                                    <TextBox Watermark="Achievements (one per line)" Text="{Binding Achievements}"
-                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Achievements"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+
+                                <StackPanel Spacing="3">
+                                    <TextBlock Classes="fieldlabel" Text="Job title"/>
+                                    <TextBox Text="{Binding JobTitle}" AutomationProperties.Name="Job title"/>
+                                </StackPanel>
+
+                                <Grid ColumnDefinitions="*,10,*">
+                                    <StackPanel Grid.Column="0" Spacing="3">
+                                        <TextBlock Classes="fieldlabel" Text="Company"/>
+                                        <TextBox Text="{Binding Company}" AutomationProperties.Name="Company"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="3">
+                                        <TextBlock Classes="fieldlabel" Text="Location"/>
+                                        <TextBox Text="{Binding Location}" AutomationProperties.Name="Location"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Spacing="3">
+                                    <TextBlock Classes="fieldlabel" Text="Dates"/>
+                                    <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
+                                        <ComboBox Grid.Column="0" Width="70"
+                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                  SelectedItem="{Binding StartMonthName}"
+                                                  AutomationProperties.Name="Start month"
+                                                  PlaceholderText="Month"/>
+                                        <ComboBox Grid.Column="2" Width="80"
+                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                  SelectedItem="{Binding StartYear}"
+                                                  AutomationProperties.Name="Start year"
+                                                  PlaceholderText="Year"/>
+                                        <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
+                                        <ComboBox Grid.Column="4" Width="70"
+                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                  SelectedItem="{Binding EndMonthName}"
+                                                  IsEnabled="{Binding !IsCurrentRole}"
+                                                  AutomationProperties.Name="End month"
+                                                  PlaceholderText="Month"/>
+                                        <ComboBox Grid.Column="6" Width="80"
+                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                  SelectedItem="{Binding EndYear}"
+                                                  IsEnabled="{Binding !IsCurrentRole}"
+                                                  AutomationProperties.Name="End year"
+                                                  PlaceholderText="Year"/>
+                                        <!-- Disables the end date rather than blanking it, so the
+                                             formatter never has to guess at a half-set range. -->
+                                        <CheckBox Grid.Column="8" Content="Current" IsChecked="{Binding IsCurrentRole}"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <StackPanel Spacing="3">
+                                    <TextBlock Classes="fieldlabel" Text="Description"/>
+                                    <TextBox Text="{Binding Description}"
+                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
+                                             AutomationProperties.Name="Description"/>
+                                </StackPanel>
+
+                                <StackPanel Spacing="3">
+                                    <TextBlock Classes="fieldlabel" Text="Achievements — one per line"/>
+                                    <TextBox Text="{Binding Achievements}"
+                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
+                                             AutomationProperties.Name="Achievements"/>
+                                </StackPanel>
+
                             </StackPanel>
                         </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
 
 </UserControl>

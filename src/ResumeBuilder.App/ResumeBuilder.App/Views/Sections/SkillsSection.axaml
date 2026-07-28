@@ -17,8 +17,14 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SkillViewModel">
                                             <Grid ColumnDefinitions="*,10,*,10,Auto,Auto,Auto,Auto" Margin="0,3">
-                                                <TextBox Grid.Column="0" Watermark="Skill Name" Text="{Binding Name}" AutomationProperties.Name="Skill Name"/>
-                                                <TextBox Grid.Column="2" Watermark="Category" Text="{Binding Category}" AutomationProperties.Name="Category"/>
+                                                <StackPanel Spacing="3">
+                                                    <TextBlock Classes="fieldlabel" Text="Skill Name"/>
+                                                    <TextBox Grid.Column="0" Text="{Binding Name}" AutomationProperties.Name="Skill Name"/>
+                                                </StackPanel>
+                                                <StackPanel Spacing="3">
+                                                    <TextBlock Classes="fieldlabel" Text="Category"/>
+                                                    <TextBox Grid.Column="2" Text="{Binding Category}" AutomationProperties.Name="Category"/>
+                                                </StackPanel>
                                                 <ComboBox Grid.Column="4" Width="120"
                                                           ToolTip.Tip="Proficiency level"
                                                           ItemsSource="{x:Static vm:SkillViewModel.AvailableLevels}"

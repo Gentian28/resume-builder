@@ -17,7 +17,10 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:LanguageViewModel">
                                             <Grid ColumnDefinitions="*,10,*,Auto,Auto,Auto" Margin="0,3">
-                                                <TextBox Grid.Column="0" Watermark="Language" Text="{Binding Name}" AutomationProperties.Name="Language"/>
+                                                <StackPanel Spacing="3">
+                                                    <TextBlock Classes="fieldlabel" Text="Language"/>
+                                                    <TextBox Grid.Column="0" Text="{Binding Name}" AutomationProperties.Name="Language"/>
+                                                </StackPanel>
                                                 <ComboBox Grid.Column="2"
                                                           ItemsSource="{x:Static vm:LanguageViewModel.AvailableProficiencies}"
                                                           SelectedItem="{Binding Proficiency}"

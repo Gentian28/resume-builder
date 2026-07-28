@@ -23,8 +23,8 @@ A cross-platform desktop resume builder: edit a resume in a live editor, see a r
 ## Getting started
 
 ```bash
-git clone <repo-url>
-cd resumebuilder
+git clone https://github.com/Gentian28/resume-builder.git
+cd resume-builder
 
 dotnet restore ResumeBuilder.sln
 dotnet build ResumeBuilder.sln

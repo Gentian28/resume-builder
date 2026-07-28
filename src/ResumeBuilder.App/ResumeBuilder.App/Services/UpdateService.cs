@@ -24,8 +24,11 @@ public sealed class UpdateService
     /// <summary>
     /// The GitHub releases feed doubles as the update feed, so updates work before any
     /// separate hosting exists. Point this at an R2 URL later by changing the source only.
+    ///
+    /// Must be the public repo: a private one returns 404 to unauthenticated clients, so every
+    /// installed copy would silently never find an update.
     /// </summary>
-    public const string DefaultFeedUrl = "https://github.com/Gentian28/resumebuilder";
+    public const string DefaultFeedUrl = "https://github.com/Gentian28/resume-builder";
 
     public UpdateService(string? feedUrl = null)
     {

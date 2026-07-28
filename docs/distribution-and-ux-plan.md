@@ -220,27 +220,43 @@ was latent from the start; CI had only ever run on `windows-latest`. Fixed by re
 4. **Builds are unsigned**, so Windows SmartScreen still warns. Fixed by the SignPath OSS
    certificate, which requires a public repo — and that is currently blocked, see below.
 
-### Blocker: `refs/pull/1/head` still exposes the purged file
+### Resolved: published from a fresh repo instead
+
+**The public repo is [github.com/Gentian28/resume-builder](https://github.com/Gentian28/resume-builder)**,
+created 2026-07-28 and pushed with the rewritten history only. Verified immediately after the
+push that it exposes exactly two refs — `HEAD` and `refs/heads/main` — and no `refs/pull/*`, so
+the problem described below cannot exist there.
+
+The original `Gentian28/resumebuilder` **stays private and untouched**, keeping PR #1 and the
+Actions history. Nothing was deleted and GitHub Support was not needed.
+
+Consequences worth remembering:
+
+- `UpdateService.DefaultFeedUrl` points at the **public** repo. A private feed returns 404 to
+  unauthenticated clients, so installed copies would silently never find an update.
+- The local clone has two remotes: `origin` (private, original) and `public`. `main` tracks
+  `public`. Pushing work to `origin` is almost certainly a mistake now.
+- Releases are cut from the public repo. v1.0.0 built green there and produced the same artifact
+  set as the trial run.
+
+### The problem this avoided: `refs/pull/1/head`
 
 Rewriting `main` did not remove the personal résumé from GitHub. GitHub retains pull-request refs
 permanently and independently of branches, and `refs/pull/1/head` still points at pre-rewrite
 history. Verified 2026-07-28 by fetching that ref: `gentian_shkembi_resume.json` is present and
 still contains the mobile number.
 
-It is currently harmless — the repo is private, so only collaborators can fetch it. It becomes a
-real exposure the moment the repo goes public, which step 7 requires. Force-pushing cannot fix it;
-the ref is not reachable from any branch.
+It stays harmless only because `Gentian28/resumebuilder` remains private, so only collaborators
+can fetch that ref. Force-pushing cannot remove it — the ref is not reachable from any branch, and
+GitHub keeps it regardless.
 
-Options, in rough order of preference:
+**So: never make `Gentian28/resumebuilder` public.** Publishing happens from `resume-builder`,
+which never had a pull request and therefore never had the ref. Had we wanted to publish the
+original instead, the options were deleting and recreating it, or asking GitHub Support to
+garbage-collect unreachable objects — both worse than simply starting a clean repo.
 
-1. **Delete and recreate the repo**, pushing only the rewritten history. Completely effective and
-   immediate. Costs PR #1 and the Actions history — this repo has one merged PR and nothing else
-   worth keeping.
-2. **Ask GitHub Support to garbage-collect** the unreachable objects. Keeps the repo and its
-   history; free, but a manual request with turnaround measured in days.
-3. **Stay private.** No exposure, but no SignPath, so downloads keep the SmartScreen warning.
-
-Do not make the repo public until this is resolved.
+The general lesson: rewriting history fixes branches, not pull-request refs. If a secret has ever
+been in a PR on a repo that will go public, a fresh repo is the reliable fix.
 
 ### Tension resolved at step 5
 

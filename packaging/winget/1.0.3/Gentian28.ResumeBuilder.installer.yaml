@@ -1,6 +1,6 @@
-# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+﻿# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
 PackageIdentifier: Gentian28.ResumeBuilder
-PackageVersion: 1.0.1
+PackageVersion: 1.0.3
 
 # Velopack's Setup.exe is a custom installer, so "exe" with explicit switches.
 # --silent is what it actually accepts (src/bins/src/setup.rs: "-s --silent"); winget's
@@ -21,13 +21,13 @@ InstallModes:
 UpgradeBehavior: install
 ReleaseDate: 2026-07-28
 
-# Pinned to the exact release. Deliberately NOT /releases/latest/download/ — the hash below
+# Pinned to the exact release. Deliberately NOT /releases/latest/download/ â€” the hash below
 # is only valid for this build, and a floating URL would break validation the moment a new
 # version ships.
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/Gentian28/resume-builder/releases/download/v1.0.1/ResumeBuilder-win-Setup.exe
-    InstallerSha256: 5437A7C14EB7585429E7C9989CDF06F10779730766199C99B73839B39EFB0E60
+    InstallerUrl: https://github.com/Gentian28/resume-builder/releases/download/v1.0.3/ResumeBuilder-win-Setup.exe
+    InstallerSha256: 6B048373EB37DCFB84A6228409F0CE95F384A19E455C7E25C6247626887EA56E
 
 ManifestType: installer
 ManifestVersion: 1.6.0

@@ -1,6 +1,6 @@
-# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+﻿# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
 PackageIdentifier: Gentian28.ResumeBuilder
-PackageVersion: 1.0.1
+PackageVersion: 1.0.3
 PackageLocale: en-US
 Publisher: Gentian Shkembi
 PublisherUrl: https://www.gentianshkembi.com
@@ -40,6 +40,6 @@ Tags:
   - privacy
   - resume
   - resume-builder
-ReleaseNotesUrl: https://github.com/Gentian28/resume-builder/releases/tag/v1.0.1
+ReleaseNotesUrl: https://github.com/Gentian28/resume-builder/releases/tag/v1.0.3
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0

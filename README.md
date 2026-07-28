@@ -1,11 +1,30 @@
 # ResumeBuilder
 
-A cross-platform desktop resume builder: edit a resume in a live editor, see a real-time PDF preview, pick from 17 templates, and export to PDF, DOCX, HTML, PNG, plain text, or JSON Resume.
+A cross-platform desktop resume builder: edit a resume in a live editor, see a real-time PDF preview, pick from 25 templates, and export to PDF, DOCX, HTML, PNG, plain text, or JSON Resume.
+
+**Your resume never leaves your machine.** No account, no upload, no cloud. Resumes are stored in a local SQLite database, and the AI features can run against a local model (Ollama, LM Studio) so even those work fully offline.
+
+## Download
+
+Grab the latest build from the [releases page](https://github.com/Gentian28/resume-builder/releases).
+
+| Platform | Download | Notes |
+| --- | --- | --- |
+| Windows | `ResumeBuilder-win-Setup.exe` | Installer, updates itself. `win-Portable.zip` if you'd rather not install. |
+| Linux | `ResumeBuilder.AppImage` | `chmod +x` and run. Needs `libfontconfig1` — present on most desktops. |
+| macOS | `ResumeBuilder-osx-Setup.pkg` | See the Gatekeeper note below. |
+
+No .NET runtime needed — every build is self-contained.
+
+Builds are **not yet code-signed**, so Windows SmartScreen shows an "unknown publisher" warning
+(More info → Run anyway) and macOS Gatekeeper will refuse the package outright until you allow it
+under System Settings → Privacy & Security. `SHA256SUMS-*.txt` is published with every release if
+you want to verify what you downloaded. Signing is planned via SignPath's free OSS certificate.
 
 ## Features
 
 - **Live preview** — the editor renders the selected template to a paged PDF preview as you type.
-- **17 templates** — Modern, Classic, Minimal, Creative, Executive, Technical, Academic, TwoColumn, Compact, Elegant, Professional, Starter, Simple, Timeline, Bold, DarkSidebar, Infographic.
+- **25 resume templates** — Modern, Classic, Minimal, Creative, Executive, Technical, Academic, Two Column, Compact, Elegant, Professional, Starter, Simple, Timeline, Bold, Dark Sidebar, Infographic, ATS Plain, Chronology, Color Block, Developer, Europass, Federal, One Page, Photo Header — plus 3 cover-letter templates.
 - **Section ordering and visibility** — reorder or hide any section, including custom sections.
 - **Export** — PDF, DOCX, HTML, PNG, plain text (ATS-friendly), native JSON, and [JSON Resume](https://jsonresume.org/).
 - **Import** — JSON Resume, native JSON, LinkedIn data export (.zip), and PDF text extraction.

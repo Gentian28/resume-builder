@@ -289,37 +289,34 @@ document accent, so the UI-accent-vs-document-accent separation holds in the run
 | Template thumbnails | Done — lazy, disk-cached, 25 files / 1.5 MB |
 | Three-zone flexible layout | Done — 196px nav, editor 1\*, preview 1.15\* |
 | Command bar | Done — template/Tailor/AI/Import promoted out of the menus |
-| Persistent field labels | Partial — Personal Information only; see below |
-| Split `MainWindow.axaml` | Done — 1,900 → 347 lines, six UserControls |
+| Persistent field labels | Done — every content section |
+| Split `MainWindow.axaml` | Done — 1,900 → 347 lines |
+| Split `EditorView.axaml` | Done — 1,274 → 35 lines, 16 section controls |
 | First-run screen | Not started |
 
-### Why labels are only partly done
+### How the labels got unblocked
 
-`AutomationProperties.Name` is set on all 55 watermarked fields, so the accessibility half is
-complete everywhere. Visible labels are applied to Personal Information only.
+The obstacle was layout, not effort. In the repeatable entries a text box shared a grid row with
+*Move up / Move down / Remove*, so stacking a label above it knocked the buttons out of alignment.
+Splitting the editor per section made this solvable one section at a time: the buttons moved into
+their own header row, which also gained the entry's title so a long list of roles stays readable
+while scrolling.
 
-The blocker is layout, not effort. In the repeatable entry templates a text box shares a grid row
-with *Move up / Move down / Remove*:
-
-```xml
-<Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
-    <TextBox Grid.Column="0" Watermark="Job Title" .../>
-    <Button Grid.Column="1" Content="^" .../>
-```
-
-Stacking a label above that text box pushes the buttons out of vertical alignment. Each of those
-rows needs deciding individually — label above the whole row, or buttons moved into a header —
-which is layout design rather than a mechanical wrap.
+Watermarks deliberately survive on the AI, Sync, Tailor and Appearance panels, where the text is
+a hint rather than a name — `Base URL (e.g. https://api.openai.com/v1)` is worth keeping inside
+the box. All of them carry `AutomationProperties.Name`, so nothing is unlabelled to a screen
+reader.
 
 ### Next
 
-**Split `EditorView.axaml` per section.** It is 1,274 lines — the split moved the problem rather
-than solving it. One control per section (`PersonalSection`, `ExperienceSection`, …) makes the
-remaining labels and the entry-editor redesign reviewable changes rather than edits buried in a
-thousand lines.
+The **first-run screen** — `docs/design/screens/first-run.html`. Today a new user still meets an
+empty form.
 
-Then the first-run screen, and the entry editors from `docs/design/components/entry-editor.html`
-— the latter carries the correctness constraint about one control per achievement bullet.
+Then the **entry editors** from `docs/design/components/entry-editor.html`: collapsing all but
+the entry being edited, and the per-bullet achievement editing that the spec requires. That one
+carries a correctness constraint rather than a stylistic one — achievements must stay one control
+per bullet, because `JobTailoringService` addresses them by index through `AchievementLines`, and
+the field is currently a single textarea holding all of them.
 
 ### A note on verifying UI work
 

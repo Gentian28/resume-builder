@@ -101,22 +101,28 @@ validates the manifests by reading the published checksum. Run it after the rele
 
 ---
 
-## 2. Apply for the SignPath code-signing certificate
+## 2. SignPath code-signing certificate — SUBMITTED, awaiting review
 
-**Why you:** a reviewed application tied to your identity, not an API call.
+Applied 2026-07-28. Expect days to a few weeks; it is a human review.
 
-**This is the single highest-impact item left.** It removes the Windows "unknown publisher"
+The download page and README already credit SignPath, which the programme requires, marked
+application-pending rather than claiming signed builds that do not exist yet.
+
+**If it is declined, the likely reason is reputation, not eligibility.** The programme asks for
+evidence the project is widely used or trusted, and at the time of applying the repo was hours
+old with no stars, forks or downloads. That is a fixable objection: reapply once
+microsoft/winget-pkgs#408983 merges, since "installable via `winget install`" is a concrete
+third-party trust signal, and once there are some download statistics to point at.
+
+The remaining eligibility question, if they raise one, is **QuestPDF**: it ships in the app and is
+commercially dual-licensed (MIT for open-source projects and small businesses, paid above $1M
+revenue), against a rule requiring "an OSI-approved Open Source license without commercial
+dual-licensing for all components". QuestPDF grants MIT to open-source projects explicitly, so
+this project's use is MIT — but it is their call, and it was disclosed rather than hidden.
+
+It remains the single highest-impact item outstanding: it removes the Windows "unknown publisher"
 warning, which is the biggest thing standing between a stranger and actually running the app.
-
-The prerequisites are already met: public repo, OSI licence (MIT), builds produced by public CI
-from that source, no third-party binaries smuggled in.
-
-1. Apply to the **SignPath Foundation** OSS programme at <https://signpath.org/>.
-   Check their current criteria rather than trusting this list — they can change.
-2. You will be asked for the repo URL, the licence, and a description of the project.
-3. On approval they provide an organisation, a signing policy, and an API token.
-
-### Wiring it in once approved
+On approval they provide an organisation, a signing policy and an API token.
 
 1. Add the token as a repository secret, e.g. `SIGNPATH_API_TOKEN`.
 2. In `.github/workflows/release.yml`, sign between publish and pack. `vpk pack` already accepts

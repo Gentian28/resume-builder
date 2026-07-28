@@ -94,9 +94,9 @@ Consider **Semi.Avalonia** as a modern base theme rather than styling stock Flue
 4. ~~**Run the app and capture the current UI** before designing anything. Then produce the
    redesign proposal grounded in real screens.~~ **Done** — screens in `docs/ui-baseline/`,
    proposal in `docs/ui-redesign-proposal.md`.
-5. Add Velopack packaging.
-6. Release workflow: tag → matrix build (windows/ubuntu/macos runners) → package → upload.
-   Existing `ci.yml` is build+test only on `windows-latest`; this is a new workflow.
+5. ~~Add Velopack packaging.~~ **Done** — verified locally, see below.
+6. ~~Release workflow: tag → matrix build → package → upload.~~ **Done** —
+   `.github/workflows/release.yml`. Not yet exercised on a real runner.
 7. Make the repo public + apply for the SignPath OSS certificate.
 8. Download page on the portfolio: screenshots, the local-LLM privacy pitch, checksums,
    per-OS buttons.
@@ -164,7 +164,44 @@ a sequenced plan are in `docs/ui-redesign-proposal.md`. Two headlines: the **PDF
 already good** — every problem is in the chrome around it — and the **template gallery has
 no thumbnails**, so users pick from 25 visual designs by reading text.
 
-### Tension to resolve at step 5
+## Release pipeline — steps 5–6, done 2026-07-28
+
+`git tag v1.0.0 && git push --tags` now builds every platform, packages installers and drafts
+a GitHub Release. **This is the point at which the app is distributable.**
+
+Verified end-to-end locally on win-x64 — `vpk pack` produced:
+
+| Artifact | Size | What it is |
+| --- | --- | --- |
+| `ResumeBuilder-win-Setup.exe` | 70 MB | The installer (real PE32) — what most people download |
+| `ResumeBuilder-win-Portable.zip` | 65 MB | No-install option |
+| `ResumeBuilder-1.0.0-full.nupkg` | 65 MB | Update payload |
+| `RELEASES`, `releases.win.json` | <1 KB | The update feed |
+
+`vpk` also **verifies the `VelopackApp.Run()` call site** and fails packaging if it is missing or
+misplaced — a useful guard, since getting it wrong breaks installs silently rather than loudly.
+
+Two decisions the local run settled:
+
+- **No separate portable step.** `vpk pack` already emits `Portable.zip`, so building our own
+  single-file zip alongside it would ship two near-identically named portable downloads.
+- **`PublishSingleFile` is off for the installer leg.** This resolves the tension flagged below:
+  delta updates diff package contents, so a compressed single-file blob makes every update a full
+  ~60 MB download. Self-contained still applies, so no .NET runtime is needed either way.
+
+### Still required before the public can actually download it
+
+1. **Force-push the purged history** — `git push --force-with-lease origin main`. Until then the
+   personal résumé file is still on GitHub, which blocks step 7.
+2. **Auto-update is not wired.** The hook is in and the feed is produced, but the app never checks
+   for updates — that needs an `UpdateManager` pointed at a feed URL, which depends on R2 hosting
+   existing first. Installs work; they just will not self-update yet.
+3. **Builds are unsigned.** Windows SmartScreen will still warn. That is what step 7 (public repo →
+   SignPath OSS certificate) fixes; checksums are published in the meantime.
+4. **`release.yml` has never run on a real runner.** The local verification covers the packaging
+   step, not the matrix, the artifact upload or the draft-release creation.
+
+### Tension resolved at step 5
 
 `PublishSingleFile` + `EnableCompressionInSingleFile` produces one compressed 60 MB blob.
 Velopack's **delta updates diff package contents** — a compressed single file defeats that,

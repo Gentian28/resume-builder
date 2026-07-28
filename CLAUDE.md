@@ -56,6 +56,7 @@ Styling has two persisted sources kept in step: legacy `Resume.AccentColor`/`Fon
 - **Achievements ↔ editor text** conversion lives only in `Core/Models/AchievementLines`. Tailored edits (`JobTailoringService`) address achievements by index through it — never re-implement the line splitting/joining, or accepted AI rewrites land on the wrong bullet.
 - **Undo:** `TextEditAction`s with the same `FieldKey` merge within a 2s window (`IMergeableAction`). Recording during undo/redo is suppressed via `UndoRedoManager.IsExecutingAction`.
 - **AI features must degrade, not gate.** `KeywordAnalyzer`, tailoring, and cover-letter drafting all work with no API key configured (analysis-only / structured fallback). Preserve that: never disable a feature behind `IsConfigured`.
+- **Two AI providers, one interface.** `AiProviderRouter` (Core) fronts `LocalAiService` (any OpenAI-compatible server, incl. local LLMs) and `AnthropicAiService` (official Anthropic SDK). Prompts live *only* in `PromptBasedAiService` — subclasses supply transport, so the two cannot drift and a provider switch changes where data goes, not which features work. The router's `IsConfigured` reports the **active** provider only; each provider keeps its own key and model so switching back doesn't lose settings.
 - **HTML export is escape-sensitive:** colors must match the strict hex pattern, hrefs must go through `UrlRule.ToSafeAbsoluteUrl` (rejects `javascript:` etc.).
 
 ## Repo notes

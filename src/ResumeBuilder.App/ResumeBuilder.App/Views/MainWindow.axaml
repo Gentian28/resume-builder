@@ -132,13 +132,13 @@
         <!-- Main Content -->
         <Grid Grid.Row="1" ColumnDefinitions="450,*">
             <!-- Left Panel - Editor -->
-            <Border Grid.Column="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="{DynamicResource RbSurface2}"
+                    BorderBrush="{DynamicResource RbBorder}" BorderThickness="0,0,1,0">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="15" Spacing="15">
 
                         <!-- AI Assistant Panel -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15" IsVisible="{Binding ShowAiPanel}">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
@@ -174,7 +174,7 @@
                                     <Button Content="Apply endpoint settings"
                                             Command="{Binding ApplyAiSettingsCommand}"
                                             HorizontalAlignment="Left"/>
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                    <Border Background="{DynamicResource RbSurface2}"
                                             CornerRadius="4" Padding="8">
                                         <TextBlock Text="{Binding AiPrivacyNotice}"
                                                    FontSize="11" Opacity="0.85" TextWrapping="Wrap"/>
@@ -188,7 +188,7 @@
                                                IsVisible="{Binding AiStatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                                     <!-- Generate Summary -->
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                    <Border Background="{DynamicResource RbSurface2}"
                                             CornerRadius="4" Padding="10">
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="Summary Generator" FontWeight="SemiBold" FontSize="12"/>
@@ -212,7 +212,7 @@
                                     </Border>
 
                                     <!-- Skill Suggestions -->
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                    <Border Background="{DynamicResource RbSurface2}"
                                             CornerRadius="4" Padding="10">
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="Skill Suggestions" FontWeight="SemiBold" FontSize="12"/>
@@ -225,7 +225,7 @@
                                             <ItemsControl ItemsSource="{Binding AiSkillSuggestions}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                                                        <Border Background="{DynamicResource RbSurface3}"
                                                                 CornerRadius="4" Padding="6,4" Margin="0,2">
                                                             <Grid ColumnDefinitions="*,Auto,Auto">
                                                                 <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
@@ -255,7 +255,7 @@
                         </Border>
 
                         <!-- Tailor to Job Panel -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15" IsVisible="{Binding ShowTailorPanel}">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -302,7 +302,7 @@
                                     <ItemsControl ItemsSource="{Binding TailoredEdits}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:TailoredEditViewModel">
-                                                <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                <Border Background="{DynamicResource RbSurface2}"
                                                         CornerRadius="4" Padding="10" Margin="0,3">
                                                     <StackPanel Spacing="6">
                                                         <Grid ColumnDefinitions="Auto,*">
@@ -324,7 +324,7 @@
                                                                 <TextBlock Text="Proposed" FontSize="10" Opacity="0.6"/>
                                                                 <TextBlock Text="{Binding Proposed}" FontSize="11"
                                                                            TextWrapping="Wrap"
-                                                                           Foreground="{DynamicResource SystemAccentColor}"/>
+                                                                           Foreground="{DynamicResource RbAccent}"/>
                                                             </StackPanel>
                                                         </Grid>
                                                         <TextBlock Text="{Binding Rationale}" FontSize="10"
@@ -344,7 +344,7 @@
                                 <!-- Results (when available) -->
                                 <StackPanel Spacing="10" IsVisible="{Binding HasKeywordAnalysis}">
                                     <!-- Score -->
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                    <Border Background="{DynamicResource RbSurface2}"
                                             CornerRadius="4" Padding="10">
                                         <StackPanel Spacing="5">
                                             <Grid ColumnDefinitions="*,Auto">
@@ -464,7 +464,7 @@
                         </Border>
 
                         <!-- Sync Panel -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15" IsVisible="{Binding ShowSyncPanel}">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -496,7 +496,7 @@
                                 </StackPanel>
 
                                 <!-- Status -->
-                                <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                <Border Background="{DynamicResource RbSurface2}"
                                         CornerRadius="4" Padding="10">
                                     <StackPanel Spacing="5">
                                         <Grid ColumnDefinitions="*,Auto">
@@ -592,7 +592,7 @@
                         </Border>
 
                         <!-- Resume Name -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -610,7 +610,7 @@
                         </Border>
 
                         <!-- Template Selector -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <TextBlock Text="Template" FontWeight="SemiBold" FontSize="14"/>
@@ -622,7 +622,7 @@
                         </Border>
 
                         <!-- Template Customization -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -662,7 +662,7 @@
                                                     Background="Transparent"
                                                     Command="{Binding ToggleAccentColorPickerCommand}">
                                                 <Border Width="28" Height="28" CornerRadius="4"
-                                                        BorderBrush="{DynamicResource SystemBaseMediumColor}"
+                                                        BorderBrush="{DynamicResource RbBorder}"
                                                         BorderThickness="1"
                                                         Background="{Binding AccentColor, Converter={x:Static vm:MainWindowViewModel.HexToColorConverter}}"/>
                                             </Button>
@@ -755,7 +755,7 @@
                         </Border>
 
                         <!-- Section Ordering -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -771,7 +771,7 @@
                                     <ItemsControl ItemsSource="{Binding Sections}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:SectionViewModel">
-                                                <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                <Border Background="{DynamicResource RbSurface2}"
                                                         CornerRadius="4" Padding="8" Margin="0,2">
                                                     <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                                                         <CheckBox Grid.Column="0" IsChecked="{Binding IsVisible}"
@@ -800,7 +800,7 @@
                         </Border>
 
                         <!-- Personal Information -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <TextBlock Text="Personal Information" FontWeight="SemiBold" FontSize="14"/>
@@ -808,11 +808,11 @@
                                 <!-- Photo Upload -->
                                 <Grid ColumnDefinitions="Auto,*">
                                     <Border Grid.Column="0" Width="80" Height="80" CornerRadius="40"
-                                            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            Background="{DynamicResource RbSurface2}"
                                             ClipToBounds="True" Margin="0,0,15,0">
                                         <Panel>
                                             <TextBlock Text="Photo" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                                       Foreground="{DynamicResource RbText3}"
                                                        IsVisible="{Binding !HasPhoto}"/>
                                             <Image Source="{Binding PhotoPreview}" Stretch="UniformToFill"
                                                    IsVisible="{Binding HasPhoto}"/>
@@ -866,7 +866,7 @@
                         </Border>
 
                         <!-- Professional Summary -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -900,7 +900,7 @@
                                          MinHeight="100"/>
 
                                 <!-- Spell Check Suggestions Popup -->
-                                <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                                <Border Background="{DynamicResource RbSurface3}"
                                         CornerRadius="4" Padding="10"
                                         IsVisible="{Binding ShowSpellSuggestions}">
                                     <StackPanel Spacing="8">
@@ -912,7 +912,7 @@
                                         <ItemsControl ItemsSource="{Binding SpellSuggestions}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="vm:SpellSuggestionViewModel">
-                                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                                    <Border Background="{DynamicResource RbSurface2}"
                                                             CornerRadius="4" Padding="8" Margin="0,2">
                                                         <StackPanel Spacing="4">
                                                             <Grid ColumnDefinitions="*,Auto">
@@ -954,7 +954,7 @@
                         </Border>
 
                         <!-- Work Experience -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -964,7 +964,7 @@
                                 <ItemsControl ItemsSource="{Binding Experiences}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:ExperienceViewModel">
-                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            <Border Background="{DynamicResource RbSurface2}"
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
@@ -1019,7 +1019,7 @@
                         </Border>
 
                         <!-- Education -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1029,7 +1029,7 @@
                                 <ItemsControl ItemsSource="{Binding EducationList}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:EducationViewModel">
-                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            <Border Background="{DynamicResource RbSurface2}"
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto">
@@ -1075,7 +1075,7 @@
                         </Border>
 
                         <!-- Skills -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1112,7 +1112,7 @@
                         </Border>
 
                         <!-- Languages -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1148,7 +1148,7 @@
                         </Border>
 
                         <!-- Projects -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1158,7 +1158,7 @@
                                 <ItemsControl ItemsSource="{Binding Projects}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:ProjectViewModel">
-                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            <Border Background="{DynamicResource RbSurface2}"
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto">
@@ -1213,7 +1213,7 @@
                         </Border>
 
                         <!-- Certifications -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1223,7 +1223,7 @@
                                 <ItemsControl ItemsSource="{Binding Certifications}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:CertificationViewModel">
-                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            <Border Background="{DynamicResource RbSurface2}"
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto">
@@ -1282,7 +1282,7 @@
                         </Border>
 
                         <!-- Custom Sections -->
-                        <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        <Border Background="{DynamicResource RbSurface1}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1294,7 +1294,7 @@
                                 <ItemsControl ItemsSource="{Binding CustomSections}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:CustomSectionViewModel">
-                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            <Border Background="{DynamicResource RbSurface2}"
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto">
@@ -1308,7 +1308,7 @@
                                                     <ItemsControl ItemsSource="{Binding Items}">
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate x:DataType="vm:CustomSectionItemViewModel">
-                                                                <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                                                                <Border Background="{DynamicResource RbSurface1}"
                                                                         CornerRadius="4" Padding="8" Margin="0,4">
                                                                     <StackPanel Spacing="6">
                                                                         <Grid ColumnDefinitions="*,Auto">
@@ -1361,14 +1361,14 @@
             </Border>
 
             <!-- Right Panel - Preview -->
-            <Grid Grid.Column="1" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+            <Grid Grid.Column="1" Background="{DynamicResource RbSurface2}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <!-- Preview Toolbar -->
-                <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                <Border Grid.Row="0" Background="{DynamicResource RbSurface2}"
                         Padding="10">
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="5">
@@ -1377,7 +1377,7 @@
                                        VerticalAlignment="Center" Width="50" TextAlignment="Center"/>
                             <Button Content="+" Command="{Binding ZoomInCommand}" Width="30"/>
                             <Button Content="Reset" Command="{Binding ZoomResetCommand}" Margin="10,0,0,0"/>
-                            <Border Width="1" Background="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                            <Border Width="1" Background="{DynamicResource RbSurface3}"
                                     Margin="10,2"/>
                             <Button Content="Undo" Command="{Binding UndoCommand}"
                                     IsEnabled="{Binding CanUndo}"
@@ -1425,7 +1425,7 @@
         </Grid>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+        <Border Grid.Row="2" Background="{DynamicResource RbSurface2}"
                 Padding="10,5">
             <Grid ColumnDefinitions="*,Auto,Auto">
                 <TextBlock Text="{Binding StatusMessage}" FontSize="12"/>
@@ -1441,7 +1441,7 @@
 
         <!-- Template Gallery Overlay -->
         <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowTemplateGallery}">
-            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            <Border Background="{DynamicResource RbSurface1}"
                     CornerRadius="12" Margin="50" Padding="20">
                 <Grid RowDefinitions="Auto,*,Auto">
                     <TextBlock Grid.Row="0" Text="Choose a Template" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -1463,7 +1463,7 @@
                                             <TextBlock Text="{Binding Description}" TextWrapping="Wrap"
                                                        FontSize="11" Opacity="0.7" MaxWidth="180"/>
                                             <TextBlock Text="{Binding Category}" FontSize="10"
-                                                       Foreground="{DynamicResource SystemAccentColor}"/>
+                                                       Foreground="{DynamicResource RbAccent}"/>
                                         </StackPanel>
                                     </Button>
                                 </DataTemplate>
@@ -1479,7 +1479,7 @@
 
         <!-- Resume List Overlay -->
         <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowResumeList}">
-            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            <Border Background="{DynamicResource RbSurface1}"
                     CornerRadius="12" Margin="100" Padding="20" MaxWidth="600">
                 <Grid RowDefinitions="Auto,*,Auto">
                     <TextBlock Grid.Row="0" Text="Your Resumes" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -1488,10 +1488,10 @@
                         <ItemsControl ItemsSource="{Binding SavedResumes}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="models:Resume">
-                                    <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                    <Border Background="{DynamicResource RbSurface2}"
                                             CornerRadius="8" Padding="15"
                                             Margin="{Binding IsVariant, Converter={x:Static vm:MainWindowViewModel.VariantIndentConverter}}"
-                                            BorderBrush="{DynamicResource SystemAccentColor}"
+                                            BorderBrush="{DynamicResource RbAccent}"
                                             BorderThickness="{Binding IsVariant, Converter={x:Static vm:MainWindowViewModel.VariantBorderConverter}}">
                                         <Grid ColumnDefinitions="*,Auto">
                                             <StackPanel Grid.Column="0" Spacing="3">
@@ -1539,7 +1539,7 @@
 
         <!-- Cover Letter Editor Overlay -->
         <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowCoverLetterEditor}">
-            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            <Border Background="{DynamicResource RbSurface1}"
                     CornerRadius="12" Margin="40" Padding="20">
                 <Grid RowDefinitions="Auto,*,Auto">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,15">
@@ -1606,7 +1606,7 @@
                                 <ItemsControl ItemsSource="{Binding LetterParagraphs}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:LetterParagraphViewModel">
-                                            <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                            <Border Background="{DynamicResource RbSurface2}"
                                                     CornerRadius="4" Padding="8" Margin="0,3">
                                                 <Grid ColumnDefinitions="*,Auto">
                                                     <TextBox Grid.Column="0" Text="{Binding Text}"
@@ -1638,7 +1638,7 @@
                         </ScrollViewer>
 
                         <!-- Letter Preview -->
-                        <Border Grid.Column="1" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                        <Border Grid.Column="1" Background="{DynamicResource RbSurface2}"
                                 CornerRadius="8">
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemsSource="{Binding LetterPreviewPages}" HorizontalAlignment="Center">
@@ -1664,7 +1664,7 @@
 
         <!-- Cover Letter List Overlay -->
         <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowCoverLetterList}">
-            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            <Border Background="{DynamicResource RbSurface1}"
                     CornerRadius="12" Margin="100" Padding="20" MaxWidth="600">
                 <Grid RowDefinitions="Auto,*,Auto">
                     <TextBlock Grid.Row="0" Text="Your Cover Letters" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -1677,7 +1677,7 @@
                             <ItemsControl ItemsSource="{Binding CoverLetters}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="models:CoverLetter">
-                                        <Border Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                        <Border Background="{DynamicResource RbSurface2}"
                                                 CornerRadius="8" Padding="15" Margin="0,5">
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <StackPanel Grid.Column="0" Spacing="3">

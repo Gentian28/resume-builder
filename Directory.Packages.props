@@ -5,13 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup Label="UI">
-    <PackageVersion Include="Avalonia" Version="11.3.10" />
-    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="11.3.10" />
-    <PackageVersion Include="Avalonia.Desktop" Version="11.3.10" />
-    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.10" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.10" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.10" />
+    <PackageVersion Include="Avalonia" Version="11.3.14" />
+    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="11.3.14" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.3.14" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.14" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.14" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <!-- Base theme. Supplies the elevation, control themes and type scale that would otherwise be
+         hand-rolled on stock Fluent; our tokens in Styles/ override it rather than replace it.
+         The ColorPicker companion styles Avalonia.Controls.ColorPicker to match. -->
+    <PackageVersion Include="Semi.Avalonia" Version="11.3.14" />
+    <PackageVersion Include="Semi.Avalonia.ColorPicker" Version="11.3.14" />
     <!-- Pinned directly: Avalonia.Desktop pulls in 0.21.2 transitively (Linux D-Bus transport),
          which carries GHSA-xrw6-gwf8-vvr9. 0.21.3 is the patch for that line. -->
     <PackageVersion Include="Tmds.DBus.Protocol" Version="0.21.3" />

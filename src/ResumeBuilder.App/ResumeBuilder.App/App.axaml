@@ -1,16 +1,28 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:semi="https://irihi.tech/semi"
              x:Class="ResumeBuilder.App.App"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             <!-- "Default" ThemeVariant follows system theme variant. Light and dark are peers
+                  here: both are fully specced, so neither is a fallback for the other. -->
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://ResumeBuilder.App/Styles/Tokens.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 
     <Application.Styles>
-        <FluentTheme />
+        <!-- Base theme. Supplies elevation, control themes and a type scale that would otherwise
+             be hand-rolled on stock Fluent; Styles/Tokens.axaml layers over it. -->
+        <semi:SemiTheme Locale="en-US" />
         <Style Selector="TextBlock.dimmed">
             <Setter Property="Opacity" Value="0.5"/>
         </Style>
         <Style Selector="TextBox.error">
-            <Setter Property="BorderBrush" Value="Red"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource RbDanger}"/>
         </Style>
     </Application.Styles>
 </Application>

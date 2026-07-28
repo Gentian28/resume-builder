@@ -1,0 +1,145 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    Design tokens. The single source for colour, type and spacing in the app chrome.
+
+    Every value here comes from the approved spec in docs/design/foundations/ and the contrast
+    ratios were computed, not eyeballed — see docs/ui-redesign-proposal.md for the arithmetic.
+    Light and dark are peers; the app follows the OS via RequestedThemeVariant="Default".
+
+    These layer on top of Semi.Avalonia rather than replacing it. Semi owns buttons, inputs,
+    scrollbars and the like; these tokens are for our own surfaces and for anywhere we need to
+    be explicit.
+
+    Naming: Rb* prefix so nothing here can collide with a Semi or Avalonia key.
+  -->
+
+  <ResourceDictionary.ThemeDictionaries>
+
+    <ResourceDictionary x:Key="Light">
+      <!-- surface -->
+      <SolidColorBrush x:Key="RbBg" Color="#F6F7F9" />
+      <SolidColorBrush x:Key="RbSurface1" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RbSurface2" Color="#F0F2F5" />
+      <SolidColorBrush x:Key="RbSurface3" Color="#E8EBEF" />
+      <!-- border. RbBorderInput is deliberately darker: on an input the border *is* the
+           affordance, so it needs 3:1 where a decorative card border does not. -->
+      <SolidColorBrush x:Key="RbBorderSubtle" Color="#ECEEF1" />
+      <SolidColorBrush x:Key="RbBorder" Color="#DDE1E6" />
+      <SolidColorBrush x:Key="RbBorderInput" Color="#818A99" />
+      <!-- text. RbText3 is #656C7A and not lighter: it carries captions and the autosave
+           stamp, which is real text and must clear 4.5:1 on RbSurface2. -->
+      <SolidColorBrush x:Key="RbText1" Color="#14161A" />
+      <SolidColorBrush x:Key="RbText2" Color="#5B6270" />
+      <SolidColorBrush x:Key="RbText3" Color="#656C7A" />
+      <!-- accent. Indigo, not blue: every blue accessible enough to be a light-theme fill
+           lands within 1.19 contrast of the default document accent #2563EB. -->
+      <SolidColorBrush x:Key="RbAccent" Color="#4F46E5" />
+      <SolidColorBrush x:Key="RbOnAccent" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RbAccentSubtle" Color="#EEEDFC" />
+      <!-- semantic -->
+      <SolidColorBrush x:Key="RbSuccess" Color="#1A7F37" />
+      <SolidColorBrush x:Key="RbSuccessBg" Color="#E8F5EC" />
+      <SolidColorBrush x:Key="RbSuccessBorder" Color="#A8D5B8" />
+      <SolidColorBrush x:Key="RbWarning" Color="#B45309" />
+      <SolidColorBrush x:Key="RbWarningBg" Color="#FDF4E3" />
+      <SolidColorBrush x:Key="RbWarningBorder" Color="#E8D3A0" />
+      <SolidColorBrush x:Key="RbDanger" Color="#B42318" />
+      <SolidColorBrush x:Key="RbDangerBg" Color="#FDECEA" />
+
+      <!-- Semi accent override. Semi's palette (SemiColorPrimary) is built with StaticResource
+           and cannot be retargeted from outside, but its ControlThemes read this *alias* layer
+           via DynamicResource — so this is the supported override point.
+           Light theme: dark accent carrying a white label. -->
+      <SolidColorBrush x:Key="ButtonDefaultPrimaryForeground" Color="#4F46E5" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#4F46E5" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryPointeroverBackground" Color="#4338CA" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryPressedBackground" Color="#3730A3" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryBorderBrush" Color="#4F46E5" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryPointeroverBorderBrush" Color="#4338CA" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryPressedBorderBrush" Color="#3730A3" />
+      <SolidColorBrush x:Key="ButtonSolidForeground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SemiColorLink" Color="#4F46E5" />
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Dark">
+      <!-- surface -->
+      <SolidColorBrush x:Key="RbBg" Color="#0F1115" />
+      <SolidColorBrush x:Key="RbSurface1" Color="#16181D" />
+      <SolidColorBrush x:Key="RbSurface2" Color="#1D2027" />
+      <SolidColorBrush x:Key="RbSurface3" Color="#24272F" />
+      <!-- border -->
+      <SolidColorBrush x:Key="RbBorderSubtle" Color="#24272F" />
+      <SolidColorBrush x:Key="RbBorder" Color="#2F333C" />
+      <SolidColorBrush x:Key="RbBorderInput" Color="#697080" />
+      <!-- text -->
+      <SolidColorBrush x:Key="RbText1" Color="#E8EAED" />
+      <SolidColorBrush x:Key="RbText2" Color="#A2A8B4" />
+      <SolidColorBrush x:Key="RbText3" Color="#868D9B" />
+      <!-- accent. Light fill + near-black label: white-on-accent >= 4.5 needs luminance
+           <= 0.183 while accent-on-dark-panel >= 4.5 needs >= 0.229, so no colour can do
+           both. Dark theme therefore inverts which side carries the light value. -->
+      <SolidColorBrush x:Key="RbAccent" Color="#8B93F8" />
+      <SolidColorBrush x:Key="RbOnAccent" Color="#0F1115" />
+      <SolidColorBrush x:Key="RbAccentSubtle" Color="#1B1D33" />
+      <!-- semantic -->
+      <SolidColorBrush x:Key="RbSuccess" Color="#3FB950" />
+      <SolidColorBrush x:Key="RbSuccessBg" Color="#11241A" />
+      <SolidColorBrush x:Key="RbSuccessBorder" Color="#26492F" />
+      <SolidColorBrush x:Key="RbWarning" Color="#D29922" />
+      <SolidColorBrush x:Key="RbWarningBg" Color="#241D0F" />
+      <SolidColorBrush x:Key="RbWarningBorder" Color="#4A3A1C" />
+      <SolidColorBrush x:Key="RbDanger" Color="#F85149" />
+      <SolidColorBrush x:Key="RbDangerBg" Color="#2A1512" />
+
+      <!-- Semi accent override — dark. Note the inversion against the light dictionary: the
+           accent used as *text* must be light to clear 4.5:1 on a dark panel (#8B93F8 = 6.45),
+           while a filled button flips to a light fill with a near-black label (6.86). Giving
+           both roles the same colour is impossible here — see the arithmetic in
+           docs/ui-redesign-proposal.md — which is why Semi's own split between
+           ButtonDefaultPrimaryForeground and ButtonSolid* is what makes this expressible. -->
+      <SolidColorBrush x:Key="ButtonDefaultPrimaryForeground" Color="#8B93F8" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#8B93F8" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryPointeroverBackground" Color="#9DA3FA" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryPressedBackground" Color="#7C84F0" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryBorderBrush" Color="#8B93F8" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryPointeroverBorderBrush" Color="#9DA3FA" />
+      <SolidColorBrush x:Key="ButtonSolidPrimaryPressedBorderBrush" Color="#7C84F0" />
+      <SolidColorBrush x:Key="ButtonSolidForeground" Color="#0F1115" />
+      <SolidColorBrush x:Key="SemiColorLink" Color="#8B93F8" />
+    </ResourceDictionary>
+
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- ==== theme-independent: identical in light and dark ==== -->
+
+  <!-- Type scale. Sizes only; the brush is chosen per use. -->
+  <x:Double x:Key="RbFontDisplay">24</x:Double>
+  <x:Double x:Key="RbFontTitle">17</x:Double>
+  <x:Double x:Key="RbFontSection">13</x:Double>
+  <x:Double x:Key="RbFontBody">13</x:Double>
+  <x:Double x:Key="RbFontLabel">11.5</x:Double>
+  <x:Double x:Key="RbFontCaption">11</x:Double>
+  <x:Double x:Key="RbFontOverline">10.5</x:Double>
+
+  <!-- Spacing, 4px base -->
+  <x:Double x:Key="RbSpace1">4</x:Double>
+  <x:Double x:Key="RbSpace2">8</x:Double>
+  <x:Double x:Key="RbSpace3">12</x:Double>
+  <x:Double x:Key="RbSpace4">16</x:Double>
+  <x:Double x:Key="RbSpace5">24</x:Double>
+  <x:Double x:Key="RbSpace6">32</x:Double>
+  <x:Double x:Key="RbSpace7">48</x:Double>
+
+  <Thickness x:Key="RbPadCard">16</Thickness>
+  <Thickness x:Key="RbPadPanel">16,14</Thickness>
+  <Thickness x:Key="RbPadInput">9,6</Thickness>
+
+  <!-- Radius -->
+  <CornerRadius x:Key="RbRadiusSm">4</CornerRadius>
+  <CornerRadius x:Key="RbRadiusMd">7</CornerRadius>
+  <CornerRadius x:Key="RbRadiusLg">10</CornerRadius>
+  <CornerRadius x:Key="RbRadiusXl">14</CornerRadius>
+
+</ResourceDictionary>

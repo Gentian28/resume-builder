@@ -5,11 +5,32 @@
 
 ---
 
-## 1. Submit the winget package
+## 1. Submit the winget package — DONE, awaiting review
 
-**Why you:** it ends in a pull request to `microsoft/winget-pkgs` from your GitHub account.
+Submitted 2026-07-28 as **microsoft/winget-pkgs#408983** for v1.0.3. CLA signed, all checks
+green, waiting on a moderator. Nothing to do but wait — and specifically **do not push to that
+branch**, since new commits restart validation and reset the review.
 
-Manifests are written and validated at `packaging/winget/1.0.1/`.
+Once merged: `winget install Gentian28.ResumeBuilder`.
+
+Two things learned worth keeping for next time:
+
+- The CLA is a one-off for your account. Reply on the PR with `@microsoft-github-policy-service
+  agree` — no `company=`, since this is your own project and you hold the IP.
+- Test-install before submitting. Doing so caught the off-screen-window bug that shipped in 1.0.1
+  and 1.0.2; submitting either would have put a broken build in Microsoft's index.
+
+### For future releases
+
+```powershell
+.\packaging\winget\new-version.ps1 -Version 1.0.4   # after the release is published
+winget install --manifest packaging\winget\1.0.4    # prove it works
+wingetcreate submit packaging\winget\1.0.4
+```
+
+The original submission instructions follow, for reference.
+
+Manifests live at `packaging/winget/<version>/`.
 
 ### First, prove it installs
 

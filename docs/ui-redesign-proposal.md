@@ -292,7 +292,8 @@ document accent, so the UI-accent-vs-document-accent separation holds in the run
 | Persistent field labels | Done — every content section |
 | Split `MainWindow.axaml` | Done — 1,900 → 347 lines |
 | Split `EditorView.axaml` | Done — 1,274 → 35 lines, 16 section controls |
-| First-run screen | Not started |
+| First-run screen | Done — three routes, shown only on an empty database |
+| Per-bullet achievements | Done — see below |
 
 ### How the labels got unblocked
 
@@ -307,16 +308,34 @@ a hint rather than a name — `Base URL (e.g. https://api.openai.com/v1)` is wor
 the box. All of them carry `AutomationProperties.Name`, so nothing is unlabelled to a screen
 reader.
 
+### Per-bullet achievements — and a correction
+
+An earlier draft of this doc claimed the single-textarea design was a *correctness* risk, on the
+grounds that an accepted AI rewrite could land on the wrong bullet. **That was wrong.**
+`AchievementLines.ReplaceAt` counts non-blank lines using exactly the rule `Parse` uses, which is
+what the class was extracted to guarantee, and `ReplaceAt_TargetsTheSameEntryParseWouldProduce`
+already pins it. The old design was consistent.
+
+Per-bullet editing is a UX improvement: it makes the thing tailoring edits visible as a thing you
+can see and reorder. The text stays the single source of truth and the bullets are a projection of
+it, so `AchievementLines` remains the only authority on what an index means.
+
+Driving the real UI found two bugs that reasoning about the code had not:
+
+- A bullet added by *Add achievement* has no line in the text yet, so `ReplaceAt` had nothing to
+  target and silently dropped the first thing typed into it. New bullets now commit by rebuilding
+  the text; only existing ones take the `ReplaceAt` path.
+- Repeated *Add* stacked blank rows that all vanished on reload, because `Parse` drops them.
+
 ### Next
 
-The **first-run screen** — `docs/design/screens/first-run.html`. Today a new user still meets an
-empty form.
+Nothing in the original spec is outstanding. Candidates from here:
 
-Then the **entry editors** from `docs/design/components/entry-editor.html`: collapsing all but
-the entry being edited, and the per-bullet achievement editing that the spec requires. That one
-carries a correctness constraint rather than a stylistic one — achievements must stay one control
-per bullet, because `JobTailoringService` addresses them by index through `AchievementLines`, and
-the field is currently a single textarea holding all of them.
+- **Collapse all but the entry being edited.** With several roles the Experience section is a long
+  scroll; `docs/design/components/entry-editor.html` shows collapsed summary rows.
+- **The AI status strip's three states** — the command-bar dot distinguishes local from everything
+  else, but the panel itself does not yet spell out cloud vs unconfigured.
+- **Cover letters** still use the old overlay rather than the three-zone surface.
 
 ### A note on verifying UI work
 

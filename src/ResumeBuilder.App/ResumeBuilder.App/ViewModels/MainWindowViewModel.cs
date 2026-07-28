@@ -69,6 +69,16 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [ObservableProperty]
     private string _statusMessage = "Ready";
 
+    /// <summary>
+    /// False unless this build was installed by Velopack *and* a newer release exists, so the
+    /// prompt never appears when running from source or the portable build.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isUpdateAvailable;
+
+    [ObservableProperty]
+    private string _updateStatusText = string.Empty;
+
     [ObservableProperty]
     private bool _showTemplateGallery;
 
@@ -368,7 +378,47 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             InitializeTheme();
             InitializeUndoRedo();
             UpdateAiPrivacyNotice();
+            _ = CheckForUpdatesAsync();
         }
+    }
+
+    /// <summary>
+    /// Looks for a newer release and pre-downloads it, so "Restart &amp; update" is instant.
+    /// Fire-and-forget on purpose: this must never delay startup, and
+    /// <see cref="UpdateService"/> already swallows offline/feed errors rather than surfacing
+    /// them — a failed update check is not the user's problem to solve.
+    /// </summary>
+    private async Task CheckForUpdatesAsync()
+    {
+        var updates = _services.UpdateService;
+        if (!updates.IsSupported)
+            return;
+
+        if (!await updates.CheckAsync())
+            return;
+
+        // Download before offering the button, so accepting does not stall on a slow connection.
+        if (!await updates.DownloadAsync())
+            return;
+
+        UpdateStatusText = $"Version {updates.AvailableVersion} ready";
+        IsUpdateAvailable = true;
+    }
+
+    /// <summary>
+    /// Applies the downloaded update and restarts. Saves first: ApplyUpdatesAndRestart exits the
+    /// process, and losing an unedited résumé to an update would be inexcusable.
+    /// </summary>
+    [RelayCommand]
+    private async Task ApplyUpdateAsync()
+    {
+        if (!IsUpdateAvailable)
+            return;
+
+        if (IsDirty)
+            await SaveCurrentResumeAsync();
+
+        _services.UpdateService.ApplyAndRestart();
     }
 
     public string[] AvailableFonts => TemplateSettings.AvailableFonts;

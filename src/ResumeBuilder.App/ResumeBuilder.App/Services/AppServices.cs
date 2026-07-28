@@ -22,6 +22,7 @@ public class AppServices
     public ISyncService SyncService { get; }
     public JobTailoringService TailoringService { get; }
     public CoverLetterService CoverLetterService { get; }
+    public UpdateService UpdateService { get; }
 
     public AppServices(
         IResumeRepository repository,
@@ -35,7 +36,8 @@ public class AppServices
         IAiService aiService,
         ISyncService syncService,
         JobTailoringService tailoringService,
-        CoverLetterService coverLetterService)
+        CoverLetterService coverLetterService,
+        UpdateService updateService)
     {
         Repository = repository;
         CoverLetterRepository = coverLetterRepository;
@@ -49,5 +51,6 @@ public class AppServices
         SyncService = syncService;
         TailoringService = tailoringService;
         CoverLetterService = coverLetterService;
+        UpdateService = updateService;
     }
 }

@@ -48,6 +48,7 @@ public partial class App : Application
             var syncService = new LocalFolderSyncService(repository, new SyncStateStore());
             var tailoringService = new JobTailoringService(aiService);
             var coverLetterService = new CoverLetterService(aiService);
+            var updateService = new UpdateService();
 
             // Apply saved theme preference
             RequestedThemeVariant = themeService.CurrentTheme;
@@ -64,7 +65,8 @@ public partial class App : Application
                 aiService,
                 syncService,
                 tailoringService,
-                coverLetterService);
+                coverLetterService,
+                updateService);
 
             // Initialize spell checker in background
             _ = spellChecker.InitializeAsync();

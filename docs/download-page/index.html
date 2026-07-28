@@ -1,0 +1,202 @@
+<meta charset="utf-8">
+<title>Resume Builder — download</title>
+<style>
+  /* Portfolio design language, taken from gentianshkembi.com styles.css. This is a page on
+     Gentian's site, not part of the app — the app has its own (indigo/Inter) system. */
+  :root{
+    --ink:#080706; --panel:#14100c; --panel-2:#1c160f; --paper:#f4efe6;
+    --muted:#a49b8f; --faint:#6b6358;
+    --line:rgba(255,255,255,0.09); --line-warm:rgba(246,133,27,0.3);
+    --orange:#f6851b; --orange-hi:#ff9c40; --amber:#ffb347; --green:#5bd67d; --blue:#6ba8ff;
+    --sans:'Montserrat','Segoe UI',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --max:1120px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);
+       line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  a{color:var(--orange);text-decoration:none}
+  a:hover{color:var(--orange-hi)}
+
+  /* hero */
+  .hero{padding:74px 0 46px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--orange);letter-spacing:.08em;
+           text-transform:uppercase;margin:0 0 14px}
+  h1{font-size:clamp(34px,5vw,52px);line-height:1.08;margin:0 0 16px;font-weight:800;
+     letter-spacing:-.02em}
+  .lede{font-size:18px;color:var(--muted);max-width:62ch;margin:0 0 26px}
+  .lede strong{color:var(--paper);font-weight:600}
+  .badges{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:12px}
+  .badge{border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted)}
+  .badge.on{border-color:var(--line-warm);color:var(--amber)}
+
+  /* downloads */
+  section{padding:52px 0}
+  h2{font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;
+     color:var(--faint);margin:0 0 22px;font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+  .card.primary{border-color:var(--line-warm);background:var(--panel-2)}
+  .os{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .os h3{margin:0;font-size:17px;font-weight:700}
+  .os .tag{font-family:var(--mono);font-size:10px;color:var(--faint);
+           border:1px solid var(--line);border-radius:4px;padding:2px 6px}
+  .card p{color:var(--muted);font-size:14px;margin:0 0 16px;min-height:44px}
+  .btn{display:inline-block;background:var(--orange);color:#1a1200;font-weight:700;
+       padding:11px 18px;border-radius:9px;font-size:14.5px;width:100%;text-align:center}
+  .btn:hover{background:var(--orange-hi);color:#1a1200}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);
+             font-weight:500;margin-top:8px;padding:8px 18px;font-size:13px}
+  .btn.ghost:hover{border-color:var(--line-warm);color:var(--amber);background:transparent}
+  .meta{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:12px}
+
+  /* app mockup */
+  .shot{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .chrome{display:flex;gap:6px;padding:0 4px 11px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#2a231a}
+  .app{display:grid;grid-template-columns:150px 1fr 1fr;gap:10px;height:290px}
+  .pane{background:#0d0b08;border:1px solid var(--line);border-radius:8px;padding:10px}
+  .lbl{height:6px;background:#221c14;border-radius:2px;margin-bottom:7px}
+  .fld{height:22px;background:#161109;border:1px solid var(--line);border-radius:5px;
+       margin-bottom:9px}
+  .page{background:var(--paper);border-radius:5px;height:100%;padding:16px}
+  .pg-h{height:11px;width:46%;background:#1d4ed8;border-radius:2px}
+  .pg-s{height:5px;width:30%;background:#9aa3b2;border-radius:2px;margin-top:5px}
+  .pg-r{height:1.5px;background:#1d4ed8;margin:10px 0 12px}
+  .pg-t{height:5px;width:26%;background:#1d4ed8;border-radius:2px;margin:12px 0 6px}
+  .pg-l{height:4px;background:#c9cfd8;border-radius:2px;margin-bottom:5px}
+
+  /* features */
+  .feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px}
+  .f h3{font-size:15.5px;margin:0 0 6px;font-weight:700}
+  .f h3 span{color:var(--orange)}
+  .f p{color:var(--muted);font-size:14px;margin:0}
+
+  /* note */
+  .note{background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--amber);
+        border-radius:10px;padding:18px 20px}
+  .note h3{margin:0 0 8px;font-size:14.5px;color:var(--amber)}
+  .note p{color:var(--muted);font-size:14px;margin:0 0 10px}
+  .note p:last-child{margin:0}
+  code{font-family:var(--mono);font-size:12.5px;background:#0d0b08;border:1px solid var(--line);
+       padding:1px 6px;border-radius:4px;color:var(--paper)}
+  footer{border-top:1px solid var(--line);padding:30px 0 54px;color:var(--faint);font-size:13.5px}
+</style>
+
+<div class="hero"><div class="wrap">
+  <p class="eyebrow">Free · Open source · MIT</p>
+  <h1>Resume Builder</h1>
+  <p class="lede">A desktop résumé builder with 25 templates, live PDF preview and ATS keyword
+    analysis. <strong>Your résumé never leaves your machine</strong> — no account, no upload, and
+    the AI features can run against a model on your own computer.</p>
+  <div class="badges">
+    <span class="badge on">No account</span>
+    <span class="badge on">Works offline</span>
+    <span class="badge on">Free export — always</span>
+    <span class="badge">Windows · macOS · Linux</span>
+    <span class="badge">No .NET runtime needed</span>
+  </div>
+</div></div>
+
+<section><div class="wrap">
+  <h2>Download</h2>
+  <div class="grid">
+    <div class="card primary">
+      <div class="os"><h3>Windows</h3><span class="tag">x64</span></div>
+      <p>Installer that keeps itself up to date. Windows 10 or later.</p>
+      <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest">Download Setup.exe</a>
+      <a class="btn ghost" href="https://github.com/Gentian28/resume-builder/releases/latest">Portable .zip</a>
+      <p class="meta">~69 MB · self-contained</p>
+    </div>
+    <div class="card">
+      <div class="os"><h3>Linux</h3><span class="tag">x64</span></div>
+      <p>Single AppImage — <code>chmod +x</code> and run. No root, no package manager.</p>
+      <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest">Download AppImage</a>
+      <p class="meta">~59 MB · needs libfontconfig1</p>
+    </div>
+    <div class="card">
+      <div class="os"><h3>macOS</h3><span class="tag">Apple silicon</span></div>
+      <p>Installer package. Gatekeeper needs allowing once — see the note below.</p>
+      <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest">Download .pkg</a>
+      <a class="btn ghost" href="https://github.com/Gentian28/resume-builder/releases/latest">Portable .zip</a>
+      <p class="meta">~59 MB · self-contained</p>
+    </div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="shot">
+    <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="app">
+      <div class="pane">
+        <div class="lbl" style="width:60%"></div>
+        <div class="lbl" style="width:44%;opacity:.6"></div>
+        <div class="lbl" style="width:52%;opacity:.6"></div>
+        <div class="lbl" style="width:38%;opacity:.6"></div>
+        <div class="lbl" style="width:48%;opacity:.6"></div>
+        <div class="lbl" style="width:42%;opacity:.6"></div>
+      </div>
+      <div class="pane">
+        <div class="lbl" style="width:34%"></div><div class="fld"></div>
+        <div class="lbl" style="width:28%"></div><div class="fld"></div>
+        <div class="lbl" style="width:40%"></div><div class="fld" style="height:52px"></div>
+      </div>
+      <div class="pane" style="padding:8px">
+        <div class="page">
+          <div class="pg-h"></div><div class="pg-s"></div><div class="pg-r"></div>
+          <div class="pg-t"></div>
+          <div class="pg-l" style="width:97%"></div><div class="pg-l" style="width:88%"></div>
+          <div class="pg-t"></div>
+          <div class="pg-l" style="width:94%"></div><div class="pg-l" style="width:79%"></div>
+          <div class="pg-l" style="width:86%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="meta" style="text-align:center;margin-top:12px">
+    Replace with a real screenshot once the UI redesign ships — see docs/ui-redesign-proposal.md
+  </p>
+</div></section>
+
+<section style="padding-top:16px"><div class="wrap">
+  <h2>What it does</h2>
+  <div class="feat">
+    <div class="f"><h3><span>◆</span> Runs the AI locally</h3>
+      <p>Point it at Ollama or LM Studio and summaries, skill suggestions and bullet rewrites
+        all happen on your machine. Nothing is sent anywhere.</p></div>
+    <div class="f"><h3><span>◆</span> 25 templates</h3>
+      <p>From ATS-plain single-column to Europass, federal long-form and photo headers. Your
+        content stays put; only the layout changes.</p></div>
+    <div class="f"><h3><span>◆</span> Tailor to a job ad</h3>
+      <p>Paste a posting for a keyword match score and the terms you are missing. The scoring
+        is local computation and works with no AI configured at all.</p></div>
+    <div class="f"><h3><span>◆</span> Export anywhere</h3>
+      <p>PDF, DOCX, HTML, PNG, plain text and JSON Resume. Import from LinkedIn exports, an
+        existing PDF, or JSON Resume.</p></div>
+    <div class="f"><h3><span>◆</span> No paywall on export</h3>
+      <p>Every builder that makes you pay to download your own résumé is doing so by choice.
+        This one does not.</p></div>
+    <div class="f"><h3><span>◆</span> Your data stays yours</h3>
+      <p>Local SQLite, no account, no telemetry. Optional two-way sync through a folder you
+        choose — Dropbox, OneDrive, or nothing at all.</p></div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="note">
+    <h3>These builds are not code-signed yet</h3>
+    <p><strong>Windows</strong> shows an "unknown publisher" SmartScreen warning — choose
+      <em>More info → Run anyway</em>. <strong>macOS</strong> Gatekeeper refuses the package until
+      you allow it under <em>System Settings → Privacy &amp; Security</em>.</p>
+    <p>Every release publishes <code>SHA256SUMS-*.txt</code> so you can verify what you downloaded.
+      A free code-signing certificate through SignPath's open-source programme is planned, which
+      removes both warnings.</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Source, issues and every release on
+  <a href="https://github.com/Gentian28/resume-builder">GitHub</a> · MIT licensed ·
+  built by <a href="https://www.gentianshkembi.com">Gentian Shkembi</a>
+</div></footer>

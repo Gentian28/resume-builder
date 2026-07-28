@@ -50,8 +50,23 @@ ew-version.ps1 -Version 1.1.0
 wingetcreate submit --token <github-PAT> packaging\winget\1.1.0
 ```
 
-Do not do this while PR #408983 for 1.0.3 is still open — wait for it to merge, or you will have
-two open PRs for the same package and confuse the moderator.
+### Sequencing against the open 1.0.3 PR
+
+**Let #408983 merge first, then submit 1.1.0 as a separate PR. Do not touch the open one.**
+
+The instinct is to update the pending PR to 1.1.0 since 1.0.3 is now superseded. Don't:
+
+- **Pushing to that branch restarts validation and resets its place in the review queue** — you
+  would trade a nearly-approved PR for a fresh one at the back of the line.
+- **The first submission is the expensive one.** It carries package-identity review — publisher,
+  package ID, licence, installer type. Later version bumps are close to automatic. Merging 1.0.3
+  buys that one-off scrutiny; 1.1.0 then rides through on the established identity.
+- **The 1.0.3 manifest stays valid** after 1.1.0 ships. It points at the v1.0.3 release assets,
+  which are not deleted, so the install works. And anyone who installs it is auto-updated to 1.1.0
+  by Velopack on next launch — so nobody is stranded on the old version.
+
+Closing #408983 and opening a fresh 1.1.0 PR also works, but throws away review time already
+spent for no gain.
 
 ---
 

@@ -1,0 +1,132 @@
+name: Release
+
+# Tag-driven. `git tag v1.0.0 && git push --tags` builds every platform, packages
+# installers with Velopack and publishes them as a GitHub Release.
+#
+# Deliberately separate from ci.yml: CI proves the code is good on every push,
+# this produces artifacts people download. Mixing them means either slow pushes
+# or untested releases.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (no leading v), e.g. 1.0.0"
+        required: true
+
+permissions:
+  contents: write   # required to create the release and upload assets
+
+jobs:
+  package:
+    name: package ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64,   channel: win }
+          - { os: ubuntu-latest,  rid: linux-x64, channel: linux }
+          - { os: macos-latest,   rid: osx-arm64, channel: osx }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # The tag is the single source of truth for the version. Strip the leading
+      # "v" so 1.0.0 reaches both the assembly and the Velopack package id.
+      - name: Resolve version
+        id: v
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            ver="${{ github.event.inputs.version }}"
+          else
+            ver="${GITHUB_REF_NAME#v}"
+          fi
+          if ! echo "$ver" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::version '$ver' is not x.y.z - tag as vX.Y.Z"
+            exit 1
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "building $ver for ${{ matrix.rid }}"
+
+      - name: Install Linux native deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      # PublishSingleFile is explicitly OFF here. Velopack's delta updates diff
+      # package contents, and a compressed single-file blob defeats that entirely -
+      # every update would be a full ~60 MB download. Self-contained still applies,
+      # so no .NET runtime is required on the user's machine.
+      - name: Publish
+        run: >
+          dotnet publish src/ResumeBuilder.App/ResumeBuilder.App
+          -c Release -r ${{ matrix.rid }}
+          -p:PublishSingleFile=false
+          -p:Version=${{ steps.v.outputs.version }}
+          -o publish/${{ matrix.rid }}
+
+      - name: Package installer
+        shell: bash
+        run: |
+          vpk pack \
+            --packId ResumeBuilder \
+            --packVersion "${{ steps.v.outputs.version }}" \
+            --packDir "publish/${{ matrix.rid }}" \
+            --mainExe "$( [ "${{ runner.os }}" = "Windows" ] && echo ResumeBuilder.App.exe || echo ResumeBuilder.App )" \
+            --packTitle "Resume Builder" \
+            --packAuthors "Gentian Shkembi" \
+            --channel "${{ matrix.channel }}" \
+            --outputDir "artifacts"
+
+      # No separate portable step: `vpk pack` already emits a Portable.zip next to
+      # the installer, plus the -full.nupkg and the RELEASES / releases.<channel>.json
+      # feed that powers delta updates. Adding our own single-file zip would ship two
+      # near-identically named portable downloads, which just confuses the download page.
+
+      - name: Checksums
+        shell: bash
+        run: |
+          cd artifacts
+          # Users verifying an unsigned download need something to check against.
+          sha256sum * > "SHA256SUMS-${{ matrix.rid }}.txt" 2>/dev/null \
+            || shasum -a 256 * > "SHA256SUMS-${{ matrix.rid }}.txt"
+          cat "SHA256SUMS-${{ matrix.rid }}.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.rid }}
+          path: artifacts/**
+          if-no-files-found: error
+
+  publish:
+    name: publish GitHub release
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Flatten
+        run: |
+          mkdir -p out
+          find dist -type f -exec cp {} out/ \;
+          ls -la out
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/**
+          draft: true          # reviewed before it goes public
+          generate_release_notes: true
+          fail_on_unmatched_files: true

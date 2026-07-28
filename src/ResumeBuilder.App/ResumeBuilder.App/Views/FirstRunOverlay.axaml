@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             x:Class="ResumeBuilder.App.Views.FirstRunOverlay"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Border Background="{DynamicResource RbBg}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="880" Margin="40,48" HorizontalAlignment="Center" Spacing="26">
+
+                <StackPanel Spacing="7" HorizontalAlignment="Center">
+                    <TextBlock Text="Let's build your résumé" FontSize="24" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Three ways to start. You can change template and layout at any point."
+                               FontSize="13" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource RbText2}"/>
+                </StackPanel>
+
+                <UniformGrid Columns="3" Margin="0,4,0,0">
+
+                    <!-- Template first: 25 designs is the most visible thing this has over a Word
+                         document, and it is otherwise invisible until a menu is found. -->
+                    <Border Background="{DynamicResource RbSurface1}" CornerRadius="10"
+                            BorderBrush="{DynamicResource RbAccent}" BorderThickness="1"
+                            Padding="18" Margin="7">
+                        <StackPanel Spacing="11">
+                            <TextBlock Text="Start from a template" FontSize="14" FontWeight="SemiBold"/>
+                            <TextBlock Text="Pick one of 25 designs and fill it in. The most common route."
+                                       FontSize="12" TextWrapping="Wrap" MinHeight="52"
+                                       Foreground="{DynamicResource RbText2}"/>
+                            <Button Content="Browse templates" HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center" Classes="accent"
+                                    Command="{Binding StartFromTemplateCommand}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Import second: fastest path from nothing to a filled screen, and it was
+                         buried at File > Import > LinkedIn Export. -->
+                    <Border Background="{DynamicResource RbSurface1}" CornerRadius="10"
+                            BorderBrush="{DynamicResource RbBorder}" BorderThickness="1"
+                            Padding="18" Margin="7">
+                        <StackPanel Spacing="11">
+                            <TextBlock Text="Import what you have" FontSize="14" FontWeight="SemiBold"/>
+                            <TextBlock Text="Bring in a LinkedIn export, an existing PDF, or a JSON Resume file. Fastest if you already have something."
+                                       FontSize="12" TextWrapping="Wrap" MinHeight="52"
+                                       Foreground="{DynamicResource RbText2}"/>
+                            <StackPanel Spacing="5">
+                                <Button Content="LinkedIn export (.zip)" HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Command="{Binding ImportLinkedInCommand}"/>
+                                <Button Content="PDF résumé" HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Command="{Binding ImportPdfCommand}"/>
+                                <Button Content="JSON Resume" HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Command="{Binding ImportJsonResumeCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Blank stays a first-class option; it is just no longer the default by
+                         omission. -->
+                    <Border Background="{DynamicResource RbSurface1}" CornerRadius="10"
+                            BorderBrush="{DynamicResource RbBorder}" BorderThickness="1"
+                            Padding="18" Margin="7">
+                        <StackPanel Spacing="11">
+                            <TextBlock Text="Start blank" FontSize="14" FontWeight="SemiBold"/>
+                            <TextBlock Text="An empty résumé with the standard sections. Best if you want to shape it yourself from the beginning."
+                                       FontSize="12" TextWrapping="Wrap" MinHeight="52"
+                                       Foreground="{DynamicResource RbText2}"/>
+                            <Button Content="Start blank" HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Command="{Binding StartFromScratchCommand}"/>
+                        </StackPanel>
+                    </Border>
+
+                </UniformGrid>
+
+                <!-- Stated once, here, at the moment someone decides whether to trust this with
+                     their employment history. Repeating it everywhere turns it into chrome. -->
+                <Border Background="{DynamicResource RbSuccessBg}"
+                        BorderBrush="{DynamicResource RbSuccessBorder}" BorderThickness="1"
+                        CornerRadius="9" Padding="13,11">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Ellipse Width="7" Height="7" VerticalAlignment="Center"
+                                 Fill="{DynamicResource RbSuccess}"/>
+                        <TextBlock FontSize="12" TextWrapping="Wrap">
+                            <Run Text="Everything stays on this computer." FontWeight="SemiBold"
+                                 Foreground="{DynamicResource RbSuccess}"/>
+                            <Run Text="No account, no upload. Résumés are stored locally, and the AI features can run against a model on your own machine."
+                                 Foreground="{DynamicResource RbText2}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Button Content="Skip" HorizontalAlignment="Center" FontSize="12"
+                        Command="{Binding DismissFirstRunCommand}"/>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+
+</UserControl>

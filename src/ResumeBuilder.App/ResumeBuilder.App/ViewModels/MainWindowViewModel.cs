@@ -870,6 +870,37 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
     }
 
+    /// <summary>
+    /// Shown when the database is empty, i.e. this is a first run.
+    ///
+    /// A blank form is a poor answer to "what is this?" — the product's strongest assets, the
+    /// template gallery and importing an existing résumé, are invisible until someone goes
+    /// looking. This offers all three routes in and then gets out of the way.
+    ///
+    /// Not a wizard: it is shown once, has no steps, and every exit leads straight to the editor.
+    /// The stepper pattern belongs to builders that are marching users toward a paywall.
+    /// </summary>
+    [ObservableProperty]
+    private bool _showFirstRun;
+
+    [RelayCommand]
+    private void DismissFirstRun() => ShowFirstRun = false;
+
+    /// <summary>Start blank — the behaviour the app has always had, now an explicit choice.</summary>
+    [RelayCommand]
+    private void StartFromScratch()
+    {
+        ShowFirstRun = false;
+        ResetToNewResume();
+    }
+
+    [RelayCommand]
+    private void StartFromTemplate()
+    {
+        ShowFirstRun = false;
+        ShowTemplateGallery = true;
+    }
+
     private async Task LoadSavedResumesAsync()
     {
         try
@@ -880,6 +911,10 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             {
                 SavedResumes.Add(resume);
             }
+
+            // Only on a genuinely empty database. Anyone with saved work goes straight to it, and
+            // it never reappears once a résumé exists.
+            ShowFirstRun = SavedResumes.Count == 0;
         }
         catch (Exception ex)
         {

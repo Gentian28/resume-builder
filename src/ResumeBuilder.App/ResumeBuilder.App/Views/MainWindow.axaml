@@ -334,6 +334,10 @@
         </Border>
 
         <!-- Template Gallery Overlay -->
+        <!-- Covers rows 1-3 rather than all four, so the menu bar stays reachable: someone who
+             wants File > Open on first run should not have to dismiss this to get there. -->
+        <views:FirstRunOverlay Grid.Row="1" Grid.RowSpan="3" IsVisible="{Binding ShowFirstRun}"/>
+
         <views:TemplateGalleryOverlay Grid.RowSpan="4" IsVisible="{Binding ShowTemplateGallery}"/>
         <!-- Resume List Overlay -->
         <views:ResumeListOverlay Grid.RowSpan="4" IsVisible="{Binding ShowResumeList}"/>

@@ -33,12 +33,20 @@ Write-Host "Template: $($previous.Name)"
 $sumsUrl = "https://github.com/$Repo/releases/download/v$Version/SHA256SUMS-win-x64.txt"
 Write-Host "Fetching $sumsUrl"
 try {
-    $sums = (Invoke-WebRequest -Uri $sumsUrl -UseBasicParsing).Content
+    $response = Invoke-WebRequest -Uri $sumsUrl -UseBasicParsing
 } catch {
     throw "Could not fetch checksums for v$Version. Is the release published? ($_)"
 }
 
-$line = $sums -split "`n" | Where-Object { $_ -match [regex]::Escape($asset) } | Select-Object -First 1
+# GitHub serves release assets as application/octet-stream, and Windows PowerShell hands back
+# .Content as a byte[] for that content type rather than a string. Decode when it does.
+$sums = if ($response.Content -is [byte[]]) {
+    [System.Text.Encoding]::UTF8.GetString($response.Content)
+} else {
+    [string]$response.Content
+}
+
+$line = $sums -split "`r?`n" | Where-Object { $_ -match [regex]::Escape($asset) } | Select-Object -First 1
 if (-not $line) { throw "No $asset entry in SHA256SUMS-win-x64.txt for v$Version." }
 $hash = ($line -split '\s+')[0].ToUpperInvariant()
 if ($hash -notmatch '^[0-9A-F]{64}$') { throw "Extracted hash does not look like SHA256: $hash" }

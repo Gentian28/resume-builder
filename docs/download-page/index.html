@@ -50,6 +50,15 @@
              font-weight:500;margin-top:8px;padding:8px 18px;font-size:13px}
   .btn.ghost:hover{border-color:var(--line-warm);color:var(--amber);background:transparent}
   .meta{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:12px}
+  .cta{margin:0 0 26px}
+  .btn.big{width:auto;display:inline-block;padding:15px 30px;font-size:16px;border-radius:11px}
+  .cta-sub{font-family:var(--mono);font-size:12px;color:var(--faint);margin:10px 0 0}
+  /* The detected platform's card is promoted; .primary is applied by script, not hardcoded. */
+  .card.detected{border-color:var(--orange);background:var(--panel-2)}
+  .card.detected .os h3::after{content:'your platform';font-family:var(--mono);font-size:9.5px;
+    color:var(--orange);border:1px solid var(--line-warm);border-radius:4px;padding:2px 6px;
+    margin-left:9px;vertical-align:middle;font-weight:500;text-transform:uppercase;
+    letter-spacing:.06em}
 
   /* app mockup */
   .shot{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
@@ -90,6 +99,14 @@
   <p class="lede">A desktop résumé builder with 25 templates, live PDF preview and ATS keyword
     analysis. <strong>Your résumé never leaves your machine</strong> — no account, no upload, and
     the AI features can run against a model on your own computer.</p>
+  <!-- Primary CTA resolves to the visitor's own OS. Everything stays reachable below, because
+       detection is a guess: people browse from work machines, spoof agents, and download on one
+       device to install on another. -->
+  <div class="cta">
+    <a class="btn big" id="cta" href="https://github.com/Gentian28/resume-builder/releases/latest">
+      Download</a>
+    <p class="cta-sub" id="cta-sub">Choose your platform below</p>
+  </div>
   <div class="badges">
     <span class="badge on">No account</span>
     <span class="badge on">Works offline</span>
@@ -102,25 +119,29 @@
 <section><div class="wrap">
   <h2>Download</h2>
   <div class="grid">
-    <div class="card primary">
+    <div class="card" data-os="win" data-label="Windows"
+         data-primary="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-win-Setup.exe">
       <div class="os"><h3>Windows</h3><span class="tag">x64</span></div>
       <p>Installer that keeps itself up to date. Windows 10 or later.</p>
       <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-win-Setup.exe">Download Setup.exe</a>
       <a class="btn ghost" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-win-Portable.zip">Portable .zip</a>
       <p class="meta">~69 MB · self-contained</p>
     </div>
-    <div class="card">
+    <div class="card" data-os="linux" data-label="Linux"
+         data-primary="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder.AppImage">
       <div class="os"><h3>Linux</h3><span class="tag">x64</span></div>
       <p>Single AppImage — <code>chmod +x</code> and run. No root, no package manager.</p>
       <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder.AppImage">Download AppImage</a>
       <p class="meta">~59 MB · needs libfontconfig1</p>
     </div>
-    <div class="card">
-      <div class="os"><h3>macOS</h3><span class="tag">Apple silicon</span></div>
-      <p>Installer package. Gatekeeper needs allowing once — see the note below.</p>
-      <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-osx-Setup.pkg">Download .pkg</a>
-      <a class="btn ghost" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-osx-Portable.zip">Portable .zip</a>
-      <p class="meta">~59 MB · self-contained</p>
+    <div class="card" data-os="mac" data-label="macOS"
+         data-primary="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-osx-Setup.pkg">
+      <div class="os"><h3>macOS</h3><span class="tag">Universal</span></div>
+      <p>Two builds — Apple silicon for M-series, Intel for 2019 and earlier. Gatekeeper needs
+        allowing once; see the note below.</p>
+      <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-osx-Setup.pkg">Apple silicon .pkg</a>
+      <a class="btn ghost" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-osx-x64-Setup.pkg">Intel .pkg</a>
+      <p class="meta">~59 MB · not sure? Apple menu → About This Mac</p>
     </div>
   </div>
 </div></section>
@@ -200,3 +221,40 @@
   <a href="https://github.com/Gentian28/resume-builder">GitHub</a> · MIT licensed ·
   built by <a href="https://www.gentianshkembi.com">Gentian Shkembi</a>
 </div></footer>
+
+<script>
+// Point the hero button at the visitor's own platform and flag the matching card.
+// Progressive enhancement only: with JS off, the button still goes to the releases page and
+// all three cards remain equally usable. Detection is a hint, never a gate — people browse on
+// a work laptop and install at home, and user agents lie.
+(function () {
+  var ua = navigator.userAgent || '';
+  var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  var hay = (plat + ' ' + ua).toLowerCase();
+
+  var os = null;
+  // Order matters: Android contains "linux", and iPadOS reports a Mac-like agent.
+  if (/android|iphone|ipad|ipod/.test(hay)) os = null;      // mobile: no desktop build applies
+  else if (/win/.test(hay)) os = 'win';
+  else if (/mac|darwin/.test(hay)) os = 'mac';
+  else if (/linux|x11|cros/.test(hay)) os = 'linux';
+
+  var card = os && document.querySelector('.card[data-os="' + os + '"]');
+  if (!card) return;                                        // unknown or mobile: leave as-is
+
+  card.classList.add('detected');
+  // Move it first so the relevant option is what the eye lands on.
+  card.parentNode.insertBefore(card, card.parentNode.firstChild);
+
+  var cta = document.getElementById('cta');
+  var sub = document.getElementById('cta-sub');
+  cta.href = card.getAttribute('data-primary');
+  cta.textContent = 'Download for ' + card.getAttribute('data-label');
+
+  // Apple silicon vs Intel is not reliably detectable — Safari reports "MacIntel" on M-series
+  // too — so say which one the button is, rather than guessing silently.
+  sub.textContent = os === 'mac'
+    ? 'Apple silicon build · Intel and other platforms below'
+    : 'Other platforms below';
+})();
+</script>

@@ -28,7 +28,12 @@ jobs:
         include:
           - { os: windows-latest, rid: win-x64,   channel: win }
           - { os: ubuntu-latest,  rid: linux-x64, channel: linux }
+          # Apple silicon. Channel stays "osx" rather than "osx-arm64" so the asset name and
+          # the /releases/latest/download/ URLs already published stay valid.
           - { os: macos-latest,   rid: osx-arm64, channel: osx }
+          # Intel Macs. An osx-arm64 build will not run on them at all — Rosetta translates
+          # x64 to arm64, not the reverse — so without this, every pre-2020 Mac is unsupported.
+          - { os: macos-latest,   rid: osx-x64,   channel: osx-x64 }
 
     steps:
       - uses: actions/checkout@v4

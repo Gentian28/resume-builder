@@ -78,4 +78,9 @@ The AI features are off until configured. They target any OpenAI-compatible `/ch
 
 ## License
 
-Not currently licensed for redistribution. Note that FluentAssertions 8.x (test-only) is under a commercial license for some uses.
+[MIT](LICENSE) — © 2026 Gentian Shkembi.
+
+One dependency to be aware of if you fork this for commercial work: **FluentAssertions 8.x**
+(test project only, never shipped in the app) moved to the Xceed Community License, which is
+free for open-source and non-commercial use but requires a paid licence for commercial use.
+It does not affect using or redistributing the application itself.

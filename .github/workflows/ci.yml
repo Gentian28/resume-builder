@@ -8,7 +8,14 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    name: build & test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Don't cancel the other two the moment one fails — when something breaks on
+      # exactly one OS, the passing legs are the useful half of the signal.
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -17,6 +24,12 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
+      # SkiaSharp links against libfontconfig, which is not present on minimal Linux
+      # images. Without it the PDF-rendering tests die in SKImageInfo's static ctor.
+      - name: Install Linux native deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
 
       - name: Restore
         run: dotnet restore ResumeBuilder.sln
@@ -31,9 +44,67 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage
+          # Must be unique per matrix leg: upload-artifact@v4 rejects duplicate names.
+          name: coverage-${{ matrix.os }}
           path: "**/TestResults/**/coverage.cobertura.xml"
           if-no-files-found: ignore
+
+  publish:
+    name: publish ${{ matrix.rid }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64,   exe: ResumeBuilder.App.exe }
+          - { os: ubuntu-latest,  rid: linux-x64, exe: ResumeBuilder.App }
+          - { os: macos-latest,   rid: osx-arm64, exe: ResumeBuilder.App }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish self-contained single file
+        run: dotnet publish src/ResumeBuilder.App/ResumeBuilder.App -c Release -r ${{ matrix.rid }} -o out
+
+      # The whole point of the publish settings is that a non-technical user gets one
+      # file and no .NET install. Assert that, rather than trusting it stays true.
+      - name: Verify the drop is a single file
+        shell: bash
+        run: |
+          ls -la out
+          count=$(find out -maxdepth 1 -type f | wc -l)
+          if [ "$count" -ne 1 ]; then
+            echo "::error::expected exactly 1 file in the publish drop, found $count"
+            find out -maxdepth 1 -type f
+            exit 1
+          fi
+          test -f "out/${{ matrix.exe }}" || { echo "::error::${{ matrix.exe }} missing"; exit 1; }
+
+      # Proves the binary is not just well-formed but actually starts: runtime boots,
+      # the single-file bundle self-extracts its native libs, and Avalonia opens a
+      # window against a virtual display. Still running when the timer fires (124) is
+      # the pass condition; any earlier exit means it crashed on startup.
+      - name: Smoke test - does it launch?
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfontconfig1 libice6 libsm6 libx11-6 xvfb
+          chmod +x out/ResumeBuilder.App
+          set +e
+          xvfb-run -a timeout 20 ./out/ResumeBuilder.App
+          code=$?
+          set -e
+          if [ "$code" -ne 124 ]; then
+            echo "::error::app exited with $code instead of staying up"
+            exit 1
+          fi
+          echo "app stayed up for the full 20s"
 
   vulnerable-packages:
     runs-on: ubuntu-latest

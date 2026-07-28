@@ -5,6 +5,50 @@
 
 ---
 
+## 0. Cut the 1.1.0 release — DO THIS FIRST
+
+Nineteen commits are sitting unreleased: the whole editor redesign, the first-run screen, and the
+Anthropic provider. The newest thing anyone can install is 1.0.3, from before any of it.
+
+Everything below is prepared. `CHANGELOG.md` already has the 1.1.0 entry written, and
+`Directory.Build.props` is bumped.
+
+**Optional but recommended first — verify the Anthropic provider against the real API.** Nothing
+else in the suite makes an actual request, so this is the only check that proves the request shape
+and response parsing are right. Costs a fraction of a cent:
+
+```powershell
+$env:ANTHROPIC_API_KEY = "sk-ant-..."
+dotnet test ResumeBuilder.sln --filter "FullyQualifiedName~AnthropicLiveTests"
+```
+
+Without the key those three tests report **Skipped**, which is why CI stays offline and green.
+
+**Then publish.** The release workflow is manual-dispatch and takes the version without a leading
+`v`:
+
+```
+GitHub → Actions → Release → Run workflow → Version: 1.1.0
+```
+
+It builds win-x64, linux-x64, osx-arm64 and osx-x64, packs Velopack installers, publishes the
+GitHub release, and writes the auto-update feed. Existing 1.0.3 installs pick up 1.1.0 on next
+launch.
+
+**Then regenerate the winget manifest** — after the release is published, because the script reads
+the released `SHA256SUMS` so the hash always matches what people actually download:
+
+```powershell
+.\packaging\winget
+ew-version.ps1 -Version 1.1.0
+wingetcreate submit --token <github-PAT> packaging\winget.1.0
+```
+
+Do not do this while PR #408983 for 1.0.3 is still open — wait for it to merge, or you will have
+two open PRs for the same package and confuse the moderator.
+
+---
+
 ## 1. Submit the winget package — DONE, awaiting review
 
 Submitted 2026-07-28 as **microsoft/winget-pkgs#408983** for v1.0.3. CLA signed, all checks

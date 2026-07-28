@@ -22,6 +22,14 @@
             <Setter Property="Opacity" Value="0.5"/>
         </Style>
 
+        <!-- Persistent field labels. A watermark disappears the moment a field is filled, so a
+             completed form became a column of values with nothing saying which was which. -->
+        <Style Selector="TextBlock.fieldlabel">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{DynamicResource RbText2}"/>
+        </Style>
+
         <!-- Section navigation entries. Flat by default so the list reads as navigation rather
              than a column of buttons; Semi's own hover and pressed states still apply. -->
         <Style Selector="Button.navitem">

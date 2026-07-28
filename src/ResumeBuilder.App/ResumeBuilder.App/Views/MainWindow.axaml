@@ -304,12 +304,12 @@
                                                 Command="{Binding UseLocalAiEndpointCommand}"/>
                                     </StackPanel>
                                     <TextBox Watermark="Base URL (e.g. https://api.openai.com/v1)"
-                                             Text="{Binding AiBaseUrl}"/>
+                                             Text="{Binding AiBaseUrl}" AutomationProperties.Name="Base URL"/>
                                     <TextBox Watermark="Model (e.g. gpt-4o-mini, llama3)"
-                                             Text="{Binding AiModel}"/>
+                                             Text="{Binding AiModel}" AutomationProperties.Name="Model"/>
                                     <TextBox Watermark="API key (not needed for a local endpoint)"
                                              Text="{Binding AiApiKey}"
-                                             PasswordChar="*"/>
+                                             PasswordChar="*" AutomationProperties.Name="API key"/>
                                     <Button Content="Apply endpoint settings"
                                             Command="{Binding ApplyAiSettingsCommand}"
                                             HorizontalAlignment="Left"/>
@@ -407,14 +407,14 @@
                                            FontSize="11" Opacity="0.7" TextWrapping="Wrap"/>
 
                                 <TextBox Text="{Binding TargetRoleText}"
-                                         Watermark="Target role (e.g. Senior Backend Engineer)"/>
+                                         Watermark="Target role (e.g. Senior Backend Engineer)" AutomationProperties.Name="Target role"/>
 
                                 <TextBox Text="{Binding JobDescriptionText}"
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
                                          Watermark="Paste job description here..."
                                          MinHeight="100"
-                                         MaxHeight="150"/>
+                                         MaxHeight="150" AutomationProperties.Name="Paste job description here"/>
 
                                 <StackPanel Orientation="Horizontal" Spacing="5">
                                     <Button Content="Tailor"
@@ -620,7 +620,7 @@
                                     <TextBlock Text="Sync Folder:" FontSize="12"/>
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBox Text="{Binding SyncFolderPath}"
-                                                 Watermark="C:\Users\...\ResumeBackups"/>
+                                                 Watermark="C:\Users\...\ResumeBackups" AutomationProperties.Name="C:\Users\...\ResumeBackups"/>
                                         <Button Grid.Column="1" Content="Browse..."
                                                 Command="{Binding BrowseSyncFolderCommand}"
                                                 Margin="5,0,0,0"/>
@@ -740,7 +740,7 @@
                                     <TextBlock Grid.Column="1" Text="{Binding SaveStateText}"
                                                FontSize="11" Opacity="0.7" VerticalAlignment="Center"/>
                                 </Grid>
-                                <TextBox Watermark="Untitled Resume" Text="{Binding ResumeName}"/>
+                                <TextBox Watermark="Untitled Resume" Text="{Binding ResumeName}" AutomationProperties.Name="Untitled Resume"/>
                                 <StackPanel Orientation="Horizontal" Spacing="5">
                                     <Button Content="Save" Command="{Binding SaveCurrentResumeCommand}"/>
                                     <Button Content="Save As..." Command="{Binding SaveAsCommand}"/>
@@ -811,7 +811,7 @@
                                             <TextBox Grid.Column="1"
                                                      Watermark="Hex color (e.g., #2563eb)"
                                                      Text="{Binding AccentColor, Mode=TwoWay}"
-                                                     MaxLength="7"/>
+                                                     MaxLength="7" AutomationProperties.Name="Hex color"/>
                                         </Grid>
                                         <!-- Inline Color Picker (shown when toggled) -->
                                         <ColorView IsVisible="{Binding ShowAccentColorPicker}"
@@ -971,41 +971,65 @@
                                     </StackPanel>
                                 </Grid>
                                 <Grid ColumnDefinitions="*,10,*">
-                                    <TextBox Grid.Column="0" Watermark="First Name" Text="{Binding FirstName}"/>
-                                    <TextBox Grid.Column="2" Watermark="Last Name" Text="{Binding LastName}"/>
+                                    <StackPanel Grid.Column="0" Spacing="3">
+                                        <TextBlock Classes="fieldlabel" Text="First name"/>
+                                        <TextBox Text="{Binding FirstName}" AutomationProperties.Name="First name"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="3">
+                                        <TextBlock Classes="fieldlabel" Text="Last name"/>
+                                        <TextBox Text="{Binding LastName}" AutomationProperties.Name="Last name"/>
+                                    </StackPanel>
                                 </Grid>
-                                <TextBox Watermark="Job Title" Text="{Binding JobTitle}"/>
+                                <StackPanel Spacing="3">
+                                    <TextBlock Classes="fieldlabel" Text="Job title"/>
+                                    <TextBox Text="{Binding JobTitle}" AutomationProperties.Name="Job title"/>
+                                </StackPanel>
                                 <Grid ColumnDefinitions="*,10,*" RowDefinitions="Auto,Auto">
-                                    <TextBox Grid.Column="0" Grid.Row="0" Watermark="Email" Text="{Binding Email}"
-                                             Classes.error="{Binding EmailError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    <StackPanel Grid.Column="0" Grid.Row="0" Spacing="3">
+                                        <TextBlock Classes="fieldlabel" Text="Email"/>
+                                        <TextBox Text="{Binding Email}"
+                                                 Classes.error="{Binding EmailError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" AutomationProperties.Name="Email"/>
+                                    </StackPanel>
                                     <TextBlock Grid.Column="0" Grid.Row="1" Text="{Binding EmailError}"
                                                Foreground="Red" FontSize="11" Margin="0,2,0,0"
                                                IsVisible="{Binding EmailError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                                    <TextBox Grid.Column="2" Grid.Row="0" Watermark="Phone" Text="{Binding Phone}"
-                                             Classes.error="{Binding PhoneError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    <StackPanel Grid.Column="2" Grid.Row="0" Spacing="3">
+                                        <TextBlock Classes="fieldlabel" Text="Phone"/>
+                                        <TextBox Text="{Binding Phone}"
+                                                 Classes.error="{Binding PhoneError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" AutomationProperties.Name="Phone"/>
+                                    </StackPanel>
                                     <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding PhoneError}"
                                                Foreground="Red" FontSize="11" Margin="0,2,0,0"
                                                IsVisible="{Binding PhoneError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                 </Grid>
                                 <Grid ColumnDefinitions="*,10,*">
-                                    <TextBox Grid.Column="0" Watermark="City" Text="{Binding City}"/>
-                                    <TextBox Grid.Column="2" Watermark="Country" Text="{Binding Country}"/>
+                                    <StackPanel Grid.Column="0" Spacing="3">
+                                        <TextBlock Classes="fieldlabel" Text="City"/>
+                                        <TextBox Text="{Binding City}" AutomationProperties.Name="City"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="3">
+                                        <TextBlock Classes="fieldlabel" Text="Country"/>
+                                        <TextBox Text="{Binding Country}" AutomationProperties.Name="Country"/>
+                                    </StackPanel>
                                 </Grid>
                                 <StackPanel Spacing="2">
-                                    <TextBox Watermark="Website" Text="{Binding Website}"
-                                             Classes.error="{Binding WebsiteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    <TextBlock Classes="fieldlabel" Text="Website"/>
+                                    <TextBox Text="{Binding Website}"
+                                             Classes.error="{Binding WebsiteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" AutomationProperties.Name="Website"/>
                                     <TextBlock Text="{Binding WebsiteError}"
                                                Foreground="Red" FontSize="11"
                                                IsVisible="{Binding WebsiteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                 </StackPanel>
                                 <StackPanel Spacing="2">
-                                    <TextBox Watermark="LinkedIn URL" Text="{Binding LinkedIn}"
-                                             Classes.error="{Binding LinkedInError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    <TextBlock Classes="fieldlabel" Text="LinkedIn URL"/>
+                                    <TextBox Text="{Binding LinkedIn}"
+                                             Classes.error="{Binding LinkedInError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" AutomationProperties.Name="LinkedIn URL"/>
                                     <TextBlock Text="{Binding LinkedInError}"
                                                Foreground="Red" FontSize="11"
                                                IsVisible="{Binding LinkedInError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                 </StackPanel>
-                                <TextBox Watermark="GitHub Username" Text="{Binding GitHub}"/>
+                                <TextBlock Classes="fieldlabel" Text="GitHub Username"/>
+                                    <TextBox Text="{Binding GitHub}" AutomationProperties.Name="GitHub Username"/>
                             </StackPanel>
                         </Border>
 
@@ -1042,7 +1066,7 @@
                                          Text="{Binding Summary}"
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
-                                         MinHeight="100"/>
+                                         MinHeight="100" AutomationProperties.Name="Write a brief summary of your professional background"/>
 
                                 <!-- Spell Check Suggestions Popup -->
                                 <Border Background="{DynamicResource RbSurface3}"
@@ -1114,7 +1138,7 @@
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Job Title" Text="{Binding JobTitle}"/>
+                                                        <TextBox Grid.Column="0" Watermark="Job Title" Text="{Binding JobTitle}" AutomationProperties.Name="Job Title"/>
                                                         <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Move Up"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceUpCommand}"
@@ -1128,8 +1152,8 @@
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveExperienceCommand}"
                                                                 CommandParameter="{Binding}"/>
                                                     </Grid>
-                                                    <TextBox Watermark="Company" Text="{Binding Company}"/>
-                                                    <TextBox Watermark="Location" Text="{Binding Location}"/>
+                                                    <TextBox Watermark="Company" Text="{Binding Company}" AutomationProperties.Name="Company"/>
+                                                    <TextBox Watermark="Location" Text="{Binding Location}" AutomationProperties.Name="Location"/>
                                                     <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
                                                         <ComboBox Grid.Column="0" Width="70"
                                                                   ItemsSource="{x:Static vm:DateOptions.Months}"
@@ -1153,9 +1177,9 @@
                                                         <CheckBox Grid.Column="8" Content="Current" IsChecked="{Binding IsCurrentRole}"/>
                                                     </Grid>
                                                     <TextBox Watermark="Description" Text="{Binding Description}"
-                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Description"/>
                                                     <TextBox Watermark="Achievements (one per line)" Text="{Binding Achievements}"
-                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Achievements"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -1180,7 +1204,7 @@
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Degree" Text="{Binding Degree}"/>
+                                                        <TextBox Grid.Column="0" Watermark="Degree" Text="{Binding Degree}" AutomationProperties.Name="Degree"/>
                                                         <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Move Up"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveEducationUpCommand}"
@@ -1194,9 +1218,9 @@
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveEducationCommand}"
                                                                 CommandParameter="{Binding}"/>
                                                     </Grid>
-                                                    <TextBox Watermark="Field of Study" Text="{Binding FieldOfStudy}"/>
-                                                    <TextBox Watermark="Institution" Text="{Binding Institution}"/>
-                                                    <TextBox Watermark="Location" Text="{Binding Location}"/>
+                                                    <TextBox Watermark="Field of Study" Text="{Binding FieldOfStudy}" AutomationProperties.Name="Field of Study"/>
+                                                    <TextBox Watermark="Institution" Text="{Binding Institution}" AutomationProperties.Name="Institution"/>
+                                                    <TextBox Watermark="Location" Text="{Binding Location}" AutomationProperties.Name="Location"/>
                                                     <Grid ColumnDefinitions="Auto,20,Auto,10,*">
                                                         <ComboBox Grid.Column="0" Width="80"
                                                                   ItemsSource="{x:Static vm:DateOptions.Years}"
@@ -1210,9 +1234,9 @@
                                                         <CheckBox Grid.Column="4" Content="Currently studying"
                                                                   IsChecked="{Binding IsCurrentlyStudying}"/>
                                                     </Grid>
-                                                    <TextBox Watermark="Grade/GPA" Text="{Binding Grade}"/>
+                                                    <TextBox Watermark="Grade/GPA" Text="{Binding Grade}" AutomationProperties.Name="Grade/GPA"/>
                                                     <TextBox Watermark="Description" Text="{Binding Description}"
-                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Description"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -1234,8 +1258,8 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SkillViewModel">
                                             <Grid ColumnDefinitions="*,10,*,10,Auto,Auto,Auto,Auto" Margin="0,3">
-                                                <TextBox Grid.Column="0" Watermark="Skill Name" Text="{Binding Name}"/>
-                                                <TextBox Grid.Column="2" Watermark="Category" Text="{Binding Category}"/>
+                                                <TextBox Grid.Column="0" Watermark="Skill Name" Text="{Binding Name}" AutomationProperties.Name="Skill Name"/>
+                                                <TextBox Grid.Column="2" Watermark="Category" Text="{Binding Category}" AutomationProperties.Name="Category"/>
                                                 <ComboBox Grid.Column="4" Width="120"
                                                           ToolTip.Tip="Proficiency level"
                                                           ItemsSource="{x:Static vm:SkillViewModel.AvailableLevels}"
@@ -1272,7 +1296,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:LanguageViewModel">
                                             <Grid ColumnDefinitions="*,10,*,Auto,Auto,Auto" Margin="0,3">
-                                                <TextBox Grid.Column="0" Watermark="Language" Text="{Binding Name}"/>
+                                                <TextBox Grid.Column="0" Watermark="Language" Text="{Binding Name}" AutomationProperties.Name="Language"/>
                                                 <ComboBox Grid.Column="2"
                                                           ItemsSource="{x:Static vm:LanguageViewModel.AvailableProficiencies}"
                                                           SelectedItem="{Binding Proficiency}"
@@ -1312,7 +1336,7 @@
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Project Name" Text="{Binding Name}"/>
+                                                        <TextBox Grid.Column="0" Watermark="Project Name" Text="{Binding Name}" AutomationProperties.Name="Project Name"/>
                                                         <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Move Up"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveProjectUpCommand}"
@@ -1327,11 +1351,11 @@
                                                                 CommandParameter="{Binding}"/>
                                                     </Grid>
                                                     <TextBox Watermark="Description" Text="{Binding Description}"
-                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Description"/>
                                                     <TextBox Watermark="Highlights (one per line)" Text="{Binding Highlights}"
-                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
-                                                    <TextBox Watermark="Technologies (comma separated)" Text="{Binding Technologies}"/>
-                                                    <TextBox Watermark="URL" Text="{Binding Url}"/>
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Highlights"/>
+                                                    <TextBox Watermark="Technologies (comma separated)" Text="{Binding Technologies}" AutomationProperties.Name="Technologies"/>
+                                                    <TextBox Watermark="URL" Text="{Binding Url}" AutomationProperties.Name="URL"/>
                                                     <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
                                                         <ComboBox Grid.Column="0" Width="70"
                                                                   ItemsSource="{x:Static vm:DateOptions.Months}"
@@ -1378,7 +1402,7 @@
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Certification Name" Text="{Binding Name}"/>
+                                                        <TextBox Grid.Column="0" Watermark="Certification Name" Text="{Binding Name}" AutomationProperties.Name="Certification Name"/>
                                                         <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Move Up"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveCertificationUpCommand}"
@@ -1392,7 +1416,7 @@
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCertificationCommand}"
                                                                 CommandParameter="{Binding}"/>
                                                     </Grid>
-                                                    <TextBox Watermark="Issuing Organization" Text="{Binding IssuingOrganization}"/>
+                                                    <TextBox Watermark="Issuing Organization" Text="{Binding IssuingOrganization}" AutomationProperties.Name="Issuing Organization"/>
                                                     <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
                                                         <ComboBox Grid.Column="0" Width="70"
                                                                   ToolTip.Tip="Issued"
@@ -1421,8 +1445,8 @@
                                                                   IsChecked="{Binding DoesNotExpire}"/>
                                                     </Grid>
                                                     <Grid ColumnDefinitions="*,10,*">
-                                                        <TextBox Grid.Column="0" Watermark="Credential ID" Text="{Binding CredentialId}"/>
-                                                        <TextBox Grid.Column="2" Watermark="Credential URL" Text="{Binding CredentialUrl}"/>
+                                                        <TextBox Grid.Column="0" Watermark="Credential ID" Text="{Binding CredentialId}" AutomationProperties.Name="Credential ID"/>
+                                                        <TextBox Grid.Column="2" Watermark="Credential URL" Text="{Binding CredentialUrl}" AutomationProperties.Name="Credential URL"/>
                                                     </Grid>
                                                 </StackPanel>
                                             </Border>
@@ -1450,7 +1474,7 @@
                                                     CornerRadius="4" Padding="10" Margin="0,5">
                                                 <StackPanel Spacing="8">
                                                     <Grid ColumnDefinitions="*,Auto">
-                                                        <TextBox Grid.Column="0" Watermark="Section Title" Text="{Binding Title}"/>
+                                                        <TextBox Grid.Column="0" Watermark="Section Title" Text="{Binding Title}" AutomationProperties.Name="Section Title"/>
                                                         <Button Grid.Column="1" Content="X" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Remove section"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCustomSectionCommand}"
@@ -1464,15 +1488,15 @@
                                                                         CornerRadius="4" Padding="8" Margin="0,4">
                                                                     <StackPanel Spacing="6">
                                                                         <Grid ColumnDefinitions="*,Auto">
-                                                                            <TextBox Grid.Column="0" Watermark="Item Title" Text="{Binding Title}"/>
+                                                                            <TextBox Grid.Column="0" Watermark="Item Title" Text="{Binding Title}" AutomationProperties.Name="Item Title"/>
                                                                             <Button Grid.Column="1" Content="X" Margin="5,0,0,0"
                                                                                     ToolTip.Tip="Remove item"
                                                                                     Command="{Binding $parent[ItemsControl].((vm:CustomSectionViewModel)DataContext).RemoveItemCommand}"
                                                                                     CommandParameter="{Binding}"/>
                                                                         </Grid>
-                                                                        <TextBox Watermark="Subtitle" Text="{Binding Subtitle}"/>
+                                                                        <TextBox Watermark="Subtitle" Text="{Binding Subtitle}" AutomationProperties.Name="Subtitle"/>
                                                                         <TextBox Watermark="Description" Text="{Binding Description}"
-                                                                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50"/>
+                                                                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" AutomationProperties.Name="Description"/>
                                                                         <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto">
                                                                             <ComboBox Grid.Column="0" Width="70"
                                                                                       ItemsSource="{x:Static vm:DateOptions.Months}"
@@ -1730,26 +1754,26 @@
                                 <ProgressBar IsIndeterminate="True" Height="4"
                                              IsVisible="{Binding IsDraftingLetter}"/>
 
-                                <TextBox Watermark="Letter name" Text="{Binding LetterName}"/>
+                                <TextBox Watermark="Letter name" Text="{Binding LetterName}" AutomationProperties.Name="Letter name"/>
 
                                 <TextBlock Text="Recipient" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
                                 <Grid ColumnDefinitions="*,10,*">
                                     <TextBox Grid.Column="0" Watermark="Recipient name"
-                                             Text="{Binding LetterRecipientName}"/>
+                                             Text="{Binding LetterRecipientName}" AutomationProperties.Name="Recipient name"/>
                                     <TextBox Grid.Column="2" Watermark="Recipient title"
-                                             Text="{Binding LetterRecipientTitle}"/>
+                                             Text="{Binding LetterRecipientTitle}" AutomationProperties.Name="Recipient title"/>
                                 </Grid>
-                                <TextBox Watermark="Company" Text="{Binding LetterCompanyName}"/>
+                                <TextBox Watermark="Company" Text="{Binding LetterCompanyName}" AutomationProperties.Name="Company"/>
                                 <TextBox Watermark="Company address"
                                          Text="{Binding LetterCompanyAddress}"
-                                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50"/>
+                                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" AutomationProperties.Name="Company address"/>
 
                                 <TextBlock Text="Letter" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
                                 <DatePicker SelectedDate="{Binding LetterDate}" HorizontalAlignment="Stretch"/>
-                                <TextBox Watermark="Subject" Text="{Binding LetterSubject}"/>
+                                <TextBox Watermark="Subject" Text="{Binding LetterSubject}" AutomationProperties.Name="Subject"/>
                                 <TextBox Watermark="{Binding LetterSalutationPlaceholder}"
                                          Text="{Binding LetterSalutation}"
-                                         ToolTip.Tip="Leave empty to use the fallback shown here"/>
+                                         ToolTip.Tip="Leave empty to use the fallback shown here" AutomationProperties.Name="{Binding LetterSalutationPlaceholder}"/>
 
                                 <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
                                     <TextBlock Text="Body Paragraphs" FontWeight="SemiBold" FontSize="12"
@@ -1766,7 +1790,7 @@
                                                     <TextBox Grid.Column="0" Text="{Binding Text}"
                                                              AcceptsReturn="True" TextWrapping="Wrap"
                                                              MinHeight="70"
-                                                             Watermark="Paragraph text..."/>
+                                                             Watermark="Paragraph text..." AutomationProperties.Name="Paragraph text"/>
                                                     <StackPanel Grid.Column="1" Spacing="2" Margin="5,0,0,0">
                                                         <Button Content="^" Width="28" Height="28" Padding="0"
                                                                 ToolTip.Tip="Move Up"
@@ -1787,7 +1811,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                                <TextBox Watermark="Closing (e.g. Sincerely,)" Text="{Binding LetterClosing}"/>
+                                <TextBox Watermark="Closing (e.g. Sincerely,)" Text="{Binding LetterClosing}" AutomationProperties.Name="Closing"/>
                             </StackPanel>
                         </ScrollViewer>
 

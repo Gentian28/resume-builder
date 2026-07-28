@@ -98,11 +98,41 @@
                                              AutomationProperties.Name="Description"/>
                                 </StackPanel>
 
-                                <StackPanel Spacing="3">
-                                    <TextBlock Classes="fieldlabel" Text="Achievements — one per line"/>
-                                    <TextBox Text="{Binding Achievements}"
-                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
-                                             AutomationProperties.Name="Achievements"/>
+                                <!-- One control per achievement rather than a single textarea.
+                                     Tailoring addresses achievements by index through
+                                     AchievementLines, so each bullet having its own bound control
+                                     makes what the AI will replace visible before accepting it. -->
+                                <StackPanel Spacing="5">
+                                    <TextBlock Classes="fieldlabel" Text="Achievements"/>
+                                    <ItemsControl ItemsSource="{Binding AchievementItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:AchievementLineViewModel">
+                                                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" Margin="0,0,0,4">
+                                                    <Ellipse Grid.Column="0" Width="4" Height="4" Margin="3,0,8,0"
+                                                             VerticalAlignment="Center"
+                                                             Fill="{DynamicResource RbText3}"/>
+                                                    <TextBox Grid.Column="1" Text="{Binding Text}"
+                                                             AcceptsReturn="False" TextWrapping="Wrap"
+                                                             AutomationProperties.Name="Achievement"/>
+                                                    <Button Grid.Column="2" Content="^" Width="26" Padding="0" Margin="4,0,0,0"
+                                                            ToolTip.Tip="Move up" AutomationProperties.Name="Move achievement up"
+                                                            Command="{Binding $parent[ItemsControl].((vm:ExperienceViewModel)DataContext).MoveAchievementUpCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Grid.Column="3" Content="v" Width="26" Padding="0" Margin="2,0,0,0"
+                                                            ToolTip.Tip="Move down" AutomationProperties.Name="Move achievement down"
+                                                            Command="{Binding $parent[ItemsControl].((vm:ExperienceViewModel)DataContext).MoveAchievementDownCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Grid.Column="4" Content="X" Width="26" Padding="0" Margin="5,0,0,0"
+                                                            ToolTip.Tip="Remove" AutomationProperties.Name="Remove achievement"
+                                                            Command="{Binding $parent[ItemsControl].((vm:ExperienceViewModel)DataContext).RemoveAchievementCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Content="+ Add achievement" Padding="8,3" FontSize="11.5"
+                                            HorizontalAlignment="Left"
+                                            Command="{Binding AddAchievementCommand}"/>
                                 </StackPanel>
 
                             </StackPanel>

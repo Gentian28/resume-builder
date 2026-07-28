@@ -74,6 +74,29 @@ public abstract class ItemViewModelBase : ObservableObject
     protected void ValueChanged() => OnChanged?.Invoke();
 }
 
+/// <summary>
+/// One achievement bullet, edited in its own control.
+///
+/// The list is a projection: <see cref="ExperienceViewModel.Achievements"/> stays the single
+/// source of truth so that <see cref="AchievementLines"/> keeps deciding what an achievement
+/// index means. Tailoring addresses bullets by index against that text, and giving the UI its own
+/// independent list would create a second answer to the same question.
+/// </summary>
+public partial class AchievementLineViewModel : ObservableObject
+{
+    private readonly Action<AchievementLineViewModel> _onEdited;
+
+    [ObservableProperty] private string _text = "";
+
+    public AchievementLineViewModel(string text, Action<AchievementLineViewModel> onEdited)
+    {
+        _text = text;
+        _onEdited = onEdited;
+    }
+
+    partial void OnTextChanged(string value) => _onEdited(this);
+}
+
 public partial class ExperienceViewModel : ItemViewModelBase
 {
     [ObservableProperty] private string _jobTitle = "";
@@ -100,13 +123,139 @@ public partial class ExperienceViewModel : ItemViewModelBase
         IsCurrentRole = exp.IsCurrentRole;
         Description = exp.Description;
         Achievements = AchievementLines.Format(exp.Achievements);
+        RebuildAchievementItems();
     }
 
     partial void OnJobTitleChanged(string? oldValue, string newValue) => TextChanged(nameof(JobTitle), oldValue, newValue, v => JobTitle = v);
     partial void OnCompanyChanged(string? oldValue, string newValue) => TextChanged(nameof(Company), oldValue, newValue, v => Company = v);
     partial void OnLocationChanged(string? oldValue, string newValue) => TextChanged(nameof(Location), oldValue, newValue, v => Location = v);
     partial void OnDescriptionChanged(string? oldValue, string newValue) => TextChanged(nameof(Description), oldValue, newValue, v => Description = v);
-    partial void OnAchievementsChanged(string? oldValue, string newValue) => TextChanged(nameof(Achievements), oldValue, newValue, v => Achievements = v);
+    partial void OnAchievementsChanged(string? oldValue, string newValue)
+    {
+        TextChanged(nameof(Achievements), oldValue, newValue, v => Achievements = v);
+
+        // Rebuild the per-bullet list whenever the text changes from anywhere other than the
+        // bullets themselves - loading a résumé, undo/redo, or an accepted tailoring rewrite.
+        if (!_syncingAchievements)
+            RebuildAchievementItems();
+    }
+
+    // Guards the two directions from fighting: editing a bullet rewrites the text, and the text
+    // changing rebuilds the bullets. Without this, typing one character would recreate the control
+    // being typed into.
+    private bool _syncingAchievements;
+
+    /// <summary>
+    /// The bullets, one per achievement. A projection of <see cref="Achievements"/>, never an
+    /// independent copy.
+    /// </summary>
+    public ObservableCollection<AchievementLineViewModel> AchievementItems { get; } = new();
+
+    private void RebuildAchievementItems()
+    {
+        _syncingAchievements = true;
+        try
+        {
+            AchievementItems.Clear();
+            foreach (var line in AchievementLines.Parse(Achievements))
+                AchievementItems.Add(new AchievementLineViewModel(line, OnAchievementLineEdited));
+        }
+        finally
+        {
+            _syncingAchievements = false;
+        }
+    }
+
+    /// <summary>
+    /// Writes one edited bullet back through <see cref="AchievementLines.ReplaceAt"/> rather than
+    /// re-joining the list, so the index the UI used is resolved by exactly the same rule
+    /// tailoring uses, and any blank lines the user left in the text survive in place.
+    /// </summary>
+    private void OnAchievementLineEdited(AchievementLineViewModel line)
+    {
+        if (_syncingAchievements)
+            return;
+
+        var index = AchievementItems.IndexOf(line);
+        if (index < 0)
+            return;
+
+        _syncingAchievements = true;
+        try
+        {
+            // A bullet just added by AddAchievement has no line in the text yet, so ReplaceAt has
+            // nothing to target and would drop the edit silently. Only existing lines go through
+            // ReplaceAt - that path is the one tailoring's index addressing depends on.
+            if (index < AchievementLines.Parse(Achievements).Count)
+                Achievements = AchievementLines.ReplaceAt(Achievements, index, line.Text);
+            else
+                Achievements = AchievementLines.Format(
+                    AchievementItems.Select(i => i.Text).Where(t => !string.IsNullOrWhiteSpace(t)));
+        }
+        finally
+        {
+            _syncingAchievements = false;
+        }
+    }
+
+    /// <summary>Rewrites the text from the current bullets. Used when the set of bullets changes.</summary>
+    private void CommitAchievementItems()
+    {
+        _syncingAchievements = true;
+        try
+        {
+            Achievements = AchievementLines.Format(
+                AchievementItems.Select(i => i.Text).Where(t => !string.IsNullOrWhiteSpace(t)));
+        }
+        finally
+        {
+            _syncingAchievements = false;
+        }
+    }
+
+    [RelayCommand]
+    private void AddAchievement()
+    {
+        // Refuse to stack empty bullets. Without this, repeated clicks leave a column of blank
+        // rows that all vanish on reload, since Parse drops them.
+        if (AchievementItems.Any(i => string.IsNullOrWhiteSpace(i.Text)))
+            return;
+
+        AchievementItems.Add(new AchievementLineViewModel(string.Empty, OnAchievementLineEdited));
+        // Not committed yet: an empty bullet would be dropped by Parse, so it only becomes real
+        // once the user types something.
+    }
+
+    [RelayCommand]
+    private void RemoveAchievement(AchievementLineViewModel? line)
+    {
+        if (line is null || !AchievementItems.Remove(line))
+            return;
+
+        CommitAchievementItems();
+    }
+
+    [RelayCommand]
+    private void MoveAchievementUp(AchievementLineViewModel? line)
+    {
+        var index = line is null ? -1 : AchievementItems.IndexOf(line);
+        if (index <= 0)
+            return;
+
+        AchievementItems.Move(index, index - 1);
+        CommitAchievementItems();
+    }
+
+    [RelayCommand]
+    private void MoveAchievementDown(AchievementLineViewModel? line)
+    {
+        var index = line is null ? -1 : AchievementItems.IndexOf(line);
+        if (index < 0 || index >= AchievementItems.Count - 1)
+            return;
+
+        AchievementItems.Move(index, index + 1);
+        CommitAchievementItems();
+    }
     partial void OnStartMonthNameChanged(string? value) => ValueChanged();
     partial void OnStartYearChanged(int? value) => ValueChanged();
     partial void OnEndMonthNameChanged(string? value) => ValueChanged();

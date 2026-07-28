@@ -39,9 +39,9 @@ launch.
 the released `SHA256SUMS` so the hash always matches what people actually download:
 
 ```powershell
-.\packaging\winget
+.\packaging\winget\new-version.ps1 -Version 1.1.0
 ew-version.ps1 -Version 1.1.0
-wingetcreate submit --token <github-PAT> packaging\winget.1.0
+wingetcreate submit --token <github-PAT> packaging\winget\1.1.0
 ```
 
 Do not do this while PR #408983 for 1.0.3 is still open — wait for it to merge, or you will have

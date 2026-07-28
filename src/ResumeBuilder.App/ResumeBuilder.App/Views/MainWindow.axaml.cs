@@ -1,6 +1,9 @@
 using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Platform;
+using Avalonia.Threading;
 using ResumeBuilder.App.ViewModels;
 
 namespace ResumeBuilder.App.Views;
@@ -43,14 +46,34 @@ public partial class MainWindow : Window
         var availableWidth = screen.WorkingArea.Width / scaling;
         var availableHeight = screen.WorkingArea.Height / scaling;
 
-        if (Width > availableWidth || Height > availableHeight)
+        var tooWide = Width > availableWidth;
+        var tooTall = Height > availableHeight;
+
+        if (tooWide || tooTall)
         {
-            WindowState = WindowState.Maximized;
-            return;
+            // Shrink the window itself, not just its state. Maximising alone left Width/Height
+            // at their declared values, so the restore button handed the user straight back the
+            // off-screen window this is meant to prevent.
+            Width = Math.Min(Width, Math.Floor(availableWidth * 0.9));
+            Height = Math.Min(Height, Math.Floor(availableHeight * 0.9));
         }
 
-        // Fits, but re-centre against the working area so it never overlaps the taskbar.
-        Position = new Avalonia.PixelPoint(
+        CentreOnWorkingArea(screen, scaling);
+
+        if (tooWide || tooTall)
+        {
+            // Maximise on a later frame so the platform records the resized geometry above as the
+            // restore rectangle. Doing it inline maximises before the new size has been applied,
+            // and the restore rectangle keeps the old oversized bounds.
+            Dispatcher.UIThread.Post(
+                () => WindowState = WindowState.Maximized,
+                DispatcherPriority.Background);
+        }
+    }
+
+    private void CentreOnWorkingArea(Screen screen, double scaling)
+    {
+        Position = new PixelPoint(
             screen.WorkingArea.X + (int)((screen.WorkingArea.Width - Width * scaling) / 2),
             screen.WorkingArea.Y + (int)((screen.WorkingArea.Height - Height * scaling) / 2));
     }

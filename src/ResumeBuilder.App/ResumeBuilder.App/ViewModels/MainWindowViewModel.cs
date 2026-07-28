@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
@@ -711,6 +712,108 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     }
 
     /// <summary>
+    /// Editor navigation. Replaces scrolling one long column of every section at once: each entry
+    /// shows a single section, so the editor has somewhere to put the width freed up by the
+    /// flexible layout instead of stacking everything in a fixed rail.
+    /// </summary>
+    public ObservableCollection<EditorSection> EditorSections { get; } =
+    [
+        new("personal", "Personal"),
+        new("summary", "Summary"),
+        new("experience", "Experience"),
+        new("education", "Education"),
+        new("skills", "Skills"),
+        new("languages", "Languages"),
+        new("projects", "Projects"),
+        new("certifications", "Certifications"),
+        new("custom", "Custom sections"),
+        new("name", "Résumé name", isDocumentSetting: true),
+        new("template", "Template", isDocumentSetting: true),
+        new("appearance", "Appearance", isDocumentSetting: true),
+        new("order", "Section order", isDocumentSetting: true)
+    ];
+
+    /// <summary>Which section the editor column is showing. Keys match MainWindow.axaml.</summary>
+    [ObservableProperty]
+    private string _selectedEditorSection = "personal";
+
+    /// <summary>
+    /// Preview of the current template, shown in the command bar's picker.
+    ///
+    /// It is the only always-visible reminder that 25 designs exist — the gallery is otherwise
+    /// invisible until opened. Costs one already-cached thumbnail.
+    /// </summary>
+    [ObservableProperty]
+    private Bitmap? _selectedTemplateThumbnail;
+
+    private async Task LoadSelectedTemplateThumbnailAsync(string templateId)
+    {
+        // Renders on first use and is cached thereafter, so switching templates does not re-render.
+        SelectedTemplateThumbnail = await _services.TemplateThumbnailService
+            .GetAsync(templateId)
+            .ConfigureAwait(true);
+    }
+
+    [RelayCommand]
+    private void SelectEditorSection(EditorSection? section)
+    {
+        if (section is not null)
+            SelectedEditorSection = section.Key;
+    }
+
+    partial void OnSelectedEditorSectionChanged(string value)
+    {
+        foreach (var section in EditorSections)
+            section.IsSelected = section.Key == value;
+    }
+
+    /// <summary>
+    /// Subscribes the nav counts to every list that feeds them, and refreshes once immediately.
+    ///
+    /// Must be re-run whenever the collections are replaced rather than mutated — loading a
+    /// résumé does exactly that, so a subscription made only in the constructor would go stale
+    /// on the first Open and quietly stop updating.
+    /// </summary>
+    private void WireSectionCounts()
+    {
+        foreach (var collection in new INotifyCollectionChanged[]
+                 {
+                     Experiences, EducationList, Skills, Languages,
+                     Projects, Certifications, CustomSections
+                 })
+        {
+            collection.CollectionChanged -= OnSectionCollectionChanged;
+            collection.CollectionChanged += OnSectionCollectionChanged;
+        }
+
+        RefreshSectionCounts();
+    }
+
+    private void OnSectionCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        => RefreshSectionCounts();
+
+    /// <summary>
+    /// Keeps the counts beside the nav entries honest.
+    /// </summary>
+    private void RefreshSectionCounts()
+    {
+        foreach (var section in EditorSections)
+        {
+            section.Count = section.Key switch
+            {
+                "experience" => Experiences.Count,
+                "education" => EducationList.Count,
+                "skills" => Skills.Count,
+                "languages" => Languages.Count,
+                "projects" => Projects.Count,
+                "certifications" => Certifications.Count,
+                "custom" => CustomSections.Count,
+                _ => null
+            };
+        }
+    }
+
+    /// <summary>
     /// The gallery's own list, carrying a rendered preview per template.
     ///
     /// Separate from <see cref="Templates"/> so the plain <see cref="TemplateInfo"/> list stays
@@ -848,6 +951,10 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
             SelectedTemplate = Templates.FirstOrDefault(t => t.Id == resume.SelectedTemplateId) ?? Templates.FirstOrDefault();
 
+            // The collections above are replaced wholesale, not cleared, so any previous
+            // subscription is now dangling. Re-hook against the new instances.
+            WireSectionCounts();
+
             LoadPhotoPreview();
             LoadCustomizationFromResume();
             LoadSectionsFromResume();
@@ -982,6 +1089,12 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
     partial void OnSelectedTemplateChanged(TemplateInfo? value)
     {
+        // Outside the _isLoadingEditor guard on purpose: the command bar's picker should show the
+        // right template even when the change came from loading a résumé rather than a user click.
+        SelectedTemplateThumbnail = null;
+        if (value is not null)
+            _ = LoadSelectedTemplateThumbnailAsync(value.Id);
+
         if (value == null || _isLoadingEditor) return;
 
         CurrentResume.SelectedTemplateId = value.Id;

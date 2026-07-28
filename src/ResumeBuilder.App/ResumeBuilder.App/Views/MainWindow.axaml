@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ResumeBuilder.App.ViewModels"
+        xmlns:conv="using:ResumeBuilder.App.Converters"
         xmlns:models="using:ResumeBuilder.Core.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -27,7 +28,7 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
         <!-- Menu Bar -->
         <Menu Grid.Row="0">
             <MenuItem Header="_File">
@@ -130,9 +131,147 @@
         </Menu>
 
         <!-- Main Content -->
-        <Grid Grid.Row="1" ColumnDefinitions="450,*">
-            <!-- Left Panel - Editor -->
-            <Border Grid.Column="0" Background="{DynamicResource RbSurface2}"
+        <!-- Command bar. The features that distinguish this product used to be three levels deep
+             under File and Tools; the menu bar stays for completeness but is no longer the only
+             route to them. Zoom/undo/save/export move here from the old preview toolbar, which
+             put them ~2800px from Export on a wide window. -->
+        <Border Grid.Row="1" Background="{DynamicResource RbSurface1}"
+                BorderBrush="{DynamicResource RbBorder}" BorderThickness="0,0,0,1"
+                Padding="11,7">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <Button Grid.Column="0" Padding="6,3" Click="ShowTemplateGallery_Click"
+                        ToolTip.Tip="Choose a template">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <Border Width="15" Height="21" CornerRadius="2" Background="White"
+                                ClipToBounds="True">
+                            <Image Source="{Binding SelectedTemplateThumbnail}" Stretch="Uniform"/>
+                        </Border>
+                        <TextBlock Text="{Binding SelectedTemplate.Name}" FontSize="12"
+                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock Text="▾" FontSize="9" Opacity="0.55" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="1" Content="Tailor to Job" Padding="9,4" Margin="5,0,0,0"
+                        Click="ToggleTailorPanel_Click"/>
+
+                <Button Grid.Column="2" Padding="9,4" Margin="4,0,0,0" Click="ToggleAiPanel_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="AI Assistant" VerticalAlignment="Center"/>
+                        <!-- Status dot, never a disabled button: AI features degrade rather than
+                             gate, and a greyed-out control reads as broken instead of offline. -->
+                        <Ellipse Width="7" Height="7" VerticalAlignment="Center"
+                                 Fill="{Binding IsAiLocal, Converter={x:Static conv:AiStatusBrushConverter.Instance}}"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="3" Content="Import ▾" Padding="9,4" Margin="4,0,0,0">
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuItem Header="JSON Resume (.json)" Command="{Binding ImportJsonResumeCommand}"/>
+                            <MenuItem Header="LinkedIn Export (.zip)" Command="{Binding ImportLinkedInCommand}"/>
+                            <MenuItem Header="PDF Resume (.pdf)" Command="{Binding ImportPdfCommand}"/>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+
+                <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Content="−" Command="{Binding ZoomOutCommand}" Width="28" Padding="0"/>
+                    <TextBlock Text="{Binding PreviewZoom, StringFormat={}{0:P0}}" Width="46"
+                               TextAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                    <Button Content="+" Command="{Binding ZoomInCommand}" Width="28" Padding="0"/>
+                    <Button Content="Reset" Command="{Binding ZoomResetCommand}" Padding="8,3"/>
+                </StackPanel>
+
+                <Border Grid.Column="6" Width="1" Margin="9,3"
+                        Background="{DynamicResource RbBorder}"/>
+
+                <Button Grid.Column="7" Content="Undo" Command="{Binding UndoCommand}"
+                        IsEnabled="{Binding CanUndo}" Padding="9,4"
+                        ToolTip.Tip="{Binding NextUndoDescription, StringFormat='Undo: {0}'}"/>
+                <Button Grid.Column="8" Content="Redo" Command="{Binding RedoCommand}"
+                        IsEnabled="{Binding CanRedo}" Padding="9,4" Margin="4,0,0,0"
+                        ToolTip.Tip="{Binding NextRedoDescription, StringFormat='Redo: {0}'}"/>
+
+                <Border Grid.Column="9" Width="1" Margin="9,3"
+                        Background="{DynamicResource RbBorder}"/>
+
+                <Button Grid.Column="10" Content="Save" Command="{Binding SaveCurrentResumeCommand}"
+                        Padding="11,4"/>
+                <SplitButton Grid.Column="11" Content="Export PDF" Margin="5,0,0,0"
+                             Classes="accent"
+                             Command="{Binding ExportCommand}" CommandParameter="PDF">
+                    <SplitButton.Flyout>
+                        <MenuFlyout>
+                            <MenuItem Header="PDF" Command="{Binding ExportCommand}" CommandParameter="PDF"/>
+                            <MenuItem Header="Word (DOCX)" Command="{Binding ExportCommand}" CommandParameter="DOCX"/>
+                            <MenuItem Header="HTML" Command="{Binding ExportCommand}" CommandParameter="HTML"/>
+                            <MenuItem Header="PNG Image" Command="{Binding ExportCommand}" CommandParameter="PNG"/>
+                            <MenuItem Header="Plain text (ATS)" Command="{Binding ExportCommand}" CommandParameter="TXT"/>
+                            <MenuItem Header="JSON (Backup)" Command="{Binding ExportCommand}" CommandParameter="JSON"/>
+                        </MenuFlyout>
+                    </SplitButton.Flyout>
+                </SplitButton>
+            </Grid>
+        </Border>
+
+        <!-- Three zones: fixed section list, then editor and preview that both flex. Previously a
+             fixed 450px rail beside the preview, so widening the window only ever added grey. -->
+        <!-- The preview gets the larger weight: a page has a fixed aspect ratio and benefits more
+             from width than a column of form fields does. -->
+        <Grid Grid.Row="2" ColumnDefinitions="196,1*,1.15*">
+
+            <!-- Zone 1: section navigation -->
+            <Border Grid.Column="0" Background="{DynamicResource RbSurface1}"
+                    BorderBrush="{DynamicResource RbBorder}" BorderThickness="0,0,1,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8,11">
+                        <TextBlock Text="CONTENT" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource RbText3}" Margin="9,4,0,6"/>
+                        <ItemsControl ItemsSource="{Binding EditorSections}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:EditorSection">
+                                    <Button Classes="navitem" Classes.on="{Binding IsSelected}"
+                                            IsVisible="{Binding !IsDocumentSetting}"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Stretch"
+                                            Padding="9,6" Margin="0,0,0,1"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).SelectEditorSectionCommand}"
+                                            CommandParameter="{Binding}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{Binding Name}" FontSize="12"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Count}" FontSize="11"
+                                                       Foreground="{DynamicResource RbText3}"
+                                                       IsVisible="{Binding Count, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="DOCUMENT" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource RbText3}" Margin="9,16,0,6"/>
+                        <ItemsControl ItemsSource="{Binding EditorSections}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:EditorSection">
+                                    <Button Classes="navitem" Classes.on="{Binding IsSelected}"
+                                            IsVisible="{Binding IsDocumentSetting}"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="9,6" Margin="0,0,0,1"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).SelectEditorSectionCommand}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock Text="{Binding Name}" FontSize="12"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Zone 2: editor -->
+            <Border Grid.Column="1" Background="{DynamicResource RbBg}"
                     BorderBrush="{DynamicResource RbBorder}" BorderThickness="0,0,1,0">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="15" Spacing="15">
@@ -593,6 +732,7 @@
 
                         <!-- Resume Name -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=name}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -611,6 +751,7 @@
 
                         <!-- Template Selector -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=template}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <TextBlock Text="Template" FontWeight="SemiBold" FontSize="14"/>
@@ -623,6 +764,7 @@
 
                         <!-- Template Customization -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=appearance}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -756,6 +898,7 @@
 
                         <!-- Section Ordering -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=order}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -801,6 +944,7 @@
 
                         <!-- Personal Information -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=personal}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <TextBlock Text="Personal Information" FontWeight="SemiBold" FontSize="14"/>
@@ -867,6 +1011,7 @@
 
                         <!-- Professional Summary -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=summary}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -955,6 +1100,7 @@
 
                         <!-- Work Experience -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=experience}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1020,6 +1166,7 @@
 
                         <!-- Education -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=education}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1076,6 +1223,7 @@
 
                         <!-- Skills -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=skills}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1113,6 +1261,7 @@
 
                         <!-- Languages -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=languages}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1149,6 +1298,7 @@
 
                         <!-- Projects -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=projects}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1214,6 +1364,7 @@
 
                         <!-- Certifications -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=certifications}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1283,6 +1434,7 @@
 
                         <!-- Custom Sections -->
                         <Border Background="{DynamicResource RbSurface1}"
+                                IsVisible="{Binding SelectedEditorSection, Converter={x:Static conv:StringEqualsConverter.Instance}, ConverterParameter=custom}"
                                 CornerRadius="8" Padding="15">
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -1361,48 +1513,17 @@
             </Border>
 
             <!-- Right Panel - Preview -->
-            <Grid Grid.Column="1" Background="{DynamicResource RbSurface2}">
+            <!-- Zone 3: preview -->
+            <Grid Grid.Column="2" Background="{DynamicResource RbSurface2}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Preview Toolbar -->
-                <Border Grid.Row="0" Background="{DynamicResource RbSurface2}"
-                        Padding="10">
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="5">
-                            <Button Content="-" Command="{Binding ZoomOutCommand}" Width="30"/>
-                            <TextBlock Text="{Binding PreviewZoom, StringFormat={}{0:P0}}"
-                                       VerticalAlignment="Center" Width="50" TextAlignment="Center"/>
-                            <Button Content="+" Command="{Binding ZoomInCommand}" Width="30"/>
-                            <Button Content="Reset" Command="{Binding ZoomResetCommand}" Margin="10,0,0,0"/>
-                            <Border Width="1" Background="{DynamicResource RbSurface3}"
-                                    Margin="10,2"/>
-                            <Button Content="Undo" Command="{Binding UndoCommand}"
-                                    IsEnabled="{Binding CanUndo}"
-                                    ToolTip.Tip="{Binding NextUndoDescription, StringFormat='Undo: {0}'}"/>
-                            <Button Content="Redo" Command="{Binding RedoCommand}"
-                                    IsEnabled="{Binding CanRedo}"
-                                    ToolTip.Tip="{Binding NextRedoDescription, StringFormat='Redo: {0}'}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5">
-                            <Button Content="Save" Command="{Binding SaveCurrentResumeCommand}"/>
-                            <SplitButton Content="Export PDF" Command="{Binding ExportCommand}" CommandParameter="PDF">
-                                <SplitButton.Flyout>
-                                    <MenuFlyout>
-                                        <MenuItem Header="PDF" Command="{Binding ExportCommand}" CommandParameter="PDF"/>
-                                        <MenuItem Header="Word (DOCX)" Command="{Binding ExportCommand}" CommandParameter="DOCX"/>
-                                        <MenuItem Header="HTML" Command="{Binding ExportCommand}" CommandParameter="HTML"/>
-                                        <MenuItem Header="PNG Image" Command="{Binding ExportCommand}" CommandParameter="PNG"/>
-                                        <MenuItem Header="JSON (Backup)" Command="{Binding ExportCommand}" CommandParameter="JSON"/>
-                                    </MenuFlyout>
-                                </SplitButton.Flyout>
-                            </SplitButton>
-                        </StackPanel>
-                    </Grid>
-                </Border>
+                <!-- The toolbar that used to sit here moved into the window-wide command bar:
+                     it put zoom and undo at the far left and Export at the far right, ~2800px
+                     apart on a wide window. Row 0 is kept so the preview stays in row 1. -->
+                <Border Grid.Row="0" Height="0"/>
 
                 <!-- Preview Content -->
                 <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
@@ -1425,7 +1546,7 @@
         </Grid>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="{DynamicResource RbSurface2}"
+        <Border Grid.Row="3" Background="{DynamicResource RbSurface2}"
                 Padding="10,5">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                 <TextBlock Text="{Binding StatusMessage}" FontSize="12"/>
@@ -1451,7 +1572,7 @@
         </Border>
 
         <!-- Template Gallery Overlay -->
-        <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowTemplateGallery}">
+        <Border Grid.RowSpan="4" Background="#80000000" IsVisible="{Binding ShowTemplateGallery}">
             <Border Background="{DynamicResource RbSurface1}"
                     CornerRadius="12" Margin="50" Padding="20">
                 <Grid RowDefinitions="Auto,*,Auto">
@@ -1511,7 +1632,7 @@
         </Border>
 
         <!-- Resume List Overlay -->
-        <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowResumeList}">
+        <Border Grid.RowSpan="4" Background="#80000000" IsVisible="{Binding ShowResumeList}">
             <Border Background="{DynamicResource RbSurface1}"
                     CornerRadius="12" Margin="100" Padding="20" MaxWidth="600">
                 <Grid RowDefinitions="Auto,*,Auto">
@@ -1571,7 +1692,7 @@
         </Border>
 
         <!-- Cover Letter Editor Overlay -->
-        <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowCoverLetterEditor}">
+        <Border Grid.RowSpan="4" Background="#80000000" IsVisible="{Binding ShowCoverLetterEditor}">
             <Border Background="{DynamicResource RbSurface1}"
                     CornerRadius="12" Margin="40" Padding="20">
                 <Grid RowDefinitions="Auto,*,Auto">
@@ -1696,7 +1817,7 @@
         </Border>
 
         <!-- Cover Letter List Overlay -->
-        <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding ShowCoverLetterList}">
+        <Border Grid.RowSpan="4" Background="#80000000" IsVisible="{Binding ShowCoverLetterList}">
             <Border Background="{DynamicResource RbSurface1}"
                     CornerRadius="12" Margin="100" Padding="20" MaxWidth="600">
                 <Grid RowDefinitions="Auto,*,Auto">
@@ -1745,7 +1866,7 @@
         </Border>
 
         <!-- Loading Overlay -->
-        <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding IsLoading}">
+        <Border Grid.RowSpan="4" Background="#80000000" IsVisible="{Binding IsLoading}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ProgressBar IsIndeterminate="True" Width="200"/>
                 <TextBlock Text="Exporting..." Margin="0,10,0,0" HorizontalAlignment="Center"/>

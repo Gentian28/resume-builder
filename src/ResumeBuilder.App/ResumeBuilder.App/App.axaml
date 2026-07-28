@@ -21,6 +21,25 @@
         <Style Selector="TextBlock.dimmed">
             <Setter Property="Opacity" Value="0.5"/>
         </Style>
+
+        <!-- Section navigation entries. Flat by default so the list reads as navigation rather
+             than a column of buttons; Semi's own hover and pressed states still apply. -->
+        <Style Selector="Button.navitem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Foreground" Value="{DynamicResource RbText2}"/>
+        </Style>
+        <Style Selector="Button.navitem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource RbSurface2}"/>
+        </Style>
+        <Style Selector="Button.navitem.on /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource RbSurface3}"/>
+        </Style>
+        <Style Selector="Button.navitem.on">
+            <Setter Property="Foreground" Value="{DynamicResource RbText1}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
         <Style Selector="TextBox.error">
             <Setter Property="BorderBrush" Value="{DynamicResource RbDanger}"/>
         </Style>

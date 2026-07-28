@@ -1458,23 +1458,45 @@
                     <TextBlock Grid.Row="0" Text="Choose a Template" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
 
                     <ScrollViewer Grid.Row="1">
-                        <ItemsControl ItemsSource="{Binding Templates}">
+                        <ItemsControl ItemsSource="{Binding TemplateCards}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Button Margin="10" Padding="15" MinWidth="200"
+                                <DataTemplate x:DataType="vm:TemplateCardViewModel">
+                                    <Button Margin="8" Padding="9" Width="178"
+                                            HorizontalContentAlignment="Stretch"
+                                            ToolTip.Tip="{Binding Info.Description}"
                                             Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).SelectTemplateCommand}"
-                                            CommandParameter="{Binding}">
-                                        <StackPanel Spacing="5">
-                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14"/>
-                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap"
-                                                       FontSize="11" Opacity="0.7" MaxWidth="180"/>
-                                            <TextBlock Text="{Binding Category}" FontSize="10"
-                                                       Foreground="{DynamicResource RbAccent}"/>
+                                            CommandParameter="{Binding Info}">
+                                        <StackPanel Spacing="7">
+                                            <!-- Fixed 210:297. A résumé template's whole value is how it
+                                                 uses the page, so the preview must never crop or stretch. -->
+                                            <Border Width="156" Height="220" CornerRadius="4"
+                                                    Background="White" ClipToBounds="True">
+                                                <Panel>
+                                                    <!-- Placeholder while rendering, and the resting
+                                                         state if a template failed to render. -->
+                                                    <!-- IsNull, not "!Thumbnail": negating a Bitmap
+                                                         does not evaluate to false, so the
+                                                         placeholder painted over every preview. -->
+                                                    <TextBlock Text="{Binding Info.Name}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="11" Foreground="#9AA3B2"
+                                                               IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}"/>
+                                                    <Image Source="{Binding Thumbnail}"
+                                                           Stretch="Uniform"
+                                                           IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                                </Panel>
+                                            </Border>
+                                            <StackPanel Spacing="1">
+                                                <TextBlock Text="{Binding Info.Name}" FontWeight="SemiBold" FontSize="12.5"/>
+                                                <TextBlock Text="{Binding Info.Category}" FontSize="10"
+                                                           Foreground="{DynamicResource RbText3}"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </Button>
                                 </DataTemplate>

@@ -49,6 +49,9 @@ public partial class App : Application
             var tailoringService = new JobTailoringService(aiService);
             var coverLetterService = new CoverLetterService(aiService);
             var updateService = new UpdateService();
+            // Its own PngExporter: ExportService keeps its instances private, and this one is
+            // stateless, so sharing would only add coupling.
+            var thumbnailService = new TemplateThumbnailService(new PngExporter(templateRegistry));
 
             // Apply saved theme preference
             RequestedThemeVariant = themeService.CurrentTheme;
@@ -66,7 +69,8 @@ public partial class App : Application
                 syncService,
                 tailoringService,
                 coverLetterService,
-                updateService);
+                updateService,
+                thumbnailService);
 
             // Initialize spell checker in background
             _ = spellChecker.InitializeAsync();

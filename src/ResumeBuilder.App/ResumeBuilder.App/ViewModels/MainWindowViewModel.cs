@@ -710,6 +710,44 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         SelectedTemplate = Templates.FirstOrDefault(t => t.Id == "modern") ?? Templates.FirstOrDefault();
     }
 
+    /// <summary>
+    /// The gallery's own list, carrying a rendered preview per template.
+    ///
+    /// Separate from <see cref="Templates"/> so the plain <see cref="TemplateInfo"/> list stays
+    /// the binding source for the template dropdown and the status bar. Only the gallery needs
+    /// thumbnails, and only the gallery should pay for rendering them.
+    /// </summary>
+    public ObservableCollection<TemplateCardViewModel> TemplateCards { get; } = new();
+
+    /// <summary>
+    /// Renders previews the first time the gallery is opened, never at start-up. 25 QuestPDF
+    /// renders is real work, and most sessions never open the gallery at all.
+    /// </summary>
+    partial void OnShowTemplateGalleryChanged(bool value)
+    {
+        if (value)
+            _ = LoadTemplateCardsAsync();
+    }
+
+    private async Task LoadTemplateCardsAsync()
+    {
+        if (TemplateCards.Count == 0)
+        {
+            foreach (var info in Templates)
+            {
+                TemplateCards.Add(new TemplateCardViewModel(info, _services.TemplateThumbnailService));
+            }
+        }
+
+        // Sequentially rather than all at once: each render is CPU-bound, and 25 in parallel would
+        // saturate the machine and make the first card appear later, not sooner. This way cards
+        // fill in from the top while the user is still reading the first row.
+        foreach (var card in TemplateCards)
+        {
+            await card.LoadThumbnailAsync().ConfigureAwait(true);
+        }
+    }
+
     private async Task LoadSavedResumesAsync()
     {
         try

@@ -15,6 +15,11 @@ public class PngExporter : IExporter
     public string MimeType => "image/png";
 
     private const int RasterDpi = 150;
+
+    // ~620x877 for A4. Enough to stay sharp on a high-DPI display at card size, small enough that
+    // caching all 25 templates costs a couple of MB rather than tens.
+    private const int ThumbnailDpi = 75;
+
     private const int PageGap = 20;
 
     public PngExporter(TemplateRegistry templateRegistry)
@@ -43,6 +48,31 @@ public class PngExporter : IExporter
     public Task<byte[][]> ExportAllPagesAsync(Resume resume, string templateId)
     {
         return Task.FromResult(RenderPages(resume, templateId));
+    }
+
+    /// <summary>
+    /// Renders page one only, at a low DPI, for use as a gallery thumbnail.
+    ///
+    /// Separate from <see cref="ExportAsync"/> on both counts: an export must never drop pages,
+    /// whereas a thumbnail showing page two stitched underneath page one would be unreadable at
+    /// card size; and 150 DPI produces a ~1240x1754 image per template, which is wasteful when it
+    /// will be drawn at roughly a tenth of that.
+    ///
+    /// Returns an empty array if the template renders nothing, so callers can fall back rather
+    /// than show a broken image.
+    /// </summary>
+    public byte[] RenderThumbnail(Resume resume, string templateId)
+    {
+        var template = _templateRegistry.GetTemplateOrDefault(templateId);
+        var document = template.CreateDocument(resume);
+
+        var pages = document.GenerateImages(new ImageGenerationSettings
+        {
+            ImageFormat = ImageFormat.Png,
+            RasterDpi = ThumbnailDpi
+        }).Take(1).ToArray();
+
+        return pages.Length == 0 ? Array.Empty<byte>() : pages[0];
     }
 
     public async Task ExportToFileAsync(Resume resume, string templateId, string filePath)

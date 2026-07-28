@@ -12,7 +12,10 @@ Grab the latest build from the [releases page](https://github.com/Gentian28/resu
 | --- | --- | --- |
 | Windows | `ResumeBuilder-win-Setup.exe` | Installer, updates itself. `win-Portable.zip` if you'd rather not install. |
 | Linux | `ResumeBuilder.AppImage` | `chmod +x` and run. Needs `libfontconfig1` — present on most desktops. |
-| macOS | `ResumeBuilder-osx-Setup.pkg` | See the Gatekeeper note below. |
+| macOS — Apple silicon | `ResumeBuilder-osx-Setup.pkg` | M1 and later. See the Gatekeeper note below. |
+| macOS — Intel | `ResumeBuilder-osx-x64-Setup.pkg` | 2019 and earlier. An Apple silicon build will not run on Intel. |
+
+Not sure which Mac you have? Apple menu → About This Mac.
 
 No .NET runtime needed — every build is self-contained.
 

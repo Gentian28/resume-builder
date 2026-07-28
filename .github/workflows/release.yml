@@ -128,10 +128,26 @@ jobs:
           find dist -type f -exec cp {} out/ \;
           ls -la out
 
+      # Without an explicit tag_name, action-gh-release falls back to github.ref - which on a
+      # workflow_dispatch is refs/heads/main, so the release would be tagged "main" rather than
+      # the version. Every release so far came from a tag push, where the fallback happens to be
+      # right, which is why this went unnoticed.
+      - name: Resolve tag
+        id: v
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            ver="${{ github.event.inputs.version }}"
+          else
+            ver="${GITHUB_REF_NAME#v}"
+          fi
+          echo "tag=v$ver" >> "$GITHUB_OUTPUT"
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: out/**
+          tag_name: ${{ steps.v.outputs.tag }}
           draft: true          # reviewed before it goes public
           generate_release_notes: true
           fail_on_unmatched_files: true

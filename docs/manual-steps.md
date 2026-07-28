@@ -24,15 +24,21 @@ dotnet test ResumeBuilder.sln --filter "FullyQualifiedName~AnthropicLiveTests"
 
 Without the key those three tests report **Skipped**, which is why CI stays offline and green.
 
-**Then publish.** The release workflow is manual-dispatch and takes the version without a leading
-`v`:
+**Then publish.** Push a tag — this is the path every release so far has used:
 
-```
-GitHub → Actions → Release → Run workflow → Version: 1.1.0
+```powershell
+git tag v1.1.0
+git push public v1.1.0
 ```
 
-It builds win-x64, linux-x64, osx-arm64 and osx-x64, packs Velopack installers, publishes the
-GitHub release, and writes the auto-update feed. Existing 1.0.3 installs pick up 1.1.0 on next
+(The Actions → Run workflow button also works now, but the tag push is the proven path.)
+
+It builds win-x64, linux-x64, osx-arm64 and osx-x64 and packs Velopack installers, then creates
+the GitHub release **as a draft**. Nothing is public and nothing auto-updates until you review the
+draft and hit Publish. Until then `releases/latest/download/` still serves 1.0.3, so the portfolio
+page is unaffected.
+
+Once you publish: the auto-update feed updates and existing 1.0.3 installs pick up 1.1.0 on next
 launch.
 
 **Then regenerate the winget manifest** — after the release is published, because the script reads

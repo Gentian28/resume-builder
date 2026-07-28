@@ -60,5 +60,5 @@ Styling has two persisted sources kept in step: legacy `Resume.AccentColor`/`Fon
 
 ## Repo notes
 
-- `gentian_shkembi_resume.json` at the root is the owner's **real personal data** (name/phone/address). The repo is private; this must be scrubbed from history before the repo is ever made public. Use `samples/sample-resume.json` (synthetic) for tests and examples.
+- **Never commit real résumé data.** `samples/sample-resume.json` (synthetic — Jane Doe / example.com) is the fixture for tests and examples. A root-level `gentian_shkembi_resume.json` holding the owner's real name/phone/address was purged from the working tree and from every commit on 2026-07-27, ahead of open-sourcing; `.gitignore` now blocks `/*_resume.json` at the root so it cannot come back by accident.
 - Tests live in `src/ResumeBuilder.Tests` (xUnit + FluentAssertions). The App project is intentionally not referenced by the test project (Avalonia WinExe); logic that needs testing belongs in Core (e.g. `AchievementLines` was extracted for exactly that reason).

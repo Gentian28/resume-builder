@@ -37,3 +37,8 @@ coverage*.json
 !.env.example
 appsettings.*.local.json
 secrets.json
+
+# Real résumé data. The repo is public; only samples/ holds committed fixtures,
+# and those are synthetic. Anything else at the root is someone's actual CV.
+/*_resume.json
+/*-resume.json

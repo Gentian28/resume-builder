@@ -121,11 +121,16 @@ def main() -> None:
     for n in (512, 256, 128, 64, 32):
         draw(n).save(OUT / f"icon-{n}.png")
 
+    # macOS refuses anything but .icns - `vpk pack` fails with "--icon does not have an .icns
+    # extension" rather than falling back.
+    draw(1024).save(OUT / "icon.icns", format="ICNS")
+
     splash().save(OUT / "splash.png")
 
     print(f"wrote {OUT / 'icon.ico'} ({', '.join(str(n) for n in ICO_SIZES)})")
+    print("wrote icon.icns")
     print("wrote icon-512/256/128/64/32.png")
-    print("wrote splash.png")
+    print("wrote splash.png  (Windows installer only - the flag does not exist elsewhere)")
 
 
 if __name__ == "__main__":

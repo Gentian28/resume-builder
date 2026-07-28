@@ -95,7 +95,25 @@ jobs:
 
       - name: Package installer
         shell: bash
+        # Branding flags are per-platform and vpk rejects the wrong ones outright rather than
+        # ignoring them: --splashImage exists only on Windows, and macOS demands .icns and fails
+        # on a .ico. Checking `vpk pack --help` on one OS is not enough - this was found the hard
+        # way when 1.1.1 built on Windows and failed on the other three.
         run: |
+          brand=()
+          case "${{ runner.os }}" in
+            Windows)
+              brand=(--icon "packaging/icon/icon.ico"
+                     --splashImage "packaging/icon/splash.png"
+                     --splashProgressColor "#4F46E5") ;;
+            macOS)
+              brand=(--icon "packaging/icon/icon.icns") ;;
+            Linux)
+              # No icon flag: the AppImage takes its icon from the published app, and vpk's
+              # Linux pack does not accept one.
+              brand=() ;;
+          esac
+
           vpk pack \
             --packId ResumeBuilder \
             --packVersion "${{ steps.v.outputs.version }}" \
@@ -103,9 +121,7 @@ jobs:
             --mainExe "$( [ "${{ runner.os }}" = "Windows" ] && echo ResumeBuilder.App.exe || echo ResumeBuilder.App )" \
             --packTitle "Resume Builder" \
             --packAuthors "Gentian Shkembi" \
-            --icon "packaging/icon/icon.ico" \
-            --splashImage "packaging/icon/splash.png" \
-            --splashProgressColor "#4F46E5" \
+            "${brand[@]}" \
             --channel "${{ matrix.channel }}" \
             --outputDir "artifacts"
 

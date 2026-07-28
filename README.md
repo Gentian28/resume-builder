@@ -19,10 +19,22 @@ Not sure which Mac you have? Apple menu → About This Mac.
 
 No .NET runtime needed — every build is self-contained.
 
-Builds are **not yet code-signed**, so Windows SmartScreen shows an "unknown publisher" warning
-(More info → Run anyway) and macOS Gatekeeper will refuse the package outright until you allow it
-under System Settings → Privacy & Security. `SHA256SUMS-*.txt` is published with every release if
-you want to verify what you downloaded. Signing is planned via SignPath's free OSS certificate.
+`SHA256SUMS-*.txt` is published with every release so you can verify what you downloaded.
+
+### Code signing
+
+Free code signing for Windows builds is provided by [SignPath.io](https://signpath.io/), with the
+certificate issued by the [SignPath Foundation](https://signpath.org/).
+
+*Status: application pending.* Until it is granted, Windows builds are unsigned and SmartScreen
+shows an "unknown publisher" warning — choose **More info → Run anyway**. macOS Gatekeeper
+likewise refuses the package until you allow it under **System Settings → Privacy & Security**;
+that needs Apple notarisation, which is separate from code signing and not yet in place.
+
+### Privacy
+
+The app has no account, no telemetry and no analytics. See [PRIVACY.md](PRIVACY.md) for exactly
+what is stored and the three cases where it touches the network.
 
 ## Features
 

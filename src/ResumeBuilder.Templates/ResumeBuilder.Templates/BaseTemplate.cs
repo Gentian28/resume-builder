@@ -153,7 +153,22 @@ public abstract class BaseTemplate : IResumeTemplate
 
     protected static string FormatGitHubDisplay(string? value) => FormatProfileHandle(value, "github.com");
 
-    protected static string FormatLinkedInDisplay(string? value) => FormatProfileHandle(value, "linkedin.com");
+    /// <summary>
+    /// Display text for a LinkedIn link as a full typeable address: "https://www.linkedin.com/in/user/"
+    /// renders as "linkedin.com/in/user" — same convention as the "github.com/user" call sites.
+    /// </summary>
+    protected static string FormatLinkedInDisplay(string? value)
+    {
+        var handle = FormatProfileHandle(value, "linkedin.com");
+        return string.IsNullOrEmpty(handle) ? string.Empty : $"linkedin.com/{handle}";
+    }
+
+    /// <summary>
+    /// Display text for the personal website: strips the scheme, "www." and a trailing slash so
+    /// "https://www.example.com/" renders as "example.com". Public because cover-letter templates
+    /// implement ICoverLetterTemplate directly and do not extend this class.
+    /// </summary>
+    public static string FormatWebsiteDisplay(string? value) => FormatProfileHandle(value, string.Empty);
 
     // Photo rendering helper
     protected void ComposePhotoOrInitials(IContainer container, Resume resume, float size, Color backgroundColor, Color initialsColor)

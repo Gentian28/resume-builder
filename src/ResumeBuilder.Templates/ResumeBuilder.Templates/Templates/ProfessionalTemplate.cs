@@ -239,7 +239,7 @@ public class ProfessionalTemplate : BaseTemplate
                     if (!string.IsNullOrWhiteSpace(info.GitHub))
                         contactCol.Item().AlignRight().Text($"github.com/{FormatGitHubDisplay(info.GitHub)}").FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
                     if (!string.IsNullOrWhiteSpace(info.Website))
-                        contactCol.Item().AlignRight().Text(info.Website).FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
+                        contactCol.Item().AlignRight().Text(FormatWebsiteDisplay(info.Website)).FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
                 });
             });
 

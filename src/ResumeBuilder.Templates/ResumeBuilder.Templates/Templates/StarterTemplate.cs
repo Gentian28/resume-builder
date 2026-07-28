@@ -173,7 +173,7 @@ public class StarterTemplate : BaseTemplate
             var links = new List<string>();
             if (!string.IsNullOrWhiteSpace(info.LinkedIn)) links.Add(FormatLinkedInDisplay(info.LinkedIn));
             if (!string.IsNullOrWhiteSpace(info.GitHub)) links.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
-            if (!string.IsNullOrWhiteSpace(info.Website)) links.Add(info.Website);
+            if (!string.IsNullOrWhiteSpace(info.Website)) links.Add(FormatWebsiteDisplay(info.Website));
 
             if (links.Any())
             {

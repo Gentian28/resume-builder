@@ -121,7 +121,7 @@ public class PhotoHeaderTemplate : BaseTemplate
         Add(info.Location);
         Add(FormatLinkedInDisplay(info.LinkedIn));
         Add(string.IsNullOrWhiteSpace(info.GitHub) ? null : $"github.com/{FormatGitHubDisplay(info.GitHub)}");
-        Add(info.Website);
+        Add(FormatWebsiteDisplay(info.Website));
 
         return contacts;
     }

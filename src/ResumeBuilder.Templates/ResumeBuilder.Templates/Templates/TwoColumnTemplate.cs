@@ -91,7 +91,7 @@ public class TwoColumnTemplate : BaseTemplate
                         if (!string.IsNullOrWhiteSpace(info.Location))
                             col.Item().PaddingBottom(3).Text(info.Location).FontSize(8 * FontSizeScale);
                         if (!string.IsNullOrWhiteSpace(info.Website))
-                            col.Item().PaddingBottom(3).Text(info.Website).FontSize(8 * FontSizeScale);
+                            col.Item().PaddingBottom(3).Text(FormatWebsiteDisplay(info.Website)).FontSize(8 * FontSizeScale);
                         if (!string.IsNullOrWhiteSpace(info.LinkedIn))
                             col.Item().PaddingBottom(3).Text(FormatLinkedInDisplay(info.LinkedIn)).FontSize(8 * FontSizeScale);
                         if (!string.IsNullOrWhiteSpace(info.GitHub))

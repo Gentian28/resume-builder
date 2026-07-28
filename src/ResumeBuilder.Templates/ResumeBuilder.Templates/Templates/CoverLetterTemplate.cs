@@ -126,7 +126,7 @@ public class CoverLetterTemplate : ICoverLetterTemplate
                     .FontColor(TemplateColors.Parse(_settings.SecondaryColor));
             }
 
-            var contacts = new[] { info.Email, info.Phone, info.Location, info.Website }
+            var contacts = new[] { info.Email, info.Phone, info.Location, BaseTemplate.FormatWebsiteDisplay(info.Website) }
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .ToList();
 

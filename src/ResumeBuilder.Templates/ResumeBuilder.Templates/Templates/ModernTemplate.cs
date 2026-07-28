@@ -184,7 +184,7 @@ public class ModernTemplate : BaseTemplate
                     if (!string.IsNullOrWhiteSpace(info.GitHub))
                         contactItems.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
                     if (!string.IsNullOrWhiteSpace(info.Website))
-                        contactItems.Add(info.Website);
+                        contactItems.Add(FormatWebsiteDisplay(info.Website));
 
                     contactRow.RelativeItem().Text(string.Join("  |  ", contactItems))
                         .FontSize(9 * FontSizeScale)

@@ -120,7 +120,7 @@ public class TechnicalTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.LinkedIn))
                 col.Item().Text(FormatLinkedInDisplay(info.LinkedIn)).FontSize(8 * FontSizeScale);
             if (!string.IsNullOrWhiteSpace(info.Website))
-                col.Item().Text(info.Website).FontSize(8 * FontSizeScale);
+                col.Item().Text(FormatWebsiteDisplay(info.Website)).FontSize(8 * FontSizeScale);
         });
     }
 

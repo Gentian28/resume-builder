@@ -245,7 +245,7 @@ public class ChronologyTemplate : BaseTemplate
                 if (!string.IsNullOrWhiteSpace(info.Location)) contacts.Add(info.Location);
                 if (!string.IsNullOrWhiteSpace(info.LinkedIn)) contacts.Add(FormatLinkedInDisplay(info.LinkedIn));
                 if (!string.IsNullOrWhiteSpace(info.GitHub)) contacts.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
-                if (!string.IsNullOrWhiteSpace(info.Website)) contacts.Add(info.Website);
+                if (!string.IsNullOrWhiteSpace(info.Website)) contacts.Add(FormatWebsiteDisplay(info.Website));
 
                 if (contacts.Count > 0)
                 {

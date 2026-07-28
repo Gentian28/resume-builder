@@ -203,7 +203,7 @@ public class EuropassTemplate : BaseTemplate
         Add("Address", address);
         Add("Telephone", info.Phone);
         Add("Email", info.Email);
-        Add("Website", info.Website);
+        Add("Website", FormatWebsiteDisplay(info.Website));
         Add("LinkedIn", FormatLinkedInDisplay(info.LinkedIn));
         Add("GitHub", FormatGitHubDisplay(info.GitHub));
 

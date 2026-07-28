@@ -75,7 +75,7 @@ public class CreativeTemplate : BaseTemplate
                         if (!string.IsNullOrWhiteSpace(info.Location))
                             col.Item().Text(info.Location).FontSize(8 * FontSizeScale).FontColor(Colors.White);
                         if (!string.IsNullOrWhiteSpace(info.Website))
-                            col.Item().Text(info.Website).FontSize(8 * FontSizeScale).FontColor(Colors.White);
+                            col.Item().Text(FormatWebsiteDisplay(info.Website)).FontSize(8 * FontSizeScale).FontColor(Colors.White);
                         if (!string.IsNullOrWhiteSpace(info.LinkedIn))
                             col.Item().Text(FormatLinkedInDisplay(info.LinkedIn)).FontSize(8 * FontSizeScale).FontColor(Colors.White);
                         if (!string.IsNullOrWhiteSpace(info.GitHub))

@@ -158,7 +158,7 @@ public class DeveloperTemplate : BaseTemplate
                 column.Item().Element(c => ComposeKeyValue(c, "github", $"github.com/{FormatGitHubDisplay(info.GitHub)}", accent));
 
             if (!string.IsNullOrWhiteSpace(info.Website))
-                column.Item().Element(c => ComposeKeyValue(c, "website", info.Website, accent));
+                column.Item().Element(c => ComposeKeyValue(c, "website", FormatWebsiteDisplay(info.Website), accent));
 
             if (!string.IsNullOrWhiteSpace(info.LinkedIn))
                 column.Item().Element(c => ComposeKeyValue(c, "linkedin", FormatLinkedInDisplay(info.LinkedIn)));

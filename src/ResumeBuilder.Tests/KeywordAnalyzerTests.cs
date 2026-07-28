@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using ResumeBuilder.Core.SmartContent;
 
 namespace ResumeBuilder.Tests;

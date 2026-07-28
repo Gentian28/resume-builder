@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using FluentAssertions;
+using AwesomeAssertions;
 using ResumeBuilder.Core.UndoRedo;
 
 namespace ResumeBuilder.Tests;

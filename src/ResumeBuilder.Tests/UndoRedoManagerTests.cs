@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using ResumeBuilder.Core.UndoRedo;
 using System.Collections.ObjectModel;
 

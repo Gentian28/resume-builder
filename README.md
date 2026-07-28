@@ -102,7 +102,12 @@ The AI features are off until configured. They target any OpenAI-compatible `/ch
 
 [MIT](LICENSE) — © 2026 Gentian Shkembi.
 
-One dependency to be aware of if you fork this for commercial work: **FluentAssertions 8.x**
-(test project only, never shipped in the app) moved to the Xceed Community License, which is
-free for open-source and non-commercial use but requires a paid licence for commercial use.
-It does not affect using or redistributing the application itself.
+Every dependency is OSI-licensed. One is worth knowing about if you fork this for commercial
+work: **QuestPDF**, which renders every template, is MIT for open-source projects, non-profits
+and companies under $1M USD annual revenue, and requires a paid licence above that. It does not
+affect using, forking or redistributing this project.
+
+(The test suite used to depend on FluentAssertions 8.x, which moved to the non-OSI Xceed
+Community License permitting non-commercial use only — meaning a commercial fork could not
+legally run the tests. It now uses [AwesomeAssertions](https://github.com/AwesomeAssertions/AwesomeAssertions),
+the Apache-2.0 community fork.)

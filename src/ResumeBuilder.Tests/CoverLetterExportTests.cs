@@ -1,5 +1,5 @@
 using System.Text;
-using FluentAssertions;
+using AwesomeAssertions;
 using QuestPDF.Infrastructure;
 using ResumeBuilder.Core.Models;
 using ResumeBuilder.Export;

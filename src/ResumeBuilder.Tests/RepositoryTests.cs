@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Data.Sqlite;
 using ResumeBuilder.Core.Models;
 using ResumeBuilder.Data;

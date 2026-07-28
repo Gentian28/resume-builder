@@ -51,7 +51,12 @@
 
   <ItemGroup Label="Testing">
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="FluentAssertions" Version="8.8.0" />
+    <!-- The MIT-community fork of FluentAssertions, under Apache-2.0. FluentAssertions 8.x moved
+         to the Xceed Community License, which is not OSI-approved and permits Non-Commercial Use
+         only — so anyone forking this MIT project for commercial work could not legally run its
+         tests, and SignPath's OSS programme requires OSI licensing without commercial
+         dual-licensing for all components. -->
+    <PackageVersion Include="AwesomeAssertions" Version="9.5.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="xunit" Version="2.9.3" />

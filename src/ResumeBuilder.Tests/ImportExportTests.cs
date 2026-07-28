@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using ResumeBuilder.Core.Models;
 using ResumeBuilder.Export;
 using ResumeBuilder.Export.Importers;

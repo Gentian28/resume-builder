@@ -103,6 +103,9 @@ jobs:
             --mainExe "$( [ "${{ runner.os }}" = "Windows" ] && echo ResumeBuilder.App.exe || echo ResumeBuilder.App )" \
             --packTitle "Resume Builder" \
             --packAuthors "Gentian Shkembi" \
+            --icon "packaging/icon/icon.ico" \
+            --splashImage "packaging/icon/splash.png" \
+            --splashProgressColor "#4F46E5" \
             --channel "${{ matrix.channel }}" \
             --outputDir "artifacts"
 

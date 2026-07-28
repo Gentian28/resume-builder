@@ -16,14 +16,41 @@ Manifests are written and validated at `packaging/winget/1.0.1/`.
 Do not skip this — winget's CI installs the package unattended, and a broken silent switch
 fails the PR after a slow review cycle.
 
+**Prerequisite, once per machine.** winget refuses local manifests by default
+(`LocalManifestFiles` is off), so this needs enabling first. It requires an **administrator**
+PowerShell — Start menu → type `PowerShell` → right-click *Windows PowerShell* → *Run as
+administrator*:
+
 ```powershell
-winget install --manifest packaging\winget\1.0.1
+winget settings --enable LocalManifestFiles
 ```
 
-Then confirm the app launches, and uninstall again:
+Check it took with `winget settings export` — `"LocalManifestFiles":true`.
+
+**Then, in a normal (non-admin) PowerShell.** Velopack installs per-user under `%LocalAppData%`,
+so there is nothing to elevate for. Use the full path and the working directory stops mattering:
+
+```powershell
+winget install --manifest C:\Users\Pc\source\repos\resumebuilder\packaging\winget\1.0.1
+```
+
+winget reads the three YAML files, downloads the ~69 MB installer from the GitHub release,
+verifies it against the `InstallerSha256` in the manifest, and runs it. A hash mismatch means the
+manifest and the release have drifted apart — regenerate with `new-version.ps1`.
+
+This performs a **real install**: Resume Builder appears in the Start menu. That is the point —
+you are testing what a stranger will experience.
+
+Confirm it launches, then remove it:
 
 ```powershell
 winget uninstall Gentian28.ResumeBuilder
+```
+
+Optionally turn the setting back off afterwards (admin PowerShell again):
+
+```powershell
+winget settings --disable LocalManifestFiles
 ```
 
 ### Then submit

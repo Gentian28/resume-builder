@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Anthropic" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="WeCantSpell.Hunspell" />
   </ItemGroup>

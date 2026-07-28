@@ -44,7 +44,8 @@ public partial class App : Application
             var themeService = new ThemeService();
             var spellChecker = new HunspellService();
             var undoRedoManager = new UndoRedoManager();
-            var aiService = new LocalAiService();
+            // Routes to whichever provider the user picked; both stay configured independently.
+            var aiService = new AiProviderRouter();
             var syncService = new LocalFolderSyncService(repository, new SyncStateStore());
             var tailoringService = new JobTailoringService(aiService);
             var coverLetterService = new CoverLetterService(aiService);

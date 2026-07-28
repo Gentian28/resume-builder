@@ -11,35 +11,108 @@
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
                                     <TextBlock Text="AI Assistant" FontWeight="SemiBold" FontSize="14"/>
-                                    <Border Grid.Column="1" Background="#3316a34a" CornerRadius="8"
-                                            Padding="6,1" Margin="8,0,0,0"
-                                            HorizontalAlignment="Left" VerticalAlignment="Center"
-                                            IsVisible="{Binding IsAiLocal}">
-                                        <TextBlock Text="Local" FontSize="10"/>
-                                    </Border>
                                     <Button Grid.Column="2" Content="X" Padding="4,0"
-                                            Command="{Binding ToggleAiPanelCommand}"/>
+                                            Command="{Binding ToggleAiPanelCommand}"
+                                            AutomationProperties.Name="Close AI panel"/>
                                 </Grid>
 
-                                <!-- Endpoint Configuration -->
+                                <!-- Three states, stated in words rather than left to be inferred
+                                     from a base URL. Green is reserved for the local case: it is
+                                     the only state where "nothing leaves your machine" is true, so
+                                     it is the only one that gets to claim it. The unconfigured
+                                     state is neutral, not an error - not having set up a model is
+                                     not a fault, and the offline features work regardless. -->
+                                <Border CornerRadius="7" Padding="10,9"
+                                        IsVisible="{Binding IsAiLocal}"
+                                        Background="{DynamicResource RbSuccessBg}"
+                                        BorderBrush="{DynamicResource RbSuccessBorder}" BorderThickness="1">
+                                    <StackPanel Orientation="Horizontal" Spacing="9">
+                                        <Ellipse Width="7" Height="7" VerticalAlignment="Top" Margin="0,4,0,0"
+                                                 Fill="{DynamicResource RbSuccess}"/>
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding AiStatusHeadline}" FontSize="11.5"
+                                                       FontWeight="SemiBold" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource RbSuccess}"/>
+                                            <TextBlock Text="Nothing leaves your machine." FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource RbText2}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border CornerRadius="7" Padding="10,9"
+                                        IsVisible="{Binding IsAiCloud}"
+                                        Background="{DynamicResource RbWarningBg}"
+                                        BorderBrush="{DynamicResource RbWarningBorder}" BorderThickness="1">
+                                    <StackPanel Orientation="Horizontal" Spacing="9">
+                                        <Ellipse Width="7" Height="7" VerticalAlignment="Top" Margin="0,4,0,0"
+                                                 Fill="{DynamicResource RbWarning}"/>
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding AiStatusHeadline}" FontSize="11.5"
+                                                       FontWeight="SemiBold" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource RbWarning}"/>
+                                            <TextBlock Text="Résumé text you send is transmitted to this provider."
+                                                       FontSize="11" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource RbText2}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border CornerRadius="7" Padding="10,9"
+                                        IsVisible="{Binding IsAiUnconfigured}"
+                                        Background="{DynamicResource RbSurface2}"
+                                        BorderBrush="{DynamicResource RbBorder}" BorderThickness="1">
+                                    <StackPanel Orientation="Horizontal" Spacing="9">
+                                        <Ellipse Width="7" Height="7" VerticalAlignment="Top" Margin="0,4,0,0"
+                                                 Fill="{DynamicResource RbText3}"/>
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding AiStatusHeadline}" FontSize="11.5"
+                                                       FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Text="Keyword analysis and ATS scoring still work — they run on this machine and need no model."
+                                                       FontSize="11" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource RbText2}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Provider Configuration -->
                                 <StackPanel Spacing="6">
-                                    <TextBlock Text="Endpoint" FontSize="12" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Any OpenAI-compatible server works: OpenAI itself, or a local LLM such as Ollama or LM Studio."
+                                    <TextBlock Text="Provider" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Anthropic, or any OpenAI-compatible server — OpenAI itself, or a local LLM such as Ollama or LM Studio."
                                                FontSize="11" Opacity="0.7" TextWrapping="Wrap"/>
                                     <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <Button Content="Use Anthropic" Padding="8,3" FontSize="11"
+                                                Command="{Binding UseAnthropicEndpointCommand}"/>
                                         <Button Content="Use OpenAI" Padding="8,3" FontSize="11"
                                                 Command="{Binding UseOpenAiEndpointCommand}"/>
                                         <Button Content="Use local LLM" Padding="8,3" FontSize="11"
                                                 Command="{Binding UseLocalAiEndpointCommand}"/>
                                     </StackPanel>
+
+                                    <!-- Anthropic has one API, so there is no endpoint to pick.
+                                         The field is hidden rather than disabled: a control you
+                                         can see but never use is worse than one that isn't there. -->
                                     <TextBox Watermark="Base URL (e.g. https://api.openai.com/v1)"
-                                             Text="{Binding AiBaseUrl}" AutomationProperties.Name="Base URL"/>
+                                             Text="{Binding AiBaseUrl}"
+                                             IsVisible="{Binding IsOpenAiCompatibleSelected}"
+                                             AutomationProperties.Name="Base URL"/>
                                     <TextBox Watermark="Model (e.g. gpt-4o-mini, llama3)"
-                                             Text="{Binding AiModel}" AutomationProperties.Name="Model"/>
+                                             Text="{Binding AiModel}"
+                                             IsVisible="{Binding IsOpenAiCompatibleSelected}"
+                                             AutomationProperties.Name="Model"/>
+                                    <TextBox Watermark="Model (e.g. claude-opus-5)"
+                                             Text="{Binding AiModel}"
+                                             IsVisible="{Binding IsAnthropicSelected}"
+                                             AutomationProperties.Name="Model"/>
                                     <TextBox Watermark="API key (not needed for a local endpoint)"
                                              Text="{Binding AiApiKey}"
+                                             IsVisible="{Binding IsOpenAiCompatibleSelected}"
                                              PasswordChar="*" AutomationProperties.Name="API key"/>
-                                    <Button Content="Apply endpoint settings"
+                                    <TextBox Watermark="Anthropic API key (sk-ant-...)"
+                                             Text="{Binding AiApiKey}"
+                                             IsVisible="{Binding IsAnthropicSelected}"
+                                             PasswordChar="*" AutomationProperties.Name="Anthropic API key"/>
+                                    <Button Content="Apply settings"
                                             Command="{Binding ApplyAiSettingsCommand}"
                                             HorizontalAlignment="Left"/>
                                     <Border Background="{DynamicResource RbSurface2}"

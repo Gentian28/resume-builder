@@ -10,6 +10,7 @@
     <PackageVersion Include="Avalonia.Desktop" Version="11.3.14" />
     <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.14" />
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.14" />
+    <PackageVersion Include="Anthropic" Version="12.39.0" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <!-- Base theme. Supplies the elevation, control themes and type scale that would otherwise be
          hand-rolled on stock Fluent; our tokens in Styles/ override it rather than replace it.

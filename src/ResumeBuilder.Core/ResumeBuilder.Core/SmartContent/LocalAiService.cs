@@ -8,7 +8,7 @@ namespace ResumeBuilder.Core.SmartContent;
 /// <summary>
 /// AI service that uses OpenAI-compatible APIs (OpenAI, local LLMs like Ollama, etc.)
 /// </summary>
-public class LocalAiService : IAiService, IDisposable
+public class LocalAiService : PromptBasedAiService, IDisposable
 {
     public const string OpenAiBaseUrl = "https://api.openai.com/v1";
     public const string DefaultModel = "gpt-4o-mini";
@@ -22,7 +22,7 @@ public class LocalAiService : IAiService, IDisposable
     /// A local server needs no key; a remote one does. Checking the host (rather than searching the
     /// URL for "localhost") also covers 127.0.0.1 and ::1.
     /// </summary>
-    public bool IsConfigured => !string.IsNullOrEmpty(_apiKey) || IsLocalEndpoint(_baseUrl);
+    public override bool IsConfigured => !string.IsNullOrEmpty(_apiKey) || IsLocalEndpoint(_baseUrl);
 
     /// <summary>The endpoint requests are sent to - surfaced so the UI can say where data goes.</summary>
     public string BaseUrl => _baseUrl;
@@ -39,7 +39,7 @@ public class LocalAiService : IAiService, IDisposable
         _httpClient = new HttpClient();
     }
 
-    public void Configure(string apiKey, string? model = null)
+    public override void Configure(string apiKey, string? model = null)
     {
         _apiKey = apiKey;
         if (!string.IsNullOrEmpty(model))
@@ -62,140 +62,10 @@ public class LocalAiService : IAiService, IDisposable
         _apiKey = "local"; // Mark as configured
     }
 
-    public async Task<AiResult<string>> GenerateSummaryAsync(
-        string jobTitle,
-        IEnumerable<string> experiences,
-        IEnumerable<string> skills,
-        CancellationToken cancellationToken = default)
-    {
-        if (!IsConfigured)
-            return AiResult<string>.Failed("AI service not configured. Please set API key in settings.");
 
-        var prompt = $@"Write a professional resume summary (2-3 sentences) for a {jobTitle}.
 
-Experience highlights:
-{string.Join("\n- ", experiences.Take(5))}
 
-Key skills: {string.Join(", ", skills.Take(10))}
 
-Write in first person, be concise, and highlight key strengths. Do not use generic phrases like 'results-driven' or 'team player'. Focus on specific achievements and expertise.";
-
-        return await SendChatRequestAsync(prompt, cancellationToken);
-    }
-
-    public async Task<AiResult<IEnumerable<string>>> ImproveAchievementAsync(
-        string achievement,
-        string? jobContext = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (!IsConfigured)
-            return AiResult<IEnumerable<string>>.Failed("AI service not configured.");
-
-        var contextPart = !string.IsNullOrEmpty(jobContext)
-            ? $" in the context of {jobContext}"
-            : "";
-
-        var prompt = $@"Improve this resume achievement bullet point{contextPart}. Make it more impactful using the STAR method (Situation, Task, Action, Result). Include metrics where possible.
-
-Original: {achievement}
-
-Provide exactly 3 alternative versions, each on a new line starting with '- '. Be specific and quantify results when possible.";
-
-        var result = await SendChatRequestAsync(prompt, cancellationToken);
-        if (!result.Success || result.Data == null)
-            return AiResult<IEnumerable<string>>.Failed(result.ErrorMessage ?? "Failed to generate suggestions");
-
-        var suggestions = result.Data
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Where(l => l.TrimStart().StartsWith("-"))
-            .Select(l => l.TrimStart('-', ' '))
-            .ToList();
-
-        return AiResult<IEnumerable<string>>.Succeeded(suggestions);
-    }
-
-    public async Task<AiResult<IEnumerable<string>>> SuggestSkillsAsync(
-        string jobTitle,
-        IEnumerable<string> currentSkills,
-        IEnumerable<string>? experiences = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (!IsConfigured)
-            return AiResult<IEnumerable<string>>.Failed("AI service not configured.");
-
-        var experiencePart = experiences?.Any() == true
-            ? $"\n\nBased on this experience:\n{string.Join("\n- ", experiences.Take(5))}"
-            : "";
-
-        var prompt = $@"Suggest 5-8 relevant skills for a {jobTitle} position that are NOT already listed.
-
-Current skills: {string.Join(", ", currentSkills)}{experiencePart}
-
-List only skill names (no descriptions), one per line starting with '- '. Focus on in-demand technical and soft skills for this role.";
-
-        var result = await SendChatRequestAsync(prompt, cancellationToken);
-        if (!result.Success || result.Data == null)
-            return AiResult<IEnumerable<string>>.Failed(result.ErrorMessage ?? "Failed to generate suggestions");
-
-        var suggestions = result.Data
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Where(l => l.TrimStart().StartsWith("-"))
-            .Select(l => l.TrimStart('-', ' ').Trim())
-            .Where(s => !string.IsNullOrWhiteSpace(s))
-            .ToList();
-
-        return AiResult<IEnumerable<string>>.Succeeded(suggestions);
-    }
-
-    public async Task<AiResult<string>> OptimizeForJobAsync(
-        string content,
-        string jobDescription,
-        CancellationToken cancellationToken = default)
-    {
-        if (!IsConfigured)
-            return AiResult<string>.Failed("AI service not configured.");
-
-        var prompt = $@"Rewrite this resume content to better match the following job description. Keep the same structure but optimize keyword usage and emphasis.
-
-Job Description:
-{jobDescription.Substring(0, Math.Min(1000, jobDescription.Length))}
-
-Current Content:
-{content}
-
-Rewrite to highlight relevant experience and use keywords from the job description naturally. Maintain professional tone.";
-
-        return await SendChatRequestAsync(prompt, cancellationToken);
-    }
-
-    public async Task<AiResult<IEnumerable<AiSuggestion>>> GetImprovementSuggestionsAsync(
-        string resumeContent,
-        CancellationToken cancellationToken = default)
-    {
-        if (!IsConfigured)
-            return AiResult<IEnumerable<AiSuggestion>>.Failed("AI service not configured.");
-
-        var prompt = $@"Review this resume content and provide 3-5 specific improvement suggestions. Focus on:
-1. Content gaps or weak points
-2. Quantification opportunities (adding metrics)
-3. Clarity and impact of language
-4. Missing relevant information
-
-Resume:
-{resumeContent.Substring(0, Math.Min(2000, resumeContent.Length))}
-
-For each suggestion, format as:
-TYPE: [Summary/ExperienceBullet/SkillSuggestion/Improvement]
-SUGGESTION: [Your specific suggestion]
----";
-
-        var result = await SendChatRequestAsync(prompt, cancellationToken);
-        if (!result.Success || result.Data == null)
-            return AiResult<IEnumerable<AiSuggestion>>.Failed(result.ErrorMessage ?? "Failed to analyze");
-
-        var suggestions = ParseSuggestions(result.Data);
-        return AiResult<IEnumerable<AiSuggestion>>.Succeeded(suggestions);
-    }
 
     /// <summary>Pulls <c>error.message</c> out of an OpenAI-style error body, if it looks like one.</summary>
     private static string? ExtractErrorMessage(string body)
@@ -220,7 +90,7 @@ SUGGESTION: [Your specific suggestion]
         return body.Length > 200 ? body[..200] : body;
     }
 
-    private async Task<AiResult<string>> SendChatRequestAsync(string prompt, CancellationToken cancellationToken)
+    protected override async Task<AiResult<string>> SendAsync(string prompt, CancellationToken cancellationToken)
     {
         try
         {
@@ -229,7 +99,7 @@ SUGGESTION: [Your specific suggestion]
                 Model = _model,
                 Messages = new[]
                 {
-                    new ChatMessage { Role = "system", Content = "You are a professional resume writing assistant. Provide concise, actionable suggestions." },
+                    new ChatMessage { Role = "system", Content = SystemPrompt },
                     new ChatMessage { Role = "user", Content = prompt }
                 },
                 MaxTokens = 500,
@@ -270,49 +140,7 @@ SUGGESTION: [Your specific suggestion]
         }
     }
 
-    private List<AiSuggestion> ParseSuggestions(string response)
-    {
-        var suggestions = new List<AiSuggestion>();
-        var blocks = response.Split("---", StringSplitOptions.RemoveEmptyEntries);
 
-        foreach (var block in blocks)
-        {
-            var lines = block.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            string? type = null;
-            string? suggestion = null;
-
-            foreach (var line in lines)
-            {
-                if (line.StartsWith("TYPE:", StringComparison.OrdinalIgnoreCase))
-                    type = line.Substring(5).Trim();
-                else if (line.StartsWith("SUGGESTION:", StringComparison.OrdinalIgnoreCase))
-                    suggestion = line.Substring(11).Trim();
-            }
-
-            if (!string.IsNullOrEmpty(suggestion))
-            {
-                suggestions.Add(new AiSuggestion
-                {
-                    Type = ParseSuggestionType(type),
-                    Content = suggestion
-                });
-            }
-        }
-
-        return suggestions;
-    }
-
-    private SuggestionType ParseSuggestionType(string? type)
-    {
-        return type?.ToLowerInvariant() switch
-        {
-            "summary" => SuggestionType.Summary,
-            "experiencebullet" => SuggestionType.ExperienceBullet,
-            "skillsuggestion" => SuggestionType.SkillSuggestion,
-            "jobdescription" => SuggestionType.JobDescription,
-            _ => SuggestionType.Improvement
-        };
-    }
 
     public void Dispose()
     {

@@ -253,7 +253,22 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private bool _showAiPanel;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAiCloud))]
+    [NotifyPropertyChangedFor(nameof(IsAiUnconfigured))]
     private bool _isAiConfigured;
+
+    /// <summary>
+    /// Configured, but pointing at something that is not this machine. Distinguished from the
+    /// local case because the two have opposite privacy consequences and the panel should say so
+    /// rather than leave the user to infer it from a base URL.
+    /// </summary>
+    public bool IsAiCloud => IsAiConfigured && !IsAiLocal;
+
+    /// <summary>
+    /// No endpoint set. Deliberately not treated as an error state: keyword analysis and ATS
+    /// scoring are local computation and work regardless, which is what the panel says.
+    /// </summary>
+    public bool IsAiUnconfigured => !IsAiConfigured;
 
     [ObservableProperty]
     private string _aiApiKey = "";
@@ -265,10 +280,15 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private string _aiModel = LocalAiService.DefaultModel;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAiCloud))]
     private bool _isAiLocal;
 
     [ObservableProperty]
     private string _aiPrivacyNotice = "";
+
+    /// <summary>One line naming the current mode, e.g. "Running locally · llama3.1".</summary>
+    [ObservableProperty]
+    private string _aiStatusHeadline = "No model configured";
 
     [ObservableProperty]
     private bool _isAiProcessing;
@@ -1596,11 +1616,31 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
     // ---------------------------------------------------------------- AI
 
+    /// <summary>
+    /// True while Anthropic is the selected provider. Drives the panel: Anthropic has no base URL
+    /// to choose and always needs a key, so the endpoint field is hidden rather than shown
+    /// disabled — an input that cannot be used is worse than one that isn't there.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsOpenAiCompatibleSelected))]
+    private bool _isAnthropicSelected;
+
+    public bool IsOpenAiCompatibleSelected => !IsAnthropicSelected;
+
     [RelayCommand]
     private void ApplyAiSettings()
     {
-        if (_services?.AiService is not LocalAiService ai)
+        if (_services?.AiService is not AiProviderRouter router)
             return;
+
+        if (IsAnthropicSelected)
+        {
+            ApplyAnthropicSettings(router);
+            return;
+        }
+
+        var ai = router.OpenAiCompatible;
+        router.Active = AiProvider.OpenAiCompatible;
 
         var baseUrl = string.IsNullOrWhiteSpace(AiBaseUrl) ? LocalAiService.OpenAiBaseUrl : AiBaseUrl.Trim();
         var model = string.IsNullOrWhiteSpace(AiModel) ? LocalAiService.DefaultModel : AiModel.Trim();
@@ -1630,9 +1670,32 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         AiStatusMessage = $"Ready - using {ai.Model} at {ai.BaseUrl}";
     }
 
+    /// <summary>
+    /// Anthropic needs no endpoint choice — there is one API — so the only inputs that matter are
+    /// the key and the model.
+    /// </summary>
+    private void ApplyAnthropicSettings(AiProviderRouter router)
+    {
+        if (string.IsNullOrWhiteSpace(AiApiKey))
+        {
+            AiStatusMessage = "Anthropic needs an API key";
+            return;
+        }
+
+        var model = string.IsNullOrWhiteSpace(AiModel) ? AnthropicAiService.DefaultModel : AiModel.Trim();
+
+        router.Anthropic.Configure(AiApiKey.Trim(), model);
+        router.Active = AiProvider.Anthropic;
+
+        IsAiConfigured = router.Anthropic.IsConfigured;
+        UpdateAiPrivacyNotice();
+        AiStatusMessage = $"Ready - using {router.Anthropic.Model}";
+    }
+
     [RelayCommand]
     private void UseLocalAiEndpoint()
     {
+        IsAnthropicSelected = false;
         AiBaseUrl = "http://localhost:11434/v1";
         AiModel = "llama3";
         AiApiKey = "";
@@ -1642,16 +1705,80 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private void UseOpenAiEndpoint()
     {
+        IsAnthropicSelected = false;
         AiBaseUrl = LocalAiService.OpenAiBaseUrl;
         AiModel = LocalAiService.DefaultModel;
     }
 
+    /// <summary>
+    /// Selects Anthropic and fills in its default model. Deliberately does not apply — the user
+    /// still has to paste a key, and applying here would only produce an error message.
+    /// </summary>
+    [RelayCommand]
+    private void UseAnthropicEndpoint()
+    {
+        IsAnthropicSelected = true;
+        AiModel = AnthropicAiService.DefaultModel;
+        AiApiKey = "";
+        AiStatusMessage = "Paste an Anthropic API key, then apply.";
+    }
+
+    /// <summary>
+    /// Keeps the panel's three states in step: running locally, using a cloud provider, or not
+    /// configured.
+    ///
+    /// The distinction matters because the states have opposite privacy consequences, and only one
+    /// of them earns the claim the product is built on. "Nothing leaves your machine" appears in
+    /// exactly the state where it is literally true.
+    /// </summary>
     private void UpdateAiPrivacyNotice()
     {
-        if (_services?.AiService is not LocalAiService ai)
+        if (_services?.AiService is not AiProviderRouter router)
             return;
 
+        if (router.Active == AiProvider.Anthropic)
+        {
+            var anthropic = router.Anthropic;
+
+            // Anthropic is always remote, so it is never the green "local" state - naming the
+            // provider is the honest version of that claim.
+            IsAiLocal = false;
+            IsAiConfigured = anthropic.IsConfigured;
+
+            if (!anthropic.IsConfigured)
+            {
+                AiStatusHeadline = "No model configured";
+                AiPrivacyNotice =
+                    "Keyword analysis and ATS scoring still work — they run on this machine and need no model. " +
+                    "Choose a provider below and add a key to enable summaries, skill suggestions and rewrites.";
+                return;
+            }
+
+            AiStatusHeadline = $"Using Anthropic · {anthropic.Model}";
+            AiPrivacyNotice =
+                $"Your resume text is sent to Anthropic (model {anthropic.Model}). The API key is held in " +
+                "memory for this session only and is never written to disk.";
+            return;
+        }
+
+        var ai = router.OpenAiCompatible;
+
         IsAiLocal = ai.IsLocal;
+        IsAiConfigured = ai.IsConfigured;
+
+        if (!ai.IsConfigured)
+        {
+            AiStatusHeadline = "No model configured";
+            AiPrivacyNotice =
+                "Keyword analysis and ATS scoring still work — they run on this machine and need no model. " +
+                "Choose a provider below and add a key to enable summaries, skill suggestions and rewrites.";
+            return;
+        }
+
+        AiStatusHeadline = ai.IsLocal
+            ? $"Running locally · {ai.Model}"
+            : $"Using {ai.BaseUrl} · {ai.Model}";
+
         AiPrivacyNotice = ai.IsLocal
             ? $"Requests go to {ai.BaseUrl} on this machine. Nothing leaves your computer, and no API key is needed."
             : $"Your resume text is sent to {ai.BaseUrl} (model {ai.Model}). The API key is held in memory for this session only and is never written to disk.";

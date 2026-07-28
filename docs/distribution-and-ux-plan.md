@@ -97,9 +97,10 @@ Consider **Semi.Avalonia** as a modern base theme rather than styling stock Flue
 5. ~~Add Velopack packaging.~~ **Done** — verified locally, see below.
 6. ~~Release workflow: tag → matrix build → package → upload.~~ **Done** —
    `.github/workflows/release.yml`. Not yet exercised on a real runner.
-7. Make the repo public + apply for the SignPath OSS certificate.
-8. Download page on the portfolio: screenshots, the local-LLM privacy pitch, checksums,
-   per-OS buttons.
+7. Repo public ~~+ apply for the SignPath OSS certificate~~ — **public done**
+   ([resume-builder](https://github.com/Gentian28/resume-builder)); SignPath still to apply for.
+8. ~~Download page on the portfolio.~~ **Done** — `docs/download-page/index.html`, also on the
+   Portfolio project at claude.ai/design.
 9. Optional channels: winget manifest, then Flathub.
 
 Steps 1–4 depend on nothing else and can start immediately.
@@ -217,8 +218,27 @@ was latent from the start; CI had only ever run on `windows-latest`. Fixed by re
 2. ~~Auto-update is not wired.~~ **Done** — `UpdateService` reads the GitHub releases feed, so
    updates work without waiting for R2. Moving to R2 later is a URL change and nothing else.
 3. ~~`release.yml` has never run on a real runner.~~ **Done** — see above.
-4. **Builds are unsigned**, so Windows SmartScreen still warns. Fixed by the SignPath OSS
-   certificate, which requires a public repo — and that is currently blocked, see below.
+4. **Builds are unsigned**, so Windows SmartScreen still warns and macOS Gatekeeper refuses the
+   package until allowed by hand. This is the only remaining gap, and it needs a human.
+
+### Applying for the SignPath OSS certificate — needs you, not an agent
+
+The prerequisite (a public repo under an OSI licence, built in public CI) is now satisfied:
+`resume-builder` is public, MIT, and every release is built by GitHub Actions from public source.
+
+Apply through the **SignPath Foundation** open-source programme at
+[signpath.org](https://signpath.org/) — it is a reviewed application, not a signup, so expect a
+wait and check their current criteria rather than trusting this list. Broadly they want: a public
+repository, an OSI-approved licence, builds produced by a public CI pipeline from that source, and
+no obfuscated or third-party binaries smuggled into the artifact.
+
+Once granted, signing slots into `release.yml` between the publish and pack steps via SignPath's
+GitHub Action, using an API token stored as a repository secret. `vpk pack` also accepts signing
+parameters directly — it already warns `No signing parameters provided, 260 file(s) will not be
+signed` on every run, which is the hook to fill in.
+
+macOS is a separate problem SignPath does not solve: notarisation needs a $99/yr Apple Developer
+account. Until then the `.pkg` stays an advanced download with instructions.
 
 ### Resolved: published from a fresh repo instead
 

@@ -189,17 +189,58 @@ Two decisions the local run settled:
   delta updates diff package contents, so a compressed single-file blob makes every update a full
   ~60 MB download. Self-contained still applies, so no .NET runtime is needed either way.
 
+### First real run — v1.0.0, 2026-07-28
+
+Tag pushed, both workflows exercised on real runners. **Everything green**, and the release
+produced a complete set of installers:
+
+| Platform | Installer | Portable | Feed |
+| --- | --- | --- | --- |
+| Windows | `ResumeBuilder-win-Setup.exe` (69 MB) | `win-Portable.zip` | `releases.win.json` |
+| Linux | `ResumeBuilder.AppImage` (59 MB) | — | `releases.linux.json` |
+| macOS | `ResumeBuilder-osx-Setup.pkg` (59 MB) | `osx-Portable.zip` | `releases.osx.json` |
+
+Plus `SHA256SUMS-*.txt` per platform. The release is a **draft** — nothing is downloadable until
+it is published by hand.
+
+**The cross-platform CI paid for itself on its first run.** It failed on ubuntu with 322/323:
+`PngExporter.StitchVertically` died in `SKData`'s static constructor because `libSkiaSharp.so` was
+missing. SkiaSharp depends on the Win32 and macOS native packages but resolves the Linux one only
+through the RID runtime graph, which needs a `RuntimeIdentifier` — so `dotnet publish -r linux-x64`
+picked it up (which is why the packaged app ran) while the RID-less test build never did. The bug
+was latent from the start; CI had only ever run on `windows-latest`. Fixed by referencing
+`SkiaSharp.NativeAssets.Linux` from Export, which also matters for the Linux-hosted web version.
+
 ### Still required before the public can actually download it
 
-1. **Force-push the purged history** — `git push --force-with-lease origin main`. Until then the
-   personal résumé file is still on GitHub, which blocks step 7.
-2. **Auto-update is not wired.** The hook is in and the feed is produced, but the app never checks
-   for updates — that needs an `UpdateManager` pointed at a feed URL, which depends on R2 hosting
-   existing first. Installs work; they just will not self-update yet.
-3. **Builds are unsigned.** Windows SmartScreen will still warn. That is what step 7 (public repo →
-   SignPath OSS certificate) fixes; checksums are published in the meantime.
-4. **`release.yml` has never run on a real runner.** The local verification covers the packaging
-   step, not the matrix, the artifact upload or the draft-release creation.
+1. ~~Force-push the purged history.~~ **Done** — `main` on GitHub is now the rewritten history.
+2. ~~Auto-update is not wired.~~ **Done** — `UpdateService` reads the GitHub releases feed, so
+   updates work without waiting for R2. Moving to R2 later is a URL change and nothing else.
+3. ~~`release.yml` has never run on a real runner.~~ **Done** — see above.
+4. **Builds are unsigned**, so Windows SmartScreen still warns. Fixed by the SignPath OSS
+   certificate, which requires a public repo — and that is currently blocked, see below.
+
+### Blocker: `refs/pull/1/head` still exposes the purged file
+
+Rewriting `main` did not remove the personal résumé from GitHub. GitHub retains pull-request refs
+permanently and independently of branches, and `refs/pull/1/head` still points at pre-rewrite
+history. Verified 2026-07-28 by fetching that ref: `gentian_shkembi_resume.json` is present and
+still contains the mobile number.
+
+It is currently harmless — the repo is private, so only collaborators can fetch it. It becomes a
+real exposure the moment the repo goes public, which step 7 requires. Force-pushing cannot fix it;
+the ref is not reachable from any branch.
+
+Options, in rough order of preference:
+
+1. **Delete and recreate the repo**, pushing only the rewritten history. Completely effective and
+   immediate. Costs PR #1 and the Actions history — this repo has one merged PR and nothing else
+   worth keeping.
+2. **Ask GitHub Support to garbage-collect** the unreachable objects. Keeps the repo and its
+   history; free, but a manual request with turnaround measured in days.
+3. **Stay private.** No exposure, but no SignPath, so downloads keep the SmartScreen warning.
+
+Do not make the repo public until this is resolved.
 
 ### Tension resolved at step 5
 

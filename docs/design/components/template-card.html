@@ -1,0 +1,148 @@
+<meta charset="utf-8">
+<title>Template card</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 24px; max-width: 84ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 22px 0 10px; }
+
+  .pane { border-radius: 12px; padding: 18px 20px; border: 1px solid #2f333c; margin-bottom: 18px; }
+  .pane.dk { background: #0f1115; }
+  .pane.lt { background: #f6f7f9; border-color: #dde1e6; color: #14161a; }
+  .pane h3 { font-size: 12.5px; margin: 0 0 14px; font-weight: 620; }
+  .states { display: flex; gap: 20px; align-items: flex-start; }
+  .state { text-align: center; }
+  .cap { margin-top: 8px; font-size: 10.5px; }
+  .pane.dk .cap { color: #868d9b; }
+  .pane.lt .cap { color: #656c7a; }
+
+  /* card — dark */
+  .dk .card { width: 164px; background: #1d2027; border: 1px solid #2f333c; border-radius: 10px;
+              padding: 9px; text-align: left; position: relative; }
+  .dk .card.hover { border-color: #697080; box-shadow: 0 2px 8px rgba(0,0,0,.28);
+                    transform: translateY(-1px); }
+  .dk .card.sel { border-color: #8b93f8; box-shadow: 0 0 0 1px #8b93f8; }
+  .dk .tick { background: #8b93f8; color: #0f1115; }
+  .dk .nm { color: #e8eaed; }
+  .dk .tag { color: #868d9b; }
+  /* card — light */
+  .lt .card { width: 164px; background: #ffffff; border: 1px solid #dde1e6; border-radius: 10px;
+              padding: 9px; text-align: left; position: relative; }
+  .lt .card.hover { border-color: #818a99; box-shadow: 0 2px 8px rgba(16,20,30,.10);
+                    transform: translateY(-1px); }
+  .lt .card.sel { border-color: #4f46e5; box-shadow: 0 0 0 1px #4f46e5; }
+  .lt .tick { background: #4f46e5; color: #ffffff; }
+  .lt .nm { color: #14161a; }
+  .lt .tag { color: #656c7a; }
+
+  .tick { position: absolute; top: 15px; right: 15px; width: 17px; height: 17px; border-radius: 50%;
+          font-size: 10px; line-height: 17px; text-align: center; font-weight: 700; }
+  .thumb { width: 146px; aspect-ratio: 210/297; background: #fff; border-radius: 5px;
+           overflow: hidden; position: relative; }
+  .nm { font-size: 12px; font-weight: 600; margin-top: 8px; }
+  .tag { font-size: 9.5px; margin-top: 1px; }
+
+  /* miniature résumé */
+  .m { padding: 9px 8px; }
+  .m .h { height: 6px; width: 54%; background: #2563eb; border-radius: 1px; }
+  .m .hs { height: 2.6px; width: 34%; background: #9aa3b2; border-radius: 1px; margin-top: 2.5px; }
+  .m .rule { height: 1px; background: #2563eb; margin: 5px 0 6px; }
+  .m .sh { height: 3px; width: 28%; background: #2563eb; border-radius: 1px; margin: 6px 0 3.5px; }
+  .m .l { height: 2px; background: #c9cfd8; border-radius: 1px; margin-bottom: 2.6px; }
+  .side { position: absolute; inset: 0 auto 0 0; width: 38%; background: #1f2937; }
+  .m.two { margin-left: 38%; }
+  .band { position: absolute; inset: 0 0 auto 0; height: 32%; background: #2563eb; }
+
+  .note { margin-top: 8px; border: 1px solid #2f333c; background: #0f1115;
+          border-radius: 10px; padding: 15px 17px; }
+  .note.warn { border-color: #3d3320; background: #1c180f; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note.warn h4 { color: #e6c07b; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Template card</h1>
+<p class="sub">The highest-impact component in the redesign. Today all 25 templates are text-only
+cards — a name and a two-line description — so users pick a visual design without seeing one.
+The thumbnail <em>is</em> the product.</p>
+
+<div class="pane lt">
+  <h3>Light</h3>
+  <div class="states">
+    <div class="state">
+      <div class="card"><div class="thumb"><div class="m">
+        <div class="h"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div>
+        <div class="l" style="width:96%"></div><div class="l" style="width:88%"></div><div class="sh"></div>
+        <div class="l" style="width:92%"></div><div class="l" style="width:76%"></div></div></div>
+        <div class="nm">Modern</div><div class="tag">Modern</div></div>
+      <div class="cap">default</div></div>
+    <div class="state">
+      <div class="card hover"><div class="thumb"><div class="side"></div><div class="m two">
+        <div class="h" style="width:68%"></div><div class="hs"></div><div class="sh"></div>
+        <div class="l" style="width:90%"></div><div class="l" style="width:76%"></div></div></div>
+        <div class="nm">Dark Sidebar</div><div class="tag">Creative</div></div>
+      <div class="cap">hover — lifts, border darkens</div></div>
+    <div class="state">
+      <div class="card sel"><div class="tick">✓</div><div class="thumb"><div class="band"></div>
+        <div class="m" style="margin-top:46px"><div class="sh"></div>
+        <div class="l" style="width:92%"></div><div class="l" style="width:80%"></div></div></div>
+        <div class="nm">Color Block</div><div class="tag">Modern</div></div>
+      <div class="cap">selected — indigo ring, white tick</div></div>
+  </div>
+</div>
+
+<div class="pane dk">
+  <h3>Dark</h3>
+  <div class="states">
+    <div class="state">
+      <div class="card"><div class="thumb"><div class="m">
+        <div class="h"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div>
+        <div class="l" style="width:96%"></div><div class="l" style="width:88%"></div><div class="sh"></div>
+        <div class="l" style="width:92%"></div><div class="l" style="width:76%"></div></div></div>
+        <div class="nm">Modern</div><div class="tag">Modern</div></div>
+      <div class="cap">default</div></div>
+    <div class="state">
+      <div class="card hover"><div class="thumb"><div class="side"></div><div class="m two">
+        <div class="h" style="width:68%"></div><div class="hs"></div><div class="sh"></div>
+        <div class="l" style="width:90%"></div><div class="l" style="width:76%"></div></div></div>
+        <div class="nm">Dark Sidebar</div><div class="tag">Creative</div></div>
+      <div class="cap">hover — lifts, border brightens</div></div>
+    <div class="state">
+      <div class="card sel"><div class="tick">✓</div><div class="thumb"><div class="band"></div>
+        <div class="m" style="margin-top:46px"><div class="sh"></div>
+        <div class="l" style="width:92%"></div><div class="l" style="width:80%"></div></div></div>
+        <div class="nm">Color Block</div><div class="tag">Modern</div></div>
+      <div class="cap">selected — indigo ring, <em>near-black</em> tick</div></div>
+  </div>
+</div>
+
+<div class="note warn">
+  <h4>The thumbnail stays white in both themes — deliberately</h4>
+  <p>A résumé is printed on white paper. Tinting the thumbnail to match a dark UI would
+  misrepresent the output, and the user is choosing a <em>document</em>, not a UI skin. The card
+  chrome changes with the theme; the page inside never does.</p>
+  <p>Same reason the selected-state tick flips colour: on dark the indigo fill is light, so the
+  glyph must be near-black (<code>on-accent: #0F1115</code>). See the colour card for why this is
+  arithmetic rather than preference.</p>
+</div>
+
+<div class="note">
+  <h4>Where the thumbnails come from — no new rendering code</h4>
+  <p><code>ResumeBuilder.Export/PngExporter.cs</code> already renders any template to PNG. Render
+  each against <code>samples/sample-resume.json</code> and cache to
+  <code>%LocalAppData%/ResumeBuilder/thumbnails/&lt;templateId&gt;.png</code>, keyed on template id
+  + app version.</p>
+  <p>Generate <strong>lazily on first gallery open</strong>, not at startup or build time — 25
+  renders at once would stall the UI thread, and <code>TemplateRegistry</code> changes between
+  releases so build-time assets would go stale.</p>
+  <p><strong>Aspect ratio fixed at 210:297 (A4), never cropped or letterboxed.</strong> A template's
+  whole value proposition is how it uses the page; a cropped thumbnail lies about it.</p>
+  <p>Render with the template's <em>own</em> default accent, not the user's current
+  <code>Resume.AccentColor</code> — the card advertises the template, it does not preview the
+  user's document.</p>
+</div>

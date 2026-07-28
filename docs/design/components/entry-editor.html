@@ -1,0 +1,195 @@
+<meta charset="utf-8">
+<title>Entry editor (Experience / Education)</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 22px; max-width: 88ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 24px 0 10px; }
+
+  .t.lt { --s0:#f6f7f9; --s1:#fff; --s2:#f0f2f5; --s3:#e8ebef; --bd:#dde1e6; --bdi:#818a99;
+          --t1:#14161a; --t2:#5b6270; --t3:#656c7a; --acc:#4f46e5; --on:#fff;
+          --sh:0 2px 8px rgba(16,20,30,.10); --ring:rgba(79,70,229,.28); }
+  .t.dk { --s0:#0f1115; --s1:#16181d; --s2:#1d2027; --s3:#24272f; --bd:#2f333c; --bdi:#697080;
+          --t1:#e8eaed; --t2:#a2a8b4; --t3:#868d9b; --acc:#8b93f8; --on:#0f1115;
+          --sh:0 2px 8px rgba(0,0,0,.28); --ring:rgba(139,147,248,.30); }
+
+  .wrap { background: var(--s0); border: 1px solid var(--bd); border-radius: 12px;
+          padding: 16px 18px; color: var(--t1); }
+  .hdr { display: flex; align-items: center; margin-bottom: 12px; }
+  .htitle { font-size: 13px; font-weight: 600; }
+  .hcount { font-size: 11px; color: var(--t3); margin-left: 7px; }
+  .grow { flex: 1; }
+  .add { font-size: 11.5px; padding: 5px 11px; border-radius: 7px; border: 1px solid var(--bd);
+         color: var(--t1); background: var(--s1); }
+
+  .entry { background: var(--s1); border: 1px solid var(--bd); border-radius: 10px;
+           margin-bottom: 9px; }
+  .erow { display: flex; align-items: center; gap: 9px; padding: 10px 12px; }
+  .grip { color: var(--t3); font-size: 12px; letter-spacing: -2px; }
+  .etitle { font-size: 12.5px; font-weight: 600; }
+  .emeta { font-size: 11px; color: var(--t3); }
+  .ico { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center;
+         justify-content: center; color: var(--t2); border: 1px solid transparent; font-size: 12px; }
+  .ico:hover { background: var(--s2); }
+  .body { border-top: 1px solid var(--bd); padding: 14px 12px; }
+
+  .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+  .f { display: flex; flex-direction: column; gap: 4px; }
+  .f.wide { grid-column: 1 / -1; }
+  .lb { font-size: 11.5px; font-weight: 550; color: var(--t2); }
+  .in { background: var(--s1); border: 1px solid var(--bdi); border-radius: 7px; padding: 6px 9px;
+        font-size: 12px; color: var(--t1); }
+  .in.focus { border-color: var(--acc); box-shadow: 0 0 0 2px var(--ring); }
+  .dates { display: flex; gap: 8px; align-items: flex-end; }
+  .dates .f { flex: 1; }
+  .chkl { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--t2);
+          padding-bottom: 7px; white-space: nowrap; }
+  .chk { width: 13px; height: 13px; border-radius: 3px; border: 1px solid var(--bdi);
+         background: var(--s1); }
+  .chk.on { background: var(--acc); border-color: var(--acc); color: var(--on); font-size: 9px;
+            line-height: 13px; text-align: center; font-weight: 700; }
+
+  .bul { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; }
+  .bdot { width: 4px; height: 4px; border-radius: 50%; background: var(--t3); margin-top: 11px;
+          flex: none; }
+  .btxt { flex: 1; background: var(--s1); border: 1px solid var(--bdi); border-radius: 7px;
+          padding: 6px 9px; font-size: 12px; line-height: 1.5; color: var(--t1); }
+  .bact { display: flex; gap: 2px; padding-top: 3px; }
+  .ai { font-size: 10px; padding: 3px 7px; border-radius: 999px; border: 1px solid var(--acc);
+        color: var(--acc); white-space: nowrap; }
+  .addb { font-size: 11.5px; color: var(--acc); font-weight: 550; margin-top: 2px; }
+
+  .note { margin-top: 22px; border: 1px solid #2f333c; background: #0f1115; border-radius: 10px;
+          padding: 15px 17px; }
+  .note.warn { border-color: #3d3320; background: #1c180f; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note.warn h4 { color: #e6c07b; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Entry editor</h1>
+<p class="sub">The repeatable-entry pattern behind Experience, Education, Projects and
+Certifications — one expanded entry, the rest collapsed to a summary row. This card also settles
+open question 2 from the proposal: short fields keep the two-column grid, anything multi-line spans
+the full width.</p>
+
+<h2>Light</h2>
+<div class="t lt"><div class="wrap">
+  <div class="hdr"><span class="htitle">Work Experience</span><span class="hcount">3 entries</span>
+    <span class="grow"></span><span class="add">+ Add role</span></div>
+
+  <div class="entry"><div class="erow"><span class="grip">⠿</span>
+    <div><div class="etitle">Senior Software Engineer</div>
+      <div class="emeta">Northwind Systems · Mar 2022 – Present</div></div>
+    <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌃</span></div>
+
+    <div class="body"><div class="fgrid">
+      <div class="f"><span class="lb">Job title</span><div class="in focus">Senior Software Engineer</div></div>
+      <div class="f"><span class="lb">Company</span><div class="in">Northwind Systems</div></div>
+      <div class="f"><span class="lb">Location</span><div class="in">Springfield, IL</div></div>
+      <div class="f"><span class="lb">Dates</span><div class="dates">
+        <div class="f"><div class="in">Mar 2022</div></div>
+        <div class="f"><div class="in" style="opacity:.5">—</div></div>
+        <span class="chkl"><span class="chk on">✓</span>Current</span></div></div>
+      <div class="f wide"><span class="lb">Description</span>
+        <div class="in">Data platform team, ingesting and normalizing feeds from 150+ partners daily.</div></div>
+      <div class="f wide"><span class="lb">Achievements</span>
+        <div class="bul"><span class="bdot"></span>
+          <div class="btxt">Rewrote the ingestion pipeline, cutting end-to-end processing from 18 hours to under 5 minutes</div>
+          <div class="bact"><span class="ai">✦ Rewrite</span></div></div>
+        <div class="bul"><span class="bdot"></span>
+          <div class="btxt">Introduced schema validation that caught malformed partner feeds before they reached production</div>
+          <div class="bact"><span class="ai">✦ Rewrite</span></div></div>
+        <div class="bul"><span class="bdot"></span>
+          <div class="btxt">Mentored three engineers through their first year on the team</div>
+          <div class="bact"><span class="ai">✦ Rewrite</span></div></div>
+        <div class="addb">+ Add achievement</div></div>
+    </div></div></div>
+
+  <div class="entry"><div class="erow"><span class="grip">⠿</span>
+    <div><div class="etitle">Software Engineer</div>
+      <div class="emeta">Contoso Digital · Jan 2019 – Feb 2022 · 3 achievements</div></div>
+    <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌄</span></div></div>
+
+  <div class="entry"><div class="erow"><span class="grip">⠿</span>
+    <div><div class="etitle">Junior Developer</div>
+      <div class="emeta">Initech · Jun 2017 – Dec 2018 · 2 achievements</div></div>
+    <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌄</span></div></div>
+</div></div>
+
+<h2>Dark</h2>
+<div class="t dk"><div class="wrap">
+  <div class="hdr"><span class="htitle">Work Experience</span><span class="hcount">3 entries</span>
+    <span class="grow"></span><span class="add">+ Add role</span></div>
+
+  <div class="entry"><div class="erow"><span class="grip">⠿</span>
+    <div><div class="etitle">Senior Software Engineer</div>
+      <div class="emeta">Northwind Systems · Mar 2022 – Present</div></div>
+    <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌃</span></div>
+
+    <div class="body"><div class="fgrid">
+      <div class="f"><span class="lb">Job title</span><div class="in focus">Senior Software Engineer</div></div>
+      <div class="f"><span class="lb">Company</span><div class="in">Northwind Systems</div></div>
+      <div class="f"><span class="lb">Location</span><div class="in">Springfield, IL</div></div>
+      <div class="f"><span class="lb">Dates</span><div class="dates">
+        <div class="f"><div class="in">Mar 2022</div></div>
+        <div class="f"><div class="in" style="opacity:.5">—</div></div>
+        <span class="chkl"><span class="chk on">✓</span>Current</span></div></div>
+      <div class="f wide"><span class="lb">Description</span>
+        <div class="in">Data platform team, ingesting and normalizing feeds from 150+ partners daily.</div></div>
+      <div class="f wide"><span class="lb">Achievements</span>
+        <div class="bul"><span class="bdot"></span>
+          <div class="btxt">Rewrote the ingestion pipeline, cutting end-to-end processing from 18 hours to under 5 minutes</div>
+          <div class="bact"><span class="ai">✦ Rewrite</span></div></div>
+        <div class="bul"><span class="bdot"></span>
+          <div class="btxt">Introduced schema validation that caught malformed partner feeds before they reached production</div>
+          <div class="bact"><span class="ai">✦ Rewrite</span></div></div>
+        <div class="bul"><span class="bdot"></span>
+          <div class="btxt">Mentored three engineers through their first year on the team</div>
+          <div class="bact"><span class="ai">✦ Rewrite</span></div></div>
+        <div class="addb">+ Add achievement</div></div>
+    </div></div></div>
+
+  <div class="entry"><div class="erow"><span class="grip">⠿</span>
+    <div><div class="etitle">Software Engineer</div>
+      <div class="emeta">Contoso Digital · Jan 2019 – Feb 2022 · 3 achievements</div></div>
+    <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌄</span></div></div>
+
+  <div class="entry"><div class="erow"><span class="grip">⠿</span>
+    <div><div class="etitle">Junior Developer</div>
+      <div class="emeta">Initech · Jun 2017 – Dec 2018 · 2 achievements</div></div>
+    <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌄</span></div></div>
+</div></div>
+
+<div class="note warn">
+  <h4>Achievements must stay one control per bullet — this is a correctness constraint, not a style choice</h4>
+  <p>CLAUDE.md: achievement ↔ editor-text conversion lives only in
+  <code>Core/Models/AchievementLines</code>, and <code>JobTailoringService</code> addresses
+  achievements <strong>by index</strong> through it. A single multi-line textarea would make the
+  index depend on how the user happened to wrap their text, and accepted AI rewrites would land on
+  the wrong bullet.</p>
+  <p>So each bullet is its own bound control with a stable index. That is also what makes the
+  per-bullet <em>Rewrite</em> affordance possible — the AI acts on one addressable line rather than
+  reflowing the block. Anything that reintroduces free-text splitting in the UI layer breaks
+  tailoring silently.</p>
+</div>
+
+<div class="note">
+  <h4>Resolves: two-column grid or one?</h4>
+  <p><strong>Both, by field length.</strong> Title, company, location and dates are short and
+  benefit from pairing; description and achievements span the full width. A blanket single column
+  wastes horizontal space on a flexible layout, and a blanket two-column squeezes multi-line text
+  into half-width boxes.</p>
+  <p><strong>Only one entry is expanded at a time.</strong> Three roles with three achievements each
+  is ~30 controls; collapsed summary rows keep the section navigable and make drag-reordering
+  practical. The summary line carries what identifies the entry — title, company, dates, and an
+  achievement count so nothing feels hidden.</p>
+  <p><strong>"Current" is a checkbox that disables the end date, not a magic empty value.</strong>
+  Dates render through <code>ResumeDateFormat</code>/<code>DateRange</code> under invariant culture;
+  the UI should never let a user type something the formatter has to guess at.</p>
+</div>

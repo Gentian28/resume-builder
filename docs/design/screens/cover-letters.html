@@ -1,0 +1,190 @@
+<meta charset="utf-8">
+<title>Screen — Cover letters</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 22px; max-width: 88ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 24px 0 10px; }
+
+  .t.lt { --s0:#f6f7f9; --s1:#fff; --s2:#f0f2f5; --s3:#e8ebef; --bd:#dde1e6; --bdi:#818a99;
+          --t1:#14161a; --t2:#5b6270; --t3:#656c7a; --acc:#4f46e5; --on:#fff;
+          --sh:0 2px 8px rgba(16,20,30,.10); --link:#4f46e5; }
+  .t.dk { --s0:#0f1115; --s1:#16181d; --s2:#1d2027; --s3:#24272f; --bd:#2f333c; --bdi:#697080;
+          --t1:#e8eaed; --t2:#a2a8b4; --t3:#868d9b; --acc:#8b93f8; --on:#0f1115;
+          --sh:0 2px 8px rgba(0,0,0,.28); --link:#8b93f8; }
+
+  .app { border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; background: var(--s0);
+         color: var(--t1); }
+  .bar { display: flex; align-items: center; gap: 6px; padding: 7px 11px; background: var(--s1);
+         border-bottom: 1px solid var(--bd); }
+  .grow { flex: 1; }
+  .sep { width: 1px; height: 18px; background: var(--bd); margin: 0 3px; }
+  .b { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 5px 9px;
+       border-radius: 7px; border: 1px solid transparent; color: var(--t1); white-space: nowrap; }
+  .b.out { border-color: var(--bd); }
+  .b.pri { background: var(--acc); border-color: var(--acc); color: var(--on); font-weight: 600; }
+  .tpl { display: inline-flex; align-items: center; gap: 7px; padding: 3px 8px 3px 4px;
+         border: 1px solid var(--bd); border-radius: 8px; background: var(--s2); font-size: 11.5px;
+         font-weight: 550; }
+  .tmini { width: 15px; height: 21px; background: #fff; border-radius: 2px; position: relative;
+           overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.10); flex: none; }
+  .tmini i { position: absolute; display: block; left: 2px; right: 2px; height: .8px;
+             background: #c9cfd8; }
+  .cv { opacity: .55; font-size: 9px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #3fb950; }
+  .t.lt .dot { background: #1a7f37; }
+
+  .zones { display: grid; grid-template-columns: 178px minmax(0,1fr) minmax(0,1.15fr); height: 430px; }
+  .nav { background: var(--s1); border-right: 1px solid var(--bd); padding: 11px 8px; }
+  .nvh { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+         color: var(--t3); padding: 4px 9px 6px; }
+  .lt2 { padding: 7px 9px; border-radius: 7px; margin-bottom: 2px; }
+  .lt2.on { background: var(--s3); }
+  .ln { font-size: 11.5px; font-weight: 550; }
+  .lm { font-size: 10px; color: var(--t3); margin-top: 1px; }
+  .lnk { font-size: 10px; color: var(--link); margin-top: 2px; }
+
+  .edit { padding: 15px 17px; }
+  .f { display: flex; flex-direction: column; gap: 4px; margin-bottom: 11px; }
+  .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+  .lb { font-size: 11.5px; font-weight: 550; color: var(--t2); }
+  .in { background: var(--s1); border: 1px solid var(--bdi); border-radius: 7px; padding: 6px 9px;
+        font-size: 12px; color: var(--t1); }
+  .in.focus { border-color: var(--acc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--acc) 28%, transparent); }
+  .body { min-height: 118px; line-height: 1.55; font-size: 11.5px; color: var(--t2); }
+  .aihint { display: flex; align-items: center; gap: 7px; margin-top: -4px; }
+  .ai { font-size: 10.5px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--acc);
+        color: var(--acc); }
+  .hint { font-size: 10.5px; color: var(--t3); }
+
+  .prev { background: var(--s2); border-left: 1px solid var(--bd); padding: 15px;
+          display: flex; justify-content: center; align-items: flex-start; }
+  .page { width: 100%; max-width: 272px; aspect-ratio: 210/297; background: #fff; border-radius: 3px;
+          box-shadow: var(--sh); padding: 18px 17px; }
+  .page .h { height: 7px; width: 42%; background: #2563eb; border-radius: 1px; }
+  .page .hs { height: 3px; width: 28%; background: #9aa3b2; border-radius: 1px; margin-top: 3px; }
+  .page .rule { height: 1px; background: #2563eb; margin: 8px 0 10px; }
+  .page .l { height: 2.6px; background: #c9cfd8; border-radius: 1px; margin-bottom: 3.4px; }
+  .page .gap { height: 7px; }
+
+  .status { display: flex; gap: 10px; padding: 6px 12px; background: var(--s1);
+            border-top: 1px solid var(--bd); font-size: 11px; color: var(--t3); }
+
+  .note { margin-top: 22px; border: 1px solid #2f333c; background: #0f1115; border-radius: 10px;
+          padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Screen — Cover letters</h1>
+<p class="sub">The parallel surface to the résumé editor — same three-zone layout, same command bar,
+a different document type. Today it lives at <code>File ▸ New Cover Letter</code> /
+<code>Cover Letters…</code> with no visible relationship to the résumé it accompanies.</p>
+
+<h2>Light</h2>
+<div class="t lt"><div class="app">
+  <div class="bar">
+    <span class="tpl"><span class="tmini"><i style="top:5px;right:8px"></i><i style="top:9px"></i><i style="top:12px;right:5px"></i><i style="top:15px"></i></span>Classic<span class="cv">▾</span></span>
+    <span class="b">AI Assistant<span class="dot"></span></span>
+    <span class="grow"></span>
+    <span class="b">−</span><span class="b">100%</span><span class="b">+</span><span class="sep"></span>
+    <span class="b out">Save</span><span class="b pri">Export PDF<span class="cv">▾</span></span>
+  </div>
+  <div class="zones">
+    <div class="nav"><div class="nvh">Cover letters</div>
+      <div class="lt2 on"><div class="ln">Northwind — Data Eng</div><div class="lm">Edited 2 min ago</div>
+        <div class="lnk">↳ Jane Doe's Résumé</div></div>
+      <div class="lt2"><div class="ln">Contoso — Platform</div><div class="lm">14 Jul</div>
+        <div class="lnk">↳ Jane Doe's Résumé</div></div>
+      <div class="lt2"><div class="ln">Untitled letter</div><div class="lm">2 Jul</div></div>
+    </div>
+    <div class="edit">
+      <div class="fg">
+        <div class="f"><span class="lb">Company</span><div class="in focus">Northwind Systems</div></div>
+        <div class="f"><span class="lb">Role</span><div class="in">Senior Data Engineer</div></div>
+        <div class="f"><span class="lb">Hiring manager</span><div class="in">Dana Whitfield</div></div>
+        <div class="f"><span class="lb">Date</span><div class="in">28 July 2026</div></div>
+      </div>
+      <div class="f"><span class="lb">Letter body</span>
+        <div class="in body">Dear Ms Whitfield,<br><br>I am writing about the Senior Data Engineer
+          role. At Northwind I rebuilt a partner ingestion pipeline that cut end-to-end processing
+          from 18 hours to under five minutes, and introduced the schema validation that…</div></div>
+      <div class="aihint"><span class="ai">✦ Draft from résumé + job ad</span>
+        <span class="hint">Structured fallback if no model is configured</span></div>
+    </div>
+    <div class="prev"><div class="page">
+      <div class="h"></div><div class="hs"></div><div class="rule"></div>
+      <div class="l" style="width:34%"></div><div class="gap"></div>
+      <div class="l" style="width:97%"></div><div class="l" style="width:93%"></div>
+      <div class="l" style="width:96%"></div><div class="l" style="width:62%"></div><div class="gap"></div>
+      <div class="l" style="width:95%"></div><div class="l" style="width:98%"></div>
+      <div class="l" style="width:88%"></div><div class="gap"></div>
+      <div class="l" style="width:30%"></div></div></div>
+  </div>
+  <div class="status"><span>Auto-saved at 21:52</span><span>·</span><span>Template: Classic</span></div>
+</div></div>
+
+<h2>Dark</h2>
+<div class="t dk"><div class="app">
+  <div class="bar">
+    <span class="tpl"><span class="tmini"><i style="top:5px;right:8px"></i><i style="top:9px"></i><i style="top:12px;right:5px"></i><i style="top:15px"></i></span>Classic<span class="cv">▾</span></span>
+    <span class="b">AI Assistant<span class="dot"></span></span>
+    <span class="grow"></span>
+    <span class="b">−</span><span class="b">100%</span><span class="b">+</span><span class="sep"></span>
+    <span class="b out">Save</span><span class="b pri">Export PDF<span class="cv">▾</span></span>
+  </div>
+  <div class="zones">
+    <div class="nav"><div class="nvh">Cover letters</div>
+      <div class="lt2 on"><div class="ln">Northwind — Data Eng</div><div class="lm">Edited 2 min ago</div>
+        <div class="lnk">↳ Jane Doe's Résumé</div></div>
+      <div class="lt2"><div class="ln">Contoso — Platform</div><div class="lm">14 Jul</div>
+        <div class="lnk">↳ Jane Doe's Résumé</div></div>
+      <div class="lt2"><div class="ln">Untitled letter</div><div class="lm">2 Jul</div></div>
+    </div>
+    <div class="edit">
+      <div class="fg">
+        <div class="f"><span class="lb">Company</span><div class="in focus">Northwind Systems</div></div>
+        <div class="f"><span class="lb">Role</span><div class="in">Senior Data Engineer</div></div>
+        <div class="f"><span class="lb">Hiring manager</span><div class="in">Dana Whitfield</div></div>
+        <div class="f"><span class="lb">Date</span><div class="in">28 July 2026</div></div>
+      </div>
+      <div class="f"><span class="lb">Letter body</span>
+        <div class="in body">Dear Ms Whitfield,<br><br>I am writing about the Senior Data Engineer
+          role. At Northwind I rebuilt a partner ingestion pipeline that cut end-to-end processing
+          from 18 hours to under five minutes, and introduced the schema validation that…</div></div>
+      <div class="aihint"><span class="ai">✦ Draft from résumé + job ad</span>
+        <span class="hint">Structured fallback if no model is configured</span></div>
+    </div>
+    <div class="prev"><div class="page">
+      <div class="h"></div><div class="hs"></div><div class="rule"></div>
+      <div class="l" style="width:34%"></div><div class="gap"></div>
+      <div class="l" style="width:97%"></div><div class="l" style="width:93%"></div>
+      <div class="l" style="width:96%"></div><div class="l" style="width:62%"></div><div class="gap"></div>
+      <div class="l" style="width:95%"></div><div class="l" style="width:98%"></div>
+      <div class="l" style="width:88%"></div><div class="gap"></div>
+      <div class="l" style="width:30%"></div></div></div>
+  </div>
+  <div class="status"><span>Auto-saved at 21:52</span><span>·</span><span>Template: Classic</span></div>
+</div></div>
+
+<div class="note">
+  <h4>Notes</h4>
+  <p><strong>The letter list shows which résumé each letter accompanies.</strong> That relationship
+  exists in the data and is invisible in the UI today. It is also the thing that makes "draft from
+  résumé + job ad" comprehensible — the user can see what it will draft from.</p>
+  <p><strong>Only 3 cover-letter templates, so the picker stays a plain dropdown</strong> with a
+  thumbnail — no gallery modal. Below roughly a dozen items a grid is overkill; the 25-template
+  résumé gallery earns its modal, this does not.</p>
+  <p><strong>Drafting is labelled as working without a model.</strong> Cover-letter drafting has a
+  structured fallback when no AI endpoint is configured; the hint says so rather than leaving the
+  user to discover it by clicking a button that looks disabled.</p>
+  <p><strong>Export goes through <code>CoverLetterExportService</code>, not the résumé registry.</strong>
+  <code>IExporter</code> is typed to <code>Resume</code>, so the two export registries are separate.
+  The command bar looks identical here but is bound to a different service — worth stating because
+  the visual sameness invites wiring it to the wrong one.</p>
+</div>

@@ -1,0 +1,166 @@
+<meta charset="utf-8">
+<title>AI status strip</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 24px; max-width: 86ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 24px 0 10px; }
+
+  .t.lt { --s1:#fff; --s2:#f0f2f5; --bd:#dde1e6; --bdi:#818a99; --t1:#14161a; --t2:#5b6270;
+          --t3:#656c7a; --acc:#4f46e5; --on:#fff;
+          --okbg:#e8f5ec; --okbd:#a8d5b8; --oktx:#12602c; --okdot:#1a7f37;
+          --wnbg:#fdf4e3; --wnbd:#e8d3a0; --wntx:#7a5a10; --wndot:#b8860b; }
+  .t.dk { --s1:#16181d; --s2:#1d2027; --bd:#2f333c; --bdi:#697080; --t1:#e8eaed; --t2:#a2a8b4;
+          --t3:#868d9b; --acc:#8b93f8; --on:#0f1115;
+          --okbg:#11241a; --okbd:#26492f; --oktx:#6fd67f; --okdot:#3fb950;
+          --wnbg:#241d0f; --wnbd:#4a3a1c; --wntx:#e6c07b; --wndot:#d29922; }
+
+  .panel { width: 380px; border: 1px solid var(--bd); border-radius: 12px; background: var(--s1);
+           color: var(--t1); overflow: hidden; }
+  .ph { padding: 13px 15px 0; }
+  .pt { font-size: 13px; font-weight: 620; margin: 0; }
+
+  .strip { margin: 11px 15px; border-radius: 9px; padding: 10px 12px; display: flex;
+           gap: 9px; align-items: flex-start; border: 1px solid; }
+  .strip.ok { background: var(--okbg); border-color: var(--okbd); }
+  .strip.warn { background: var(--wnbg); border-color: var(--wnbd); }
+  .strip.none { background: var(--s2); border-color: var(--bd); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; flex: none; }
+  .strip.ok .dot { background: var(--okdot); }
+  .strip.warn .dot { background: var(--wndot); }
+  .strip.none .dot { background: var(--t3); }
+  .stx { flex: 1; }
+  .s1l { font-size: 11.5px; font-weight: 620; line-height: 1.35; }
+  .strip.ok .s1l { color: var(--oktx); }
+  .strip.warn .s1l { color: var(--wntx); }
+  .strip.none .s1l { color: var(--t1); }
+  .s2l { font-size: 11px; color: var(--t2); line-height: 1.5; margin-top: 2px; }
+  .cfg { font-size: 11px; color: var(--acc); font-weight: 550; white-space: nowrap; margin-top: 1px; }
+
+  .acts { padding: 2px 15px 15px; display: flex; flex-direction: column; gap: 6px; }
+  .act { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 8px 10px;
+         border: 1px solid var(--bd); border-radius: 7px; color: var(--t1); background: var(--s2); }
+  .act .k { margin-left: auto; font-size: 10px; color: var(--t3); }
+  .act.always { border-style: solid; }
+  .act.always .k { color: var(--okdot); font-weight: 600; }
+  svg { display: block; }
+  .ic { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.7; fill: none;
+        stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+
+  .cols { display: flex; gap: 18px; flex-wrap: wrap; }
+  .cap { font-size: 10.5px; color: #868d9b; margin-top: 8px; text-align: center; }
+  .t.lt .cap { color: #656c7a; }
+
+  .note { margin-top: 24px; border: 1px solid #3d3320; background: #1c180f; border-radius: 10px;
+          padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; color: #e6c07b; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>AI status strip</h1>
+<p class="sub">CLAUDE.md requires that AI features <strong>degrade, not gate</strong> — and in code
+they do. The current UI contradicts that: <code>ui-baseline/05-ai-assistant-buried.png</code> shows
+<em>Generate Summary</em> and <em>Suggest Skills</em> greyed out, which reads as "broken" rather
+than "works offline". This strip states the mode in words instead.</p>
+
+<h2>Light — three states</h2>
+<div class="t lt"><div class="cols">
+  <div><div class="panel">
+    <div class="ph"><p class="pt">AI Assistant</p></div>
+    <div class="strip ok"><span class="dot"></span><div class="stx">
+      <div class="s1l">Running locally · llama3.1 via Ollama</div>
+      <div class="s2l">Nothing leaves your machine.</div></div>
+      <div class="cfg">Change</div></div>
+    <div class="acts">
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h6"/></svg>Generate summary</div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg>Suggest skills</div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M2 12l7-7 3 3-7 7H2z"/><path d="M11 3l2 2"/></svg>Rewrite bullet</div>
+    </div></div><div class="cap">local model — the pitch</div></div>
+
+  <div><div class="panel">
+    <div class="ph"><p class="pt">AI Assistant</p></div>
+    <div class="strip warn"><span class="dot"></span><div class="stx">
+      <div class="s1l">Using OpenAI · gpt-4o</div>
+      <div class="s2l">Résumé text you send is transmitted to api.openai.com.</div></div>
+      <div class="cfg">Change</div></div>
+    <div class="acts">
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h6"/></svg>Generate summary</div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg>Suggest skills</div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M2 12l7-7 3 3-7 7H2z"/><path d="M11 3l2 2"/></svg>Rewrite bullet</div>
+    </div></div><div class="cap">cloud — states the trade honestly</div></div>
+
+  <div><div class="panel">
+    <div class="ph"><p class="pt">AI Assistant</p></div>
+    <div class="strip none"><span class="dot"></span><div class="stx">
+      <div class="s1l">No model configured</div>
+      <div class="s2l">Keyword analysis and ATS scoring still work — they run offline and need
+        no model.</div></div>
+      <div class="cfg">Set up</div></div>
+    <div class="acts">
+      <div class="act always"><svg class="ic" viewBox="0 0 16 16"><path d="M2 13l4-4 3 3 5-6"/></svg>Analyse against a job ad<span class="k">works now</span></div>
+      <div class="act always"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2v12M2 8h12"/></svg>ATS keyword match<span class="k">works now</span></div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h6"/></svg>Generate summary<span class="k">needs a model</span></div>
+    </div></div><div class="cap">unconfigured — never disabled</div></div>
+</div></div>
+
+<h2>Dark — three states</h2>
+<div class="t dk"><div class="cols">
+  <div><div class="panel">
+    <div class="ph"><p class="pt">AI Assistant</p></div>
+    <div class="strip ok"><span class="dot"></span><div class="stx">
+      <div class="s1l">Running locally · llama3.1 via Ollama</div>
+      <div class="s2l">Nothing leaves your machine.</div></div>
+      <div class="cfg">Change</div></div>
+    <div class="acts">
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h6"/></svg>Generate summary</div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg>Suggest skills</div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M2 12l7-7 3 3-7 7H2z"/><path d="M11 3l2 2"/></svg>Rewrite bullet</div>
+    </div></div><div class="cap">local model — the pitch</div></div>
+
+  <div><div class="panel">
+    <div class="ph"><p class="pt">AI Assistant</p></div>
+    <div class="strip warn"><span class="dot"></span><div class="stx">
+      <div class="s1l">Using OpenAI · gpt-4o</div>
+      <div class="s2l">Résumé text you send is transmitted to api.openai.com.</div></div>
+      <div class="cfg">Change</div></div>
+    <div class="acts">
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h6"/></svg>Generate summary</div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg>Suggest skills</div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M2 12l7-7 3 3-7 7H2z"/><path d="M11 3l2 2"/></svg>Rewrite bullet</div>
+    </div></div><div class="cap">cloud — states the trade honestly</div></div>
+
+  <div><div class="panel">
+    <div class="ph"><p class="pt">AI Assistant</p></div>
+    <div class="strip none"><span class="dot"></span><div class="stx">
+      <div class="s1l">No model configured</div>
+      <div class="s2l">Keyword analysis and ATS scoring still work — they run offline and need
+        no model.</div></div>
+      <div class="cfg">Set up</div></div>
+    <div class="acts">
+      <div class="act always"><svg class="ic" viewBox="0 0 16 16"><path d="M2 13l4-4 3 3 5-6"/></svg>Analyse against a job ad<span class="k">works now</span></div>
+      <div class="act always"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2v12M2 8h12"/></svg>ATS keyword match<span class="k">works now</span></div>
+      <div class="act"><svg class="ic" viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h6"/></svg>Generate summary<span class="k">needs a model</span></div>
+    </div></div><div class="cap">unconfigured — never disabled</div></div>
+</div></div>
+
+<div class="note">
+  <h4>Rules for this component</h4>
+  <p><strong>Never disable an action to communicate configuration state.</strong> Disabled controls
+  are indistinguishable from broken ones. Instead the unconfigured panel promotes what
+  <em>does</em> work — keyword analysis and ATS scoring are pure local computation via
+  <code>KeywordAnalyzer</code> and need no model at all — and labels the rest "needs a model" with
+  a route to set one up.</p>
+  <p><strong>The cloud state is deliberately not celebratory.</strong> If a user points this at
+  OpenAI, their entire employment history goes to a third party. Saying so plainly is the honest
+  counterpart to the local-model pitch, and it makes the green state mean something.</p>
+  <p><strong>Green is the only state that names the privacy property.</strong> "Nothing leaves your
+  machine" is the product's strongest line; it belongs where it is literally true and nowhere else.</p>
+  <p>Status derives from <code>LocalAiService</code>'s configured base URL — a loopback address is
+  the local state, any other host is the cloud state, unset is unconfigured. Not from
+  <code>IsConfigured</code> as a gate.</p>
+</div>

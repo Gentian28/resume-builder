@@ -1,0 +1,132 @@
+<meta charset="utf-8">
+<title>Command bar</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 24px; max-width: 86ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 24px 0 10px; }
+
+  .t.lt { --s0:#f6f7f9; --s1:#fff; --s2:#f0f2f5; --bd:#dde1e6; --bdi:#818a99; --t1:#14161a;
+          --t2:#5b6270; --t3:#656c7a; --acc:#4f46e5; --on:#fff; --ok:#1a7f37; }
+  .t.dk { --s0:#0f1115; --s1:#16181d; --s2:#1d2027; --bd:#2f333c; --bdi:#697080; --t1:#e8eaed;
+          --t2:#a2a8b4; --t3:#868d9b; --acc:#8b93f8; --on:#0f1115; --ok:#3fb950; }
+  .frame { border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; background: var(--s0); }
+
+  .bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--s1);
+         border-bottom: 1px solid var(--bd); color: var(--t1); }
+  .grow { flex: 1; }
+  .sep { width: 1px; height: 20px; background: var(--bd); margin: 0 4px; }
+
+  .b { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 6px 10px;
+       border-radius: 7px; color: var(--t1); border: 1px solid transparent; white-space: nowrap; }
+  .b:hover { background: var(--s2); }
+  .b.out { border-color: var(--bd); }
+  .b.pri { background: var(--acc); color: var(--on); font-weight: 600; border-color: var(--acc); }
+  .b.icon { padding: 6px 8px; }
+  .b .cv { opacity: .55; font-size: 9px; }
+
+  /* template chip carries a live thumbnail */
+  .tpl { display: inline-flex; align-items: center; gap: 8px; padding: 4px 9px 4px 5px;
+         border: 1px solid var(--bd); border-radius: 8px; background: var(--s2); }
+  .tmini { width: 17px; height: 24px; background: #fff; border-radius: 2px; overflow: hidden;
+           position: relative; flex: none; box-shadow: 0 0 0 1px rgba(0,0,0,.10); }
+  .tmini i { display: block; position: absolute; left: 2px; right: 2px; }
+  .tmini .a { top: 3px; height: 2px; background: #2563eb; width: 9px; }
+  .tmini .r { top: 6.5px; height: .7px; background: #2563eb; }
+  .tmini .l { height: .9px; background: #c9cfd8; }
+  .tplname { font-size: 12px; font-weight: 550; }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); flex: none; }
+  .dot.off { background: var(--t3); }
+
+  svg { display: block; }
+  .ic { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.7; fill: none;
+        stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
+
+  .canvas { height: 62px; background: var(--s0); }
+
+  .note { margin-top: 22px; border: 1px solid #2f333c; background: #0f1115; border-radius: 10px;
+          padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+  .before { border-left: 2px solid #d29922; padding-left: 12px; margin: 12px 0; }
+  .before p { color: #c9ccd2; }
+</style>
+
+<h1>Command bar</h1>
+<p class="sub">Fixes the expensive problem: today the four features that differentiate this product
+are three levels deep under <em>File</em> and <em>Tools</em>, while the top strip splits zoom
+controls and Export by ~2800&nbsp;px of empty space. The menu bar stays for completeness — it just
+stops being the only route.</p>
+
+<h2>Light</h2>
+<div class="t lt"><div class="frame">
+  <div class="bar">
+    <span class="tpl"><span class="tmini"><i class="a"></i><i class="r"></i>
+      <i class="l" style="top:9px"></i><i class="l" style="top:11px;right:6px"></i>
+      <i class="l" style="top:14px"></i><i class="l" style="top:16px;right:5px"></i>
+      <i class="l" style="top:19px"></i></span><span class="tplname">Modern</span>
+      <span class="cv">▾</span></span>
+    <span class="b"><svg class="ic" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2"/></svg>Tailor to Job</span>
+    <span class="b"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg>AI Assistant<span class="dot"></span></span>
+    <span class="b"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2v8M5 7.5L8 10.5l3-3M3 13h10"/></svg>Import<span class="cv">▾</span></span>
+    <span class="grow"></span>
+    <span class="b icon">−</span><span class="b icon" style="font-size:11px">100%</span><span class="b icon">+</span>
+    <span class="sep"></span>
+    <span class="b icon"><svg class="ic" viewBox="0 0 16 16"><path d="M6 4L2.5 7.5 6 11"/><path d="M2.5 7.5H10a3.5 3.5 0 010 7H7"/></svg></span>
+    <span class="b icon" style="opacity:.4"><svg class="ic" viewBox="0 0 16 16"><path d="M10 4l3.5 3.5L10 11"/><path d="M13.5 7.5H6a3.5 3.5 0 000 7h3"/></svg></span>
+    <span class="sep"></span>
+    <span class="b out">Save</span>
+    <span class="b pri">Export PDF<span class="cv" style="opacity:.8">▾</span></span>
+  </div>
+  <div class="canvas"></div>
+</div></div>
+
+<h2>Dark</h2>
+<div class="t dk"><div class="frame">
+  <div class="bar">
+    <span class="tpl"><span class="tmini"><i class="a"></i><i class="r"></i>
+      <i class="l" style="top:9px"></i><i class="l" style="top:11px;right:6px"></i>
+      <i class="l" style="top:14px"></i><i class="l" style="top:16px;right:5px"></i>
+      <i class="l" style="top:19px"></i></span><span class="tplname">Modern</span>
+      <span class="cv">▾</span></span>
+    <span class="b"><svg class="ic" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2"/></svg>Tailor to Job</span>
+    <span class="b"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg>AI Assistant<span class="dot"></span></span>
+    <span class="b"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2v8M5 7.5L8 10.5l3-3M3 13h10"/></svg>Import<span class="cv">▾</span></span>
+    <span class="grow"></span>
+    <span class="b icon">−</span><span class="b icon" style="font-size:11px">100%</span><span class="b icon">+</span>
+    <span class="sep"></span>
+    <span class="b icon"><svg class="ic" viewBox="0 0 16 16"><path d="M6 4L2.5 7.5 6 11"/><path d="M2.5 7.5H10a3.5 3.5 0 010 7H7"/></svg></span>
+    <span class="b icon" style="opacity:.4"><svg class="ic" viewBox="0 0 16 16"><path d="M10 4l3.5 3.5L10 11"/><path d="M13.5 7.5H6a3.5 3.5 0 000 7h3"/></svg></span>
+    <span class="sep"></span>
+    <span class="b out">Save</span>
+    <span class="b pri">Export PDF<span class="cv" style="opacity:.8">▾</span></span>
+  </div>
+  <div class="canvas"></div>
+</div></div>
+
+<div class="note">
+  <h4>What moved, and why these four</h4>
+  <div class="before">
+    <p><strong>Before:</strong> <code>Templates ▸ Choose Template…</code> (a whole top-level menu
+    holding one item) · <code>Tools ▸ Tailor to Job ▸ …</code> · <code>Tools ▸ AI Assistant ▸ Show
+    AI Panel</code> · <code>File ▸ Import ▸ LinkedIn Export (.zip)</code>.</p>
+  </div>
+  <p><strong>The template control shows a thumbnail, not just a name.</strong> It is the only
+  always-visible reminder that 25 designs exist, and it makes the picker discoverable without
+  opening it. Costs 17×24&nbsp;px.</p>
+  <p><strong>AI Assistant carries a status dot, never a disabled state.</strong> Green when a local
+  model is reachable, grey when nothing is configured — but the button always opens the panel.
+  CLAUDE.md's rule is that AI features degrade rather than gate; a greyed-out control says
+  "broken" instead. See the AI status strip component.</p>
+  <p><strong>Zoom, undo and redo move right, next to Save and Export.</strong> They were at the far
+  left, ~2800&nbsp;px from Export on a wide window. Grouping every document-level action on one
+  side means the pointer stops crossing the screen.</p>
+  <p><strong>Export is the only filled button in the app.</strong> One primary action per surface —
+  it is what the user came to do, and nothing else should compete with it for the accent colour.</p>
+</div>

@@ -1,0 +1,160 @@
+<meta charset="utf-8">
+<title>Screen — First run</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 22px; max-width: 86ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 26px 0 10px; }
+
+  .t.lt { --s0:#f6f7f9; --s1:#fff; --s2:#f0f2f5; --bd:#dde1e6; --bdi:#818a99; --t1:#14161a;
+          --t2:#5b6270; --t3:#656c7a; --acc:#4f46e5; --on:#fff; --okdot:#1a7f37;
+          --okbg:#e8f5ec; --okbd:#a8d5b8; --oktx:#12602c; --sh:0 2px 8px rgba(16,20,30,.10); }
+  .t.dk { --s0:#0f1115; --s1:#16181d; --s2:#1d2027; --bd:#2f333c; --bdi:#697080; --t1:#e8eaed;
+          --t2:#a2a8b4; --t3:#868d9b; --acc:#8b93f8; --on:#0f1115; --okdot:#3fb950;
+          --okbg:#11241a; --okbd:#26492f; --oktx:#6fd67f; --sh:0 2px 8px rgba(0,0,0,.28); }
+
+  .frame { border: 1px solid var(--bd); border-radius: 12px; background: var(--s0);
+           color: var(--t1); padding: 48px 40px 34px; }
+  .hd { text-align: center; margin-bottom: 32px; }
+  .display { font-size: 24px; font-weight: 600; letter-spacing: -.02em; margin: 0; }
+  .dsub { font-size: 13px; color: var(--t2); margin: 7px 0 0; }
+
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 840px;
+           margin: 0 auto; }
+  .c { background: var(--s1); border: 1px solid var(--bd); border-radius: 10px; padding: 18px 16px;
+       box-shadow: var(--sh); display: flex; flex-direction: column; }
+  .c.hero { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc), var(--sh); }
+  .ct { font-size: 13px; font-weight: 620; margin: 0 0 4px; }
+  .cd { font-size: 11.5px; color: var(--t2); line-height: 1.55; margin: 0 0 13px; flex: 1; }
+  .cb { font-size: 11.5px; padding: 6px 12px; border-radius: 7px; text-align: center;
+        border: 1px solid var(--bd); color: var(--t1); }
+  .cb.pri { background: var(--acc); border-color: var(--acc); color: var(--on); font-weight: 600; }
+
+  /* mini template strip inside the first card */
+  .strip3 { display: flex; gap: 6px; margin-bottom: 13px; }
+  .mini { flex: 1; aspect-ratio: 210/297; background: #fff; border-radius: 3px; position: relative;
+          overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.10); }
+  .mini i { position: absolute; display: block; left: 4px; right: 4px; }
+  .mini .a { top: 5px; height: 3px; width: 20px; background: #2563eb; }
+  .mini .r { top: 10px; height: .8px; background: #2563eb; }
+  .mini .l { height: 1.4px; background: #c9cfd8; }
+  .mini .sd { position: absolute; inset: 0 auto 0 0; width: 36%; background: #1f2937; }
+  .mini .bn { position: absolute; inset: 0 0 auto 0; height: 30%; background: #2563eb; }
+
+  .fmt { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 13px; }
+  .tagf { font-size: 10px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--bd);
+          color: var(--t2); }
+
+  .privacy { max-width: 840px; margin: 26px auto 0; border-radius: 9px; padding: 10px 13px;
+             display: flex; gap: 9px; align-items: center; background: var(--okbg);
+             border: 1px solid var(--okbd); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--okdot); flex: none; }
+  .ptx { font-size: 11.5px; color: var(--oktx); font-weight: 550; }
+  .ptx span { color: var(--t2); font-weight: 400; }
+
+  .note { margin-top: 22px; border: 1px solid #2f333c; background: #0f1115; border-radius: 10px;
+          padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Screen — First run</h1>
+<p class="sub">Replaces <code>ui-baseline/01-empty-state.png</code>, where a new user is met with
+blank inputs beside a blank page — the app's answer to "what is this?" is currently "type something
+and find out". Three routes in, and the privacy line stated once, up front.</p>
+
+<h2>Light</h2>
+<div class="t lt"><div class="frame">
+  <div class="hd"><p class="display">Let's build your résumé</p>
+    <p class="dsub">Three ways to start. You can change template and layout at any point.</p></div>
+  <div class="cards">
+    <div class="c hero">
+      <div class="strip3">
+        <div class="mini"><i class="a"></i><i class="r"></i><i class="l" style="top:14px"></i><i class="l" style="top:17px;right:12px"></i><i class="l" style="top:20px"></i></div>
+        <div class="mini"><span class="sd"></span><i class="a" style="left:38%;width:14px"></i><i class="l" style="top:14px;left:38%"></i><i class="l" style="top:17px;left:38%;right:8px"></i></div>
+        <div class="mini"><span class="bn"></span><i class="l" style="top:20px"></i><i class="l" style="top:23px;right:10px"></i></div>
+      </div>
+      <p class="ct">Start from a template</p>
+      <p class="cd">Pick one of 25 designs and fill it in. The most common route.</p>
+      <div class="cb pri">Browse templates</div>
+    </div>
+    <div class="c">
+      <div class="fmt"><span class="tagf">LinkedIn .zip</span><span class="tagf">PDF</span>
+        <span class="tagf">JSON Resume</span><span class="tagf">.json</span></div>
+      <p class="ct">Import what you have</p>
+      <p class="cd">Bring in a LinkedIn export, an existing PDF résumé, or a JSON Resume file.
+        Fastest if you already have something.</p>
+      <div class="cb">Choose a file</div>
+    </div>
+    <div class="c">
+      <div class="fmt"><span class="tagf">Blank</span></div>
+      <p class="ct">Start blank</p>
+      <p class="cd">An empty résumé with the standard sections. Best if you want to shape it
+        yourself from the beginning.</p>
+      <div class="cb">Start blank</div>
+    </div>
+  </div>
+  <div class="privacy"><span class="dot"></span><div class="ptx">Everything stays on this computer.
+    <span>No account, no upload. Résumés are stored locally and AI features can run against a local model.</span></div></div>
+</div></div>
+
+<h2>Dark</h2>
+<div class="t dk"><div class="frame">
+  <div class="hd"><p class="display">Let's build your résumé</p>
+    <p class="dsub">Three ways to start. You can change template and layout at any point.</p></div>
+  <div class="cards">
+    <div class="c hero">
+      <div class="strip3">
+        <div class="mini"><i class="a"></i><i class="r"></i><i class="l" style="top:14px"></i><i class="l" style="top:17px;right:12px"></i><i class="l" style="top:20px"></i></div>
+        <div class="mini"><span class="sd"></span><i class="a" style="left:38%;width:14px"></i><i class="l" style="top:14px;left:38%"></i><i class="l" style="top:17px;left:38%;right:8px"></i></div>
+        <div class="mini"><span class="bn"></span><i class="l" style="top:20px"></i><i class="l" style="top:23px;right:10px"></i></div>
+      </div>
+      <p class="ct">Start from a template</p>
+      <p class="cd">Pick one of 25 designs and fill it in. The most common route.</p>
+      <div class="cb pri">Browse templates</div>
+    </div>
+    <div class="c">
+      <div class="fmt"><span class="tagf">LinkedIn .zip</span><span class="tagf">PDF</span>
+        <span class="tagf">JSON Resume</span><span class="tagf">.json</span></div>
+      <p class="ct">Import what you have</p>
+      <p class="cd">Bring in a LinkedIn export, an existing PDF résumé, or a JSON Resume file.
+        Fastest if you already have something.</p>
+      <div class="cb">Choose a file</div>
+    </div>
+    <div class="c">
+      <div class="fmt"><span class="tagf">Blank</span></div>
+      <p class="ct">Start blank</p>
+      <p class="cd">An empty résumé with the standard sections. Best if you want to shape it
+        yourself from the beginning.</p>
+      <div class="cb">Start blank</div>
+    </div>
+  </div>
+  <div class="privacy"><span class="dot"></span><div class="ptx">Everything stays on this computer.
+    <span>No account, no upload. Résumés are stored locally and AI features can run against a local model.</span></div></div>
+</div></div>
+
+<div class="note">
+  <h4>Why these three, in this order</h4>
+  <p><strong>Template first, because it is the strongest asset.</strong> 25 designs is the most
+  visible thing this product has over a Word document, and it is currently invisible until you
+  find a menu. The three thumbnails on the card do the advertising before the user clicks.</p>
+  <p><strong>Import second, because it is the fastest path to a filled screen.</strong> The
+  LinkedIn <code>.zip</code> route in particular takes someone from nothing to a populated résumé
+  in one file pick — and it is buried at <code>File ▸ Import ▸ LinkedIn Export (.zip)</code> today.
+  Naming the accepted formats on the card removes the guesswork about what "import" means.</p>
+  <p><strong>Blank third, not because it is bad but because it is what the app already does.</strong>
+  It stays a first-class option — some people genuinely want it — but it should not be the default
+  experience by omission.</p>
+  <p><strong>The privacy line appears once, here.</strong> Repeating it on every screen turns it
+  into chrome nobody reads. Stated at the moment someone decides whether to trust the app with
+  their employment history, it does real work. It reappears only in the AI panel, where it is
+  specifically true of the model being used.</p>
+  <p><strong>This screen must not become a wizard.</strong> It is a router, shown once, with three
+  exits — not step 1 of 6. resume.io's stepper exists to drive users toward a paywall; there is no
+  paywall here and no reason to sequence someone through their own résumé.</p>
+</div>

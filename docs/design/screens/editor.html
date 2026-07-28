@@ -1,0 +1,214 @@
+<meta charset="utf-8">
+<title>Screen — Main editor</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 22px; max-width: 88ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 26px 0 10px; }
+
+  .t.lt { --s0:#f6f7f9; --s1:#fff; --s2:#f0f2f5; --s3:#e8ebef; --bd:#dde1e6; --bdi:#818a99;
+          --t1:#14161a; --t2:#5b6270; --t3:#656c7a; --acc:#4f46e5; --on:#fff; --ok:#1a7f37;
+          --sh:0 2px 8px rgba(16,20,30,.10); }
+  .t.dk { --s0:#0f1115; --s1:#16181d; --s2:#1d2027; --s3:#24272f; --bd:#2f333c; --bdi:#697080;
+          --t1:#e8eaed; --t2:#a2a8b4; --t3:#868d9b; --acc:#8b93f8; --on:#0f1115; --ok:#3fb950;
+          --sh:0 2px 8px rgba(0,0,0,.28); }
+
+  .app { border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; background: var(--s0);
+         color: var(--t1); }
+
+  /* command bar */
+  .bar { display: flex; align-items: center; gap: 6px; padding: 7px 11px; background: var(--s1);
+         border-bottom: 1px solid var(--bd); }
+  .grow { flex: 1; }
+  .sep { width: 1px; height: 18px; background: var(--bd); margin: 0 3px; }
+  .b { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 5px 9px;
+       border-radius: 7px; border: 1px solid transparent; white-space: nowrap; color: var(--t1); }
+  .b.out { border-color: var(--bd); }
+  .b.pri { background: var(--acc); color: var(--on); font-weight: 600; border-color: var(--acc); }
+  .tpl { display: inline-flex; align-items: center; gap: 7px; padding: 3px 8px 3px 4px;
+         border: 1px solid var(--bd); border-radius: 8px; background: var(--s2); font-size: 11.5px;
+         font-weight: 550; }
+  .tmini { width: 15px; height: 21px; background: #fff; border-radius: 2px; position: relative;
+           overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.10); flex: none; }
+  .tmini i { position: absolute; display: block; left: 2px; right: 2px; }
+  .tmini .a { top: 3px; height: 2px; width: 8px; background: #2563eb; }
+  .tmini .l { height: .8px; background: #c9cfd8; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+  .cv { opacity: .55; font-size: 9px; }
+
+  /* three zones */
+  .zones { display: grid; grid-template-columns: 168px minmax(0,1fr) minmax(0,1.15fr); height: 470px; }
+  .nav { background: var(--s1); border-right: 1px solid var(--bd); padding: 11px 8px; }
+  .nvi { display: flex; align-items: center; gap: 8px; font-size: 11.5px; padding: 6px 9px;
+         border-radius: 7px; color: var(--t2); }
+  .nvi.on { background: var(--s3); color: var(--t1); font-weight: 600; }
+  .nvi .ct { margin-left: auto; font-size: 10px; color: var(--t3); }
+  .nvh { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+         color: var(--t3); padding: 10px 9px 5px; }
+
+  .edit { background: var(--s0); padding: 16px 18px; overflow: hidden; }
+  .eh { font-size: 13px; font-weight: 600; margin: 0 0 12px; }
+  .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .f { display: flex; flex-direction: column; gap: 4px; }
+  .f.wide { grid-column: 1 / -1; }
+  .lb { font-size: 11.5px; font-weight: 550; color: var(--t2); }
+  .in { background: var(--s1); border: 1px solid var(--bdi); border-radius: 7px; padding: 6px 9px;
+        font-size: 12px; color: var(--t1); }
+  .in.focus { border-color: var(--acc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--acc) 28%, transparent); }
+  .ta { min-height: 52px; line-height: 1.5; }
+
+  .prev { background: var(--s2); border-left: 1px solid var(--bd); padding: 16px;
+          display: flex; justify-content: center; align-items: flex-start; }
+  .page { width: 100%; max-width: 300px; aspect-ratio: 210/297; background: #fff; border-radius: 3px;
+          box-shadow: var(--sh); padding: 16px 15px; }
+  .p .h { height: 9px; width: 46%; background: #2563eb; border-radius: 1px; }
+  .p .hs { height: 4px; width: 30%; background: #9aa3b2; border-radius: 1px; margin-top: 4px; }
+  .p .rule { height: 1.2px; background: #2563eb; margin: 8px 0 9px; }
+  .p .sh2 { height: 4.5px; width: 26%; background: #2563eb; border-radius: 1px; margin: 10px 0 5px; }
+  .p .l { height: 3px; background: #c9cfd8; border-radius: 1px; margin-bottom: 4px; }
+
+  .status { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: var(--s1);
+            border-top: 1px solid var(--bd); font-size: 11px; color: var(--t3); }
+
+  .note { margin-top: 22px; border: 1px solid #2f333c; background: #0f1115; border-radius: 10px;
+          padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Screen — Main editor</h1>
+<p class="sub">The layout fix. Today the editor rail is pinned at ~320&nbsp;px and the page at
+~600&nbsp;px, leaving ~530&nbsp;px of dead grey between them on a wide window — widening the window
+only adds grey (<code>ui-baseline/02-populated.png</code>). Here the section list is fixed and both
+the editor and the preview flex, so extra width becomes more room to work.</p>
+
+<h2>Light</h2>
+<div class="t lt"><div class="app">
+  <div class="bar">
+    <span class="tpl"><span class="tmini"><i class="a"></i><i class="l" style="top:8px"></i><i class="l" style="top:10px;right:5px"></i><i class="l" style="top:13px"></i></span>Modern<span class="cv">▾</span></span>
+    <span class="b">Tailor to Job</span><span class="b">AI Assistant<span class="dot"></span></span>
+    <span class="b">Import<span class="cv">▾</span></span>
+    <span class="grow"></span>
+    <span class="b">−</span><span class="b">100%</span><span class="b">+</span><span class="sep"></span>
+    <span class="b">↶</span><span class="b" style="opacity:.4">↷</span><span class="sep"></span>
+    <span class="b out">Save</span><span class="b pri">Export PDF<span class="cv">▾</span></span>
+  </div>
+  <div class="zones">
+    <div class="nav">
+      <div class="nvh">Sections</div>
+      <div class="nvi on">Personal<span class="ct"></span></div>
+      <div class="nvi">Summary</div>
+      <div class="nvi">Experience<span class="ct">3</span></div>
+      <div class="nvi">Education<span class="ct">1</span></div>
+      <div class="nvi">Skills<span class="ct">3</span></div>
+      <div class="nvi">Languages<span class="ct">2</span></div>
+      <div class="nvi">Certifications<span class="ct">2</span></div>
+      <div class="nvh">Document</div>
+      <div class="nvi">Appearance</div>
+      <div class="nvi">Section order</div>
+    </div>
+    <div class="edit">
+      <p class="eh">Personal information</p>
+      <div class="fgrid">
+        <div class="f"><span class="lb">First name</span><div class="in focus">Jane</div></div>
+        <div class="f"><span class="lb">Last name</span><div class="in">Doe</div></div>
+        <div class="f wide"><span class="lb">Job title</span><div class="in">Software Engineer</div></div>
+        <div class="f"><span class="lb">Email</span><div class="in">jane.doe@example.com</div></div>
+        <div class="f"><span class="lb">Phone</span><div class="in">+1 555 0100</div></div>
+        <div class="f"><span class="lb">City</span><div class="in">Springfield</div></div>
+        <div class="f"><span class="lb">Country</span><div class="in">US</div></div>
+        <div class="f wide"><span class="lb">Professional summary</span>
+          <div class="in ta">Software engineer with 8 years of experience building web and data
+            platforms across the full stack.</div></div>
+      </div>
+    </div>
+    <div class="prev"><div class="page p">
+      <div class="h"></div><div class="hs"></div><div class="rule"></div>
+      <div class="sh2"></div><div class="l" style="width:97%"></div><div class="l" style="width:88%"></div>
+      <div class="sh2"></div><div class="l" style="width:94%"></div><div class="l" style="width:80%"></div>
+      <div class="l" style="width:86%"></div>
+      <div class="sh2"></div><div class="l" style="width:90%"></div><div class="l" style="width:72%"></div>
+    </div></div>
+  </div>
+  <div class="status"><span>Auto-saved at 21:48</span><span>·</span><span>Template: Modern</span>
+    <span class="grow"></span><span>2 spelling issues</span></div>
+</div></div>
+
+<h2>Dark</h2>
+<div class="t dk"><div class="app">
+  <div class="bar">
+    <span class="tpl"><span class="tmini"><i class="a"></i><i class="l" style="top:8px"></i><i class="l" style="top:10px;right:5px"></i><i class="l" style="top:13px"></i></span>Modern<span class="cv">▾</span></span>
+    <span class="b">Tailor to Job</span><span class="b">AI Assistant<span class="dot"></span></span>
+    <span class="b">Import<span class="cv">▾</span></span>
+    <span class="grow"></span>
+    <span class="b">−</span><span class="b">100%</span><span class="b">+</span><span class="sep"></span>
+    <span class="b">↶</span><span class="b" style="opacity:.4">↷</span><span class="sep"></span>
+    <span class="b out">Save</span><span class="b pri">Export PDF<span class="cv">▾</span></span>
+  </div>
+  <div class="zones">
+    <div class="nav">
+      <div class="nvh">Sections</div>
+      <div class="nvi on">Personal</div>
+      <div class="nvi">Summary</div>
+      <div class="nvi">Experience<span class="ct">3</span></div>
+      <div class="nvi">Education<span class="ct">1</span></div>
+      <div class="nvi">Skills<span class="ct">3</span></div>
+      <div class="nvi">Languages<span class="ct">2</span></div>
+      <div class="nvi">Certifications<span class="ct">2</span></div>
+      <div class="nvh">Document</div>
+      <div class="nvi">Appearance</div>
+      <div class="nvi">Section order</div>
+    </div>
+    <div class="edit">
+      <p class="eh">Personal information</p>
+      <div class="fgrid">
+        <div class="f"><span class="lb">First name</span><div class="in focus">Jane</div></div>
+        <div class="f"><span class="lb">Last name</span><div class="in">Doe</div></div>
+        <div class="f wide"><span class="lb">Job title</span><div class="in">Software Engineer</div></div>
+        <div class="f"><span class="lb">Email</span><div class="in">jane.doe@example.com</div></div>
+        <div class="f"><span class="lb">Phone</span><div class="in">+1 555 0100</div></div>
+        <div class="f"><span class="lb">City</span><div class="in">Springfield</div></div>
+        <div class="f"><span class="lb">Country</span><div class="in">US</div></div>
+        <div class="f wide"><span class="lb">Professional summary</span>
+          <div class="in ta">Software engineer with 8 years of experience building web and data
+            platforms across the full stack.</div></div>
+      </div>
+    </div>
+    <div class="prev"><div class="page p">
+      <div class="h"></div><div class="hs"></div><div class="rule"></div>
+      <div class="sh2"></div><div class="l" style="width:97%"></div><div class="l" style="width:88%"></div>
+      <div class="sh2"></div><div class="l" style="width:94%"></div><div class="l" style="width:80%"></div>
+      <div class="l" style="width:86%"></div>
+      <div class="sh2"></div><div class="l" style="width:90%"></div><div class="l" style="width:72%"></div>
+    </div></div>
+  </div>
+  <div class="status"><span>Auto-saved at 21:48</span><span>·</span><span>Template: Modern</span>
+    <span class="grow"></span><span>2 spelling issues</span></div>
+</div></div>
+
+<div class="note">
+  <h4>Layout rules</h4>
+  <p><strong>Only the section list is fixed width</strong> (168&nbsp;px). Editor and preview are
+  <code>minmax(0,1fr)</code> and <code>minmax(0,1.15fr)</code> — the preview gets slightly more
+  because a page has a fixed aspect ratio and benefits more from width. Extra window width is
+  divided between them instead of pooling as grey.</p>
+  <p><strong>The preview page caps at a readable size rather than growing forever.</strong> Past a
+  point a bigger page stops helping; the surplus becomes symmetric margin, which reads as
+  deliberate framing rather than the current lopsided void.</p>
+  <p><strong>The section list is navigation, not a reorder widget.</strong> It replaces scrolling a
+  single long column and gives each section a home. Reordering moves into "Section order" under
+  Document — a different task that does not belong in the primary navigation.</p>
+  <p><strong>Item counts sit in the nav</strong> (Experience 3, Skills 3). Cheap to compute, and it
+  tells the user where the content is without opening each section.</p>
+  <p><strong>Every field has a visible label</strong>, including filled ones — the placeholder-as-label
+  problem from the baseline. The two-column grid works because labels are above inputs rather than
+  beside them, so nothing depends on a fixed label column.</p>
+  <p><strong>Still open:</strong> the editor is a two-column grid here, which suits short fields but
+  may be wrong for Experience entries with multi-line achievement lists. Those may want a single
+  wide column. Worth resolving when the Experience section gets its own spec card.</p>
+</div>

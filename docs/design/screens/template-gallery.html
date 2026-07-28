@@ -1,0 +1,144 @@
+<meta charset="utf-8">
+<title>Screen — Template gallery</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 22px; max-width: 84ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 26px 0 10px; }
+
+  /* theme scopes — identical markup, different token values */
+  .t { --radius: 14px; border-radius: var(--radius); overflow: hidden; }
+  .t.lt { --s1:#fff; --s2:#f0f2f5; --bd:#dde1e6; --bdi:#818a99; --t1:#14161a; --t2:#5b6270;
+          --t3:#656c7a; --acc:#4f46e5; --on:#fff; --shadow:0 12px 32px rgba(16,20,30,.16); }
+  .t.dk { --s1:#16181d; --s2:#1d2027; --bd:#2f333c; --bdi:#697080; --t1:#e8eaed; --t2:#a2a8b4;
+          --t3:#868d9b; --acc:#8b93f8; --on:#0f1115; --shadow:0 12px 32px rgba(0,0,0,.42); }
+
+  .modal { background: var(--s1); border: 1px solid var(--bd); border-radius: var(--radius);
+           box-shadow: var(--shadow); color: var(--t1); }
+  .mhead { padding: 17px 20px 0; }
+  .mtitle { font-size: 17px; font-weight: 600; letter-spacing: -.01em; margin: 0; }
+  .mdesc { font-size: 11.5px; color: var(--t3); margin: 3px 0 0; }
+  .bar { display: flex; align-items: center; gap: 7px; padding: 14px 20px 12px; flex-wrap: wrap; }
+  .search { flex: 1; min-width: 170px; background: var(--s2); border: 1px solid var(--bdi);
+            border-radius: 7px; padding: 6px 10px; font-size: 11.5px; color: var(--t3); }
+  .chip { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--bd);
+          color: var(--t2); }
+  .chip.on { background: var(--acc); border-color: var(--acc); color: var(--on); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; padding: 2px 20px 18px; }
+
+  .card { background: var(--s2); border: 1px solid var(--bd); border-radius: 10px; padding: 8px;
+          position: relative; }
+  .card.sel { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc); }
+  .tick { position: absolute; top: 13px; right: 13px; width: 16px; height: 16px; border-radius: 50%;
+          background: var(--acc); color: var(--on); font-size: 9px; line-height: 16px;
+          text-align: center; font-weight: 700; }
+  .thumb { width: 100%; aspect-ratio: 210/297; background: #fff; border-radius: 4px;
+           overflow: hidden; position: relative; }
+  .nm { font-size: 11px; font-weight: 600; margin-top: 6px; color: var(--t1); }
+  .tag { font-size: 9px; color: var(--t3); margin-top: 1px; }
+
+  .m { padding: 8px 7px; }
+  .m .h { height: 5.5px; width: 54%; background: #2563eb; border-radius: 1px; }
+  .m .hs { height: 2.4px; width: 34%; background: #9aa3b2; border-radius: 1px; margin-top: 2.2px; }
+  .m .rule { height: 1px; background: #2563eb; margin: 4.5px 0 5px; }
+  .m .sh { height: 2.8px; width: 28%; background: #2563eb; border-radius: 1px; margin: 5px 0 3px; }
+  .m .l { height: 1.9px; background: #c9cfd8; border-radius: 1px; margin-bottom: 2.4px; }
+  .side { position: absolute; inset: 0 auto 0 0; width: 38%; background: #1f2937; }
+  .side.lt2 { background: #eef2f7; }
+  .side.blue { background: #2563eb; }
+  .m.two { margin-left: 38%; }
+  .band { position: absolute; inset: 0 0 auto 0; height: 32%; background: #2563eb; }
+  .mono .h, .mono .sh, .mono .rule { background: #111827 !important; }
+  .plain .h, .plain .sh { background: #374151 !important; }
+  .plain .rule { background: #9ca3af !important; }
+
+  .foot { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px;
+          border-top: 1px solid var(--bd); }
+  .cnt { font-size: 11px; color: var(--t3); }
+  .btns { display: flex; gap: 8px; }
+  .btn { font-size: 11.5px; padding: 6px 14px; border-radius: 7px; border: 1px solid var(--bd);
+         color: var(--t2); }
+  .btn.pri { background: var(--acc); border-color: var(--acc); color: var(--on); font-weight: 600; }
+
+  .note { margin-top: 22px; border: 1px solid #2f333c; background: #0f1115; border-radius: 10px;
+          padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Screen — Template gallery</h1>
+<p class="sub">Replaces the text-card wall in <code>ui-baseline/03-template-gallery.png</code>, which
+also ran ~60% empty space below the cards. Six columns of thumbnails fit all 25 templates in
+roughly the same footprint. Markup is identical across themes — only token values differ.</p>
+
+<h2>Light</h2>
+<div class="t lt"><div class="modal">
+  <div class="mhead"><p class="mtitle">Choose a template</p>
+    <p class="mdesc">25 designs · your content stays the same, only the layout changes</p></div>
+  <div class="bar"><div class="search">Search templates…</div>
+    <div class="chip on">All 25</div><div class="chip">Modern</div><div class="chip">Classic</div>
+    <div class="chip">Creative</div><div class="chip">Professional</div><div class="chip">Technical</div></div>
+  <div class="grid">
+    <div class="card sel"><div class="tick">✓</div><div class="thumb"><div class="m"><div class="h"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:95%"></div><div class="l" style="width:85%"></div><div class="sh"></div><div class="l" style="width:90%"></div></div></div><div class="nm">Modern</div><div class="tag">Modern</div></div>
+    <div class="card"><div class="thumb plain"><div class="m"><div class="h" style="width:46%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:93%"></div><div class="l" style="width:80%"></div><div class="sh"></div><div class="l" style="width:88%"></div></div></div><div class="nm">Classic</div><div class="tag">Classic</div></div>
+    <div class="card"><div class="thumb"><div class="side"></div><div class="m two"><div class="h" style="width:68%"></div><div class="hs"></div><div class="sh"></div><div class="l" style="width:90%"></div><div class="l" style="width:76%"></div></div></div><div class="nm">Dark Sidebar</div><div class="tag">Creative</div></div>
+    <div class="card"><div class="thumb"><div class="side lt2"></div><div class="m two"><div class="h" style="width:66%"></div><div class="hs"></div><div class="sh"></div><div class="l" style="width:88%"></div><div class="l" style="width:74%"></div></div></div><div class="nm">Two Column</div><div class="tag">Professional</div></div>
+    <div class="card"><div class="thumb"><div class="band"></div><div class="m" style="margin-top:42px"><div class="sh"></div><div class="l" style="width:92%"></div><div class="l" style="width:80%"></div></div></div><div class="nm">Color Block</div><div class="tag">Modern</div></div>
+    <div class="card"><div class="thumb mono"><div class="m"><div class="h" style="width:52%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:94%"></div><div class="l" style="width:82%"></div></div></div><div class="nm">Developer</div><div class="tag">Technical</div></div>
+    <div class="card"><div class="thumb"><div class="side blue"></div><div class="m two"><div class="h" style="width:70%"></div><div class="hs"></div><div class="sh"></div><div class="l" style="width:86%"></div></div></div><div class="nm">Infographic</div><div class="tag">Modern</div></div>
+    <div class="card"><div class="thumb plain"><div class="m"><div class="h" style="width:44%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:96%"></div><div class="l" style="width:94%"></div><div class="l" style="width:90%"></div><div class="l" style="width:86%"></div></div></div><div class="nm">ATS Plain</div><div class="tag">Professional</div></div>
+    <div class="card"><div class="thumb"><div class="m"><div style="width:22px;height:22px;border-radius:50%;background:#dbe3ee;margin-bottom:4px"></div><div class="h" style="width:56%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:90%"></div></div></div><div class="nm">Photo Header</div><div class="tag">Modern</div></div>
+    <div class="card"><div class="thumb plain"><div class="m"><div class="h" style="width:58%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:92%"></div><div class="l" style="width:88%"></div><div class="sh"></div><div class="l" style="width:80%"></div></div></div><div class="nm">Federal</div><div class="tag">Professional</div></div>
+    <div class="card"><div class="thumb"><div class="side lt2"></div><div class="m two"><div class="h" style="width:64%"></div><div class="hs"></div><div class="sh"></div><div class="l" style="width:84%"></div></div></div><div class="nm">European CV</div><div class="tag">Classic</div></div>
+    <div class="card"><div class="thumb"><div class="m"><div class="h" style="width:50%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:88%"></div><div class="l" style="width:70%"></div></div></div><div class="nm">Timeline</div><div class="tag">Modern</div></div>
+  </div>
+  <div class="foot"><div class="cnt">Showing 25 of 25</div>
+    <div class="btns"><div class="btn">Cancel</div><div class="btn pri">Use Modern</div></div></div>
+</div></div>
+
+<h2>Dark</h2>
+<div class="t dk"><div class="modal">
+  <div class="mhead"><p class="mtitle">Choose a template</p>
+    <p class="mdesc">25 designs · your content stays the same, only the layout changes</p></div>
+  <div class="bar"><div class="search">Search templates…</div>
+    <div class="chip on">All 25</div><div class="chip">Modern</div><div class="chip">Classic</div>
+    <div class="chip">Creative</div><div class="chip">Professional</div><div class="chip">Technical</div></div>
+  <div class="grid">
+    <div class="card sel"><div class="tick">✓</div><div class="thumb"><div class="m"><div class="h"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:95%"></div><div class="l" style="width:85%"></div><div class="sh"></div><div class="l" style="width:90%"></div></div></div><div class="nm">Modern</div><div class="tag">Modern</div></div>
+    <div class="card"><div class="thumb plain"><div class="m"><div class="h" style="width:46%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:93%"></div><div class="l" style="width:80%"></div><div class="sh"></div><div class="l" style="width:88%"></div></div></div><div class="nm">Classic</div><div class="tag">Classic</div></div>
+    <div class="card"><div class="thumb"><div class="side"></div><div class="m two"><div class="h" style="width:68%"></div><div class="hs"></div><div class="sh"></div><div class="l" style="width:90%"></div><div class="l" style="width:76%"></div></div></div><div class="nm">Dark Sidebar</div><div class="tag">Creative</div></div>
+    <div class="card"><div class="thumb"><div class="side lt2"></div><div class="m two"><div class="h" style="width:66%"></div><div class="hs"></div><div class="sh"></div><div class="l" style="width:88%"></div><div class="l" style="width:74%"></div></div></div><div class="nm">Two Column</div><div class="tag">Professional</div></div>
+    <div class="card"><div class="thumb"><div class="band"></div><div class="m" style="margin-top:42px"><div class="sh"></div><div class="l" style="width:92%"></div><div class="l" style="width:80%"></div></div></div><div class="nm">Color Block</div><div class="tag">Modern</div></div>
+    <div class="card"><div class="thumb mono"><div class="m"><div class="h" style="width:52%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:94%"></div><div class="l" style="width:82%"></div></div></div><div class="nm">Developer</div><div class="tag">Technical</div></div>
+    <div class="card"><div class="thumb"><div class="side blue"></div><div class="m two"><div class="h" style="width:70%"></div><div class="hs"></div><div class="sh"></div><div class="l" style="width:86%"></div></div></div><div class="nm">Infographic</div><div class="tag">Modern</div></div>
+    <div class="card"><div class="thumb plain"><div class="m"><div class="h" style="width:44%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:96%"></div><div class="l" style="width:94%"></div><div class="l" style="width:90%"></div><div class="l" style="width:86%"></div></div></div><div class="nm">ATS Plain</div><div class="tag">Professional</div></div>
+    <div class="card"><div class="thumb"><div class="m"><div style="width:22px;height:22px;border-radius:50%;background:#dbe3ee;margin-bottom:4px"></div><div class="h" style="width:56%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:90%"></div></div></div><div class="nm">Photo Header</div><div class="tag">Modern</div></div>
+    <div class="card"><div class="thumb plain"><div class="m"><div class="h" style="width:58%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:92%"></div><div class="l" style="width:88%"></div><div class="sh"></div><div class="l" style="width:80%"></div></div></div><div class="nm">Federal</div><div class="tag">Professional</div></div>
+    <div class="card"><div class="thumb"><div class="side lt2"></div><div class="m two"><div class="h" style="width:64%"></div><div class="hs"></div><div class="sh"></div><div class="l" style="width:84%"></div></div></div><div class="nm">European CV</div><div class="tag">Classic</div></div>
+    <div class="card"><div class="thumb"><div class="m"><div class="h" style="width:50%"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div><div class="l" style="width:88%"></div><div class="l" style="width:70%"></div></div></div><div class="nm">Timeline</div><div class="tag">Modern</div></div>
+  </div>
+  <div class="foot"><div class="cnt">Showing 25 of 25</div>
+    <div class="btns"><div class="btn">Cancel</div><div class="btn pri">Use Modern</div></div></div>
+</div></div>
+
+<div class="note">
+  <h4>Decisions worth arguing with</h4>
+  <p><strong>Thumbnails stay white in both themes.</strong> The grid of white pages against dark
+  chrome is intentional — those are documents, not UI. It also means the two renderings above share
+  every pixel inside the thumbnails, which is the point.</p>
+  <p><strong>Category filter as chips, not a dropdown.</strong> The categories already exist in
+  <code>TemplateInfo.Category</code>. Chips expose the taxonomy without a click, and "All 25"
+  doubles as a count — a selling point the current UI never states anywhere.</p>
+  <p><strong>Search included because 25 is past the scanning threshold.</strong> Under ~12 items a
+  grid alone is enough; at 25 and growing, typing "ats" or "academic" beats scanning.</p>
+  <p><strong>The primary button names the template</strong> ("Use Modern", not "OK") — the click
+  that restyles the whole document should say what it will do.</p>
+  <p><strong>Still open:</strong> should selecting a card apply immediately with live preview behind
+  the modal, or only on confirm? Immediate suits the app's live-preview character, but re-rendering
+  the PDF on every arrow-key move through 25 items may be too slow. Worth measuring, not guessing.</p>
+</div>

@@ -1,0 +1,155 @@
+<meta charset="utf-8">
+<title>Tailor to Job panel</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 22px; max-width: 88ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 24px 0 10px; }
+
+  .t.lt { --s0:#f6f7f9; --s1:#fff; --s2:#f0f2f5; --bd:#dde1e6; --bdi:#818a99; --t1:#14161a;
+          --t2:#5b6270; --t3:#656c7a; --acc:#4f46e5; --on:#fff;
+          --ok:#1a7f37; --okbg:#e8f5ec; --okbd:#a8d5b8; --oktx:#12602c;
+          --miss:#b45309; --missbg:#fdf4e3; --missbd:#e8d3a0;
+          --del:#b42318; --delbg:#fdecea; --addbg:#e8f5ec; }
+  .t.dk { --s0:#0f1115; --s1:#16181d; --s2:#1d2027; --bd:#2f333c; --bdi:#697080; --t1:#e8eaed;
+          --t2:#a2a8b4; --t3:#868d9b; --acc:#8b93f8; --on:#0f1115;
+          --ok:#3fb950; --okbg:#11241a; --okbd:#26492f; --oktx:#6fd67f;
+          --miss:#d29922; --missbg:#241d0f; --missbd:#4a3a1c;
+          --del:#f85149; --delbg:#2a1512; --addbg:#11241a; }
+
+  .panel { width: 420px; background: var(--s1); border: 1px solid var(--bd); border-radius: 12px;
+           color: var(--t1); overflow: hidden; }
+  .ph { padding: 13px 15px 11px; border-bottom: 1px solid var(--bd); }
+  .pt { font-size: 13px; font-weight: 620; margin: 0; }
+  .pd { font-size: 11px; color: var(--t3); margin: 3px 0 0; line-height: 1.5; }
+  .sec { padding: 13px 15px; border-bottom: 1px solid var(--bd); }
+  .sec:last-child { border-bottom: none; }
+  .lb { font-size: 11.5px; font-weight: 550; color: var(--t2); display: block; margin-bottom: 5px; }
+  .ta { background: var(--s0); border: 1px solid var(--bdi); border-radius: 7px; padding: 8px 10px;
+        font-size: 11.5px; color: var(--t2); line-height: 1.5; min-height: 44px; }
+
+  .score { display: flex; align-items: center; gap: 12px; }
+  .ring { width: 52px; height: 52px; border-radius: 50%; flex: none; display: flex;
+          align-items: center; justify-content: center; font-size: 14px; font-weight: 700;
+          background: conic-gradient(var(--ok) 0 68%, var(--s2) 68% 100%); position: relative; }
+  .ring::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--s1); }
+  .ring span { position: relative; z-index: 1; }
+  .sm { font-size: 11.5px; color: var(--t2); line-height: 1.55; }
+  .sm b { color: var(--t1); }
+
+  .kws { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .kw { font-size: 10.5px; padding: 3px 8px; border-radius: 999px; border: 1px solid; }
+  .kw.has { background: var(--okbg); border-color: var(--okbd); color: var(--oktx); }
+  .kw.no { background: var(--missbg); border-color: var(--missbd); color: var(--miss); }
+
+  .diff { border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+  .dh { font-size: 10.5px; color: var(--t3); padding: 6px 10px; background: var(--s2);
+        border-bottom: 1px solid var(--bd); }
+  .dl { font-size: 11.5px; line-height: 1.5; padding: 7px 10px; display: flex; gap: 7px; }
+  .dl .mk { font-family: ui-monospace, monospace; flex: none; }
+  .dl.rm { background: var(--delbg); color: var(--del); }
+  .dl.ad { background: var(--addbg); color: var(--oktx); }
+  .dact { display: flex; gap: 6px; padding: 8px 10px; background: var(--s2);
+          border-top: 1px solid var(--bd); }
+  .bt { font-size: 11px; padding: 4px 11px; border-radius: 6px; border: 1px solid var(--bd);
+        color: var(--t2); }
+  .bt.acc { background: var(--acc); border-color: var(--acc); color: var(--on); font-weight: 600; }
+
+  .foot { display: flex; gap: 8px; padding: 12px 15px; background: var(--s2);
+          border-top: 1px solid var(--bd); }
+  .grow { flex: 1; }
+  .b { font-size: 11.5px; padding: 6px 13px; border-radius: 7px; border: 1px solid var(--bd);
+       color: var(--t1); }
+  .b.pri { background: var(--acc); border-color: var(--acc); color: var(--on); font-weight: 600; }
+
+  .cols { display: flex; gap: 20px; flex-wrap: wrap; }
+  .note { margin-top: 22px; border: 1px solid #2f333c; background: #0f1115; border-radius: 10px;
+          padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Tailor to Job panel</h1>
+<p class="sub">Currently at <code>Tools ▸ Tailor to Job ▸ …</code>. It does two separable things:
+ATS keyword analysis, which is pure local computation and always works, and AI rewrites, which need
+a model. The panel shows the analysis unconditionally and treats rewrites as an optional layer on
+top — the "degrade, not gate" rule applied to the feature that most needs it.</p>
+
+<div class="cols">
+<div class="t lt"><div class="panel">
+  <div class="ph"><p class="pt">Tailor to Job</p>
+    <p class="pd">Paste a job ad. Matching runs offline; rewrites use whatever model you have configured.</p></div>
+  <div class="sec"><span class="lb">Job description</span>
+    <div class="ta">Senior Data Engineer — you will own ingestion pipelines, schema governance and
+      partner integrations. Python, Airflow, dbt, AWS…</div></div>
+  <div class="sec"><div class="score">
+    <div class="ring"><span>68</span></div>
+    <div class="sm"><b>68% keyword match</b><br>14 of 21 significant terms present. Missing terms
+      are weighted by how often the ad repeats them.</div></div>
+    <div class="kws">
+      <span class="kw has">ingestion</span><span class="kw has">schema</span>
+      <span class="kw has">pipelines</span><span class="kw has">partner</span>
+      <span class="kw has">validation</span><span class="kw no">Airflow</span>
+      <span class="kw no">dbt</span><span class="kw no">governance</span>
+      <span class="kw no">Python</span></div></div>
+  <div class="sec"><span class="lb">Suggested rewrites · 2</span>
+    <div class="diff"><div class="dh">Experience · Northwind Systems · achievement 1</div>
+      <div class="dl rm"><span class="mk">−</span><span>Rewrote the ingestion pipeline, cutting end-to-end processing from 18 hours to under 5 minutes</span></div>
+      <div class="dl ad"><span class="mk">+</span><span>Rewrote the partner data ingestion pipeline in Python, cutting end-to-end processing from 18 hours to under 5 minutes</span></div>
+      <div class="dact"><span class="bt acc">Accept</span><span class="bt">Reject</span><span class="bt">Edit</span></div></div>
+  </div>
+  <div class="foot"><span class="b">Accept all</span><span class="grow"></span>
+    <span class="b">Close</span><span class="b pri">Apply 1 change</span></div>
+</div></div>
+
+<div class="t dk"><div class="panel">
+  <div class="ph"><p class="pt">Tailor to Job</p>
+    <p class="pd">Paste a job ad. Matching runs offline; rewrites use whatever model you have configured.</p></div>
+  <div class="sec"><span class="lb">Job description</span>
+    <div class="ta">Senior Data Engineer — you will own ingestion pipelines, schema governance and
+      partner integrations. Python, Airflow, dbt, AWS…</div></div>
+  <div class="sec"><div class="score">
+    <div class="ring"><span>68</span></div>
+    <div class="sm"><b>68% keyword match</b><br>14 of 21 significant terms present. Missing terms
+      are weighted by how often the ad repeats them.</div></div>
+    <div class="kws">
+      <span class="kw has">ingestion</span><span class="kw has">schema</span>
+      <span class="kw has">pipelines</span><span class="kw has">partner</span>
+      <span class="kw has">validation</span><span class="kw no">Airflow</span>
+      <span class="kw no">dbt</span><span class="kw no">governance</span>
+      <span class="kw no">Python</span></div></div>
+  <div class="sec"><span class="lb">Suggested rewrites · 2</span>
+    <div class="diff"><div class="dh">Experience · Northwind Systems · achievement 1</div>
+      <div class="dl rm"><span class="mk">−</span><span>Rewrote the ingestion pipeline, cutting end-to-end processing from 18 hours to under 5 minutes</span></div>
+      <div class="dl ad"><span class="mk">+</span><span>Rewrote the partner data ingestion pipeline in Python, cutting end-to-end processing from 18 hours to under 5 minutes</span></div>
+      <div class="dact"><span class="bt acc">Accept</span><span class="bt">Reject</span><span class="bt">Edit</span></div></div>
+  </div>
+  <div class="foot"><span class="b">Accept all</span><span class="grow"></span>
+    <span class="b">Close</span><span class="b pri">Apply 1 change</span></div>
+</div></div>
+</div>
+
+<div class="note">
+  <h4>Rules</h4>
+  <p><strong>The match score renders with no model configured.</strong>
+  <code>KeywordAnalyzer</code> is local computation — score, matched terms, missing terms and
+  warnings all work offline. Only the "Suggested rewrites" section depends on a model, and it is
+  the only part that disappears without one.</p>
+  <p><strong>Every rewrite is shown as a before/after diff on a named target.</strong> The header
+  states exactly which achievement it will replace ("Northwind Systems · achievement 1") because
+  <code>JobTailoringService</code> addresses achievements by index through
+  <code>AchievementLines</code>. Showing the target makes an off-by-one visible to the user instead
+  of silently rewriting the wrong bullet.</p>
+  <p><strong>Nothing applies until Apply.</strong> Accept/Reject stage a decision; the footer count
+  ("Apply 1 change") tells the user how many edits are pending. Rewrites are irreversible-feeling
+  even though undo exists, and a per-suggestion accept that instantly mutated the résumé would make
+  the preview thrash.</p>
+  <p><strong>Missing keywords are advisory, never auto-inserted.</strong> Stuffing a résumé with
+  terms the person cannot back up is how people fail interviews. The chips report; the human
+  decides.</p>
+</div>

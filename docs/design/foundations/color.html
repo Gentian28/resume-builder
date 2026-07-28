@@ -1,0 +1,148 @@
+<meta charset="utf-8">
+<title>Color tokens</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 24px; max-width: 82ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 22px 0 10px; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .pane { border-radius: 12px; padding: 18px 20px; border: 1px solid #2f333c; }
+  .pane.dk { background: #0f1115; }
+  .pane.lt { background: #f6f7f9; border-color: #dde1e6; color: #14161a; }
+  .pane.lt h2 { color: #656c7a; }
+  .pane h3 { font-size: 13px; margin: 0 0 3px; font-weight: 620; }
+  .pane .eq { font-size: 11px; margin: 0 0 6px; opacity: .7; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sw { width: 118px; border-radius: 7px; overflow: hidden; border: 1px solid #2f333c; }
+  .pane.lt .sw { border-color: #dde1e6; }
+  .chip { height: 38px; }
+  .meta { padding: 6px 8px; background: #16181d; }
+  .pane.lt .meta { background: #ffffff; }
+  .nm { font-size: 10.5px; font-weight: 550; }
+  .hx { font-size: 9.5px; opacity: .6; font-family: ui-monospace, "Cascadia Mono", monospace; }
+
+  table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+  th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+       color: #868d9b; font-weight: 600; padding: 0 10px 7px 0; border-bottom: 1px solid #2f333c; }
+  td { padding: 7px 10px 7px 0; border-bottom: 1px solid #24272f; font-size: 11.5px; }
+  td.t { font-family: ui-monospace, "Cascadia Mono", monospace; color: #8b93f8; }
+  td.n { font-family: ui-monospace, "Cascadia Mono", monospace; text-align: right; width: 54px; }
+  .ok { color: #3fb950; font-weight: 600; }
+  .fix { color: #d29922; font-weight: 600; }
+
+  .note { margin-top: 12px; border: 1px solid #2f333c; background: #0f1115;
+          border-radius: 10px; padding: 15px 17px; }
+  .note.warn { border-color: #3d3320; background: #1c180f; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note.warn h4 { color: #e6c07b; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Color tokens</h1>
+<p class="sub">Light and dark are <strong>peers</strong> — the app follows the OS setting and neither
+is "the" theme. Every ratio below was computed, not eyeballed; two tokens from the first draft
+failed WCAG and have been replaced. These override Semi.Avalonia's ramps rather than replacing them.</p>
+
+<div class="split">
+  <div class="pane lt">
+    <h3>Light</h3><p class="eq">follows OS · equal citizen</p>
+    <h2>Surface</h2>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:#f6f7f9"></div><div class="meta"><div class="nm">bg</div><div class="hx">#F6F7F9</div></div></div>
+      <div class="sw"><div class="chip" style="background:#ffffff"></div><div class="meta"><div class="nm">surface-1</div><div class="hx">#FFFFFF</div></div></div>
+      <div class="sw"><div class="chip" style="background:#f0f2f5"></div><div class="meta"><div class="nm">surface-2</div><div class="hx">#F0F2F5</div></div></div>
+      <div class="sw"><div class="chip" style="background:#e8ebef"></div><div class="meta"><div class="nm">surface-3</div><div class="hx">#E8EBEF</div></div></div>
+    </div>
+    <h2>Border</h2>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:#eceef1"></div><div class="meta"><div class="nm">border-subtle</div><div class="hx">#ECEEF1</div></div></div>
+      <div class="sw"><div class="chip" style="background:#dde1e6"></div><div class="meta"><div class="nm">border</div><div class="hx">#DDE1E6</div></div></div>
+      <div class="sw"><div class="chip" style="background:#818a99"></div><div class="meta"><div class="nm">border-input</div><div class="hx">#818A99</div></div></div>
+    </div>
+    <h2>Text</h2>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:#14161a"></div><div class="meta"><div class="nm">text-1</div><div class="hx">#14161A</div></div></div>
+      <div class="sw"><div class="chip" style="background:#5b6270"></div><div class="meta"><div class="nm">text-2</div><div class="hx">#5B6270</div></div></div>
+      <div class="sw"><div class="chip" style="background:#656c7a"></div><div class="meta"><div class="nm">text-3</div><div class="hx">#656C7A</div></div></div>
+    </div>
+    <h2>Accent</h2>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:#4f46e5"></div><div class="meta"><div class="nm">ui-accent</div><div class="hx">#4F46E5</div></div></div>
+      <div class="sw"><div class="chip" style="background:#ffffff"></div><div class="meta"><div class="nm">on-accent</div><div class="hx">#FFFFFF</div></div></div>
+    </div>
+  </div>
+
+  <div class="pane dk">
+    <h3>Dark</h3><p class="eq">follows OS · equal citizen</p>
+    <h2>Surface</h2>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:#0f1115"></div><div class="meta"><div class="nm">bg</div><div class="hx">#0F1115</div></div></div>
+      <div class="sw"><div class="chip" style="background:#16181d"></div><div class="meta"><div class="nm">surface-1</div><div class="hx">#16181D</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1d2027"></div><div class="meta"><div class="nm">surface-2</div><div class="hx">#1D2027</div></div></div>
+      <div class="sw"><div class="chip" style="background:#24272f"></div><div class="meta"><div class="nm">surface-3</div><div class="hx">#24272F</div></div></div>
+    </div>
+    <h2>Border</h2>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:#24272f"></div><div class="meta"><div class="nm">border-subtle</div><div class="hx">#24272F</div></div></div>
+      <div class="sw"><div class="chip" style="background:#2f333c"></div><div class="meta"><div class="nm">border</div><div class="hx">#2F333C</div></div></div>
+      <div class="sw"><div class="chip" style="background:#697080"></div><div class="meta"><div class="nm">border-input</div><div class="hx">#697080</div></div></div>
+    </div>
+    <h2>Text</h2>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:#e8eaed"></div><div class="meta"><div class="nm">text-1</div><div class="hx">#E8EAED</div></div></div>
+      <div class="sw"><div class="chip" style="background:#a2a8b4"></div><div class="meta"><div class="nm">text-2</div><div class="hx">#A2A8B4</div></div></div>
+      <div class="sw"><div class="chip" style="background:#868d9b"></div><div class="meta"><div class="nm">text-3</div><div class="hx">#868D9B</div></div></div>
+    </div>
+    <h2>Accent</h2>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:#8b93f8"></div><div class="meta"><div class="nm">ui-accent</div><div class="hx">#8B93F8</div></div></div>
+      <div class="sw"><div class="chip" style="background:#0f1115"></div><div class="meta"><div class="nm">on-accent</div><div class="hx">#0F1115</div></div></div>
+    </div>
+  </div>
+</div>
+
+<h2>Verified contrast — worst-case surface for each pairing</h2>
+<table>
+  <tr><th>Pairing</th><th>Light</th><th></th><th>Dark</th><th></th><th>Needs</th></tr>
+  <tr><td class="t">text-1</td><td class="n">16.15</td><td class="ok">PASS</td><td class="n">13.53</td><td class="ok">PASS</td><td>4.5</td></tr>
+  <tr><td class="t">text-2</td><td class="n">5.47</td><td class="ok">PASS</td><td class="n">6.83</td><td class="ok">PASS</td><td>4.5</td></tr>
+  <tr><td class="t">text-3 <span class="fix">(revised)</span></td><td class="n">4.71</td><td class="ok">PASS</td><td class="n">4.89</td><td class="ok">PASS</td><td>4.5</td></tr>
+  <tr><td class="t">border-input <span class="fix">(new)</span></td><td class="n">3.11</td><td class="ok">PASS</td><td class="n">3.28</td><td class="ok">PASS</td><td>3.0</td></tr>
+  <tr><td class="t">ui-accent as text/icon</td><td class="n">6.29</td><td class="ok">PASS</td><td class="n">6.45</td><td class="ok">PASS</td><td>4.5</td></tr>
+  <tr><td class="t">on-accent on filled button</td><td class="n">6.29</td><td class="ok">PASS</td><td class="n">6.86</td><td class="ok">PASS</td><td>4.5</td></tr>
+</table>
+
+<div class="note warn">
+  <h4>Why the accent is indigo, and why the dark button label is black</h4>
+  <p><strong>The first draft's <code>text-3</code> failed in both themes</strong> — 3.57 dark,
+  2.98 light against <code>surface-2</code>. It carries captions, the autosave stamp and result
+  counts, which is real text. Revised to <code>#868D9B</code> / <code>#656C7A</code>.</p>
+  <p><strong>Borders needed splitting.</strong> Decorative card borders can be low-contrast, but an
+  input's border <em>is</em> the affordance telling you it's editable — that needs 3:1.
+  <code>border</code> managed 1.31–1.40. Hence a separate <code>border-input</code> token.</p>
+  <p><strong>A dark-theme filled button cannot have a white label.</strong> This is algebra, not
+  taste: white-on-accent ≥ 4.5 requires accent luminance ≤ 0.183, while accent-on-dark-panel ≥ 4.5
+  requires ≥ 0.229. No colour satisfies both. So dark theme uses a <em>light</em> accent with a
+  near-black label (<code>on-accent: #0F1115</code>), and light theme the reverse. Semi.Avalonia
+  handles this correctly already — the point is that our overrides must not break it.</p>
+  <p><strong>Indigo beat blue on the one thing that mattered.</strong> Teal and cyan fail as light
+  fills (white-on-<code>#0D9488</code> is 3.74). Every blue accessible enough to be a light-theme
+  fill sits within 1.19 contrast of the document default <code>#2563EB</code> — visually the same
+  colour. Indigo passes everything and sits 1.88 away, the largest separation among accessible
+  candidates.</p>
+</div>
+
+<div class="note">
+  <h4>The rule this all serves: UI accent is not document accent</h4>
+  <p><code>Resume.AccentColor</code> is <strong>user data</strong>; it drives the rendered PDF and
+  defaults to <code>#2563EB</code>. <code>ui-accent</code> is <strong>fixed chrome</strong>. They
+  must never be bound to one another — otherwise picking a magenta résumé restyles every focus
+  ring, selection highlight and primary button in the app.</p>
+  <p>Document accent may appear in exactly two places: inside the preview page, and in the
+  swatch/hex control that edits it. Nowhere else.</p>
+</div>

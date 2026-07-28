@@ -1,0 +1,165 @@
+<meta charset="utf-8">
+<title>Appearance panel</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 22px; max-width: 88ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 24px 0 10px; }
+
+  .t.lt { --s0:#f6f7f9; --s1:#fff; --s2:#f0f2f5; --bd:#dde1e6; --bdi:#818a99; --t1:#14161a;
+          --t2:#5b6270; --t3:#656c7a; --acc:#4f46e5; --on:#fff; }
+  .t.dk { --s0:#0f1115; --s1:#16181d; --s2:#1d2027; --bd:#2f333c; --bdi:#697080; --t1:#e8eaed;
+          --t2:#a2a8b4; --t3:#868d9b; --acc:#8b93f8; --on:#0f1115; }
+
+  .panel { background: var(--s0); border: 1px solid var(--bd); border-radius: 12px;
+           padding: 16px 18px; color: var(--t1); }
+  .ph { font-size: 13px; font-weight: 620; margin: 0 0 3px; }
+  .pd { font-size: 11px; color: var(--t3); margin: 0 0 14px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grp { margin-bottom: 15px; }
+  .gh { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+        color: var(--t3); margin-bottom: 8px; }
+  .lb { font-size: 11.5px; font-weight: 550; color: var(--t2); display: block; margin-bottom: 4px; }
+  .in { background: var(--s1); border: 1px solid var(--bdi); border-radius: 7px; padding: 6px 9px;
+        font-size: 12px; color: var(--t1); }
+  .sel { display: flex; align-items: center; }
+  .sel .cv { margin-left: auto; opacity: .5; font-size: 9px; }
+
+  .sws { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 9px; }
+  .sw { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
+  .sw.on { box-shadow: 0 0 0 2px var(--s0), 0 0 0 4px var(--acc); }
+  .hexrow { display: flex; gap: 7px; align-items: center; }
+  .hexsw { width: 28px; height: 28px; border-radius: 7px; flex: none;
+           box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
+  .hex { flex: 1; font-family: ui-monospace, "Cascadia Mono", monospace; }
+
+  .srow { margin-bottom: 13px; }
+  .sl { display: flex; align-items: baseline; margin-bottom: 5px; }
+  .sv { margin-left: auto; font-size: 11px; color: var(--t2);
+        font-family: ui-monospace, "Cascadia Mono", monospace; }
+  .track { height: 3px; border-radius: 2px; background: var(--s2); position: relative; }
+  .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--acc); }
+  .knob { position: absolute; top: 50%; width: 13px; height: 13px; border-radius: 50%;
+          background: var(--acc); transform: translate(-50%, -50%); }
+
+  .prevw { background: var(--s2); border: 1px solid var(--bd); border-radius: 9px; padding: 13px;
+           display: flex; justify-content: center; }
+  .page { width: 100%; max-width: 190px; aspect-ratio: 210/297; background: #fff; border-radius: 3px;
+          box-shadow: 0 1px 4px rgba(0,0,0,.16); padding: 13px 12px; }
+  .page .h { height: 7px; width: 50%; background: #2563eb; border-radius: 1px; }
+  .page .hs { height: 3px; width: 32%; background: #9aa3b2; border-radius: 1px; margin-top: 3px; }
+  .page .rule { height: 1px; background: #2563eb; margin: 6px 0 7px; }
+  .page .sh { height: 3.5px; width: 27%; background: #2563eb; border-radius: 1px; margin: 8px 0 4px; }
+  .page .l { height: 2.4px; background: #c9cfd8; border-radius: 1px; margin-bottom: 3px; }
+  .rst { font-size: 11.5px; padding: 5px 11px; border-radius: 7px; border: 1px solid var(--bd);
+         color: var(--t2); display: inline-block; margin-top: 4px; }
+
+  .note { margin-top: 22px; border: 1px solid #3d3320; background: #1c180f; border-radius: 10px;
+          padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; color: #e6c07b; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Appearance panel</h1>
+<p class="sub">Same controls as today's "Customize Appearance"
+(<code>ui-baseline/09-customize-appearance.png</code>) — which is genuinely capable and crushed
+into a 320&nbsp;px rail with 6&nbsp;pt labels. On the flexible layout it gets two columns and a
+live page preview beside it, because every control here changes the document.</p>
+
+<h2>Light</h2>
+<div class="t lt"><div class="panel">
+  <p class="ph">Appearance</p><p class="pd">Applies to this résumé only. Templates carry their own defaults.</p>
+  <div class="two">
+    <div>
+      <div class="grp"><div class="gh">Document accent</div>
+        <div class="sws">
+          <span class="sw on" style="background:#2563eb"></span><span class="sw" style="background:#dc2626"></span>
+          <span class="sw" style="background:#16a34a"></span><span class="sw" style="background:#9333ea"></span>
+          <span class="sw" style="background:#ea580c"></span><span class="sw" style="background:#0891b2"></span>
+          <span class="sw" style="background:#4f46e5"></span><span class="sw" style="background:#db2777"></span>
+          <span class="sw" style="background:#475569"></span><span class="sw" style="background:#0f766e"></span></div>
+        <div class="hexrow"><span class="hexsw" style="background:#2563eb"></span>
+          <span class="in hex">#2563EB</span></div></div>
+      <div class="grp"><div class="gh">Typeface</div>
+        <span class="lb">Heading font</span><div class="in sel">Arial<span class="cv">▾</span></div>
+        <div style="height:9px"></div>
+        <span class="lb">Body font</span><div class="in sel">Arial<span class="cv">▾</span></div></div>
+    </div>
+    <div>
+      <div class="grp"><div class="gh">Metrics</div>
+        <div class="srow"><div class="sl"><span class="lb" style="margin:0">Font size</span><span class="sv">100%</span></div>
+          <div class="track"><div class="fill" style="width:45%"></div><div class="knob" style="left:45%"></div></div></div>
+        <div class="srow"><div class="sl"><span class="lb" style="margin:0">Line spacing</span><span class="sv">1.4</span></div>
+          <div class="track"><div class="fill" style="width:48%"></div><div class="knob" style="left:48%"></div></div></div>
+        <div class="srow"><div class="sl"><span class="lb" style="margin:0">Page margin</span><span class="sv">30px</span></div>
+          <div class="track"><div class="fill" style="width:52%"></div><div class="knob" style="left:52%"></div></div></div>
+        <div class="srow"><div class="sl"><span class="lb" style="margin:0">Section spacing</span><span class="sv">15px</span></div>
+          <div class="track"><div class="fill" style="width:40%"></div><div class="knob" style="left:40%"></div></div></div>
+        <span class="rst">Reset to template defaults</span></div>
+    </div>
+  </div>
+  <div class="prevw" style="margin-top:6px"><div class="page">
+    <div class="h"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div>
+    <div class="l" style="width:96%"></div><div class="l" style="width:86%"></div>
+    <div class="sh"></div><div class="l" style="width:92%"></div><div class="l" style="width:74%"></div></div></div>
+</div></div>
+
+<h2>Dark</h2>
+<div class="t dk"><div class="panel">
+  <p class="ph">Appearance</p><p class="pd">Applies to this résumé only. Templates carry their own defaults.</p>
+  <div class="two">
+    <div>
+      <div class="grp"><div class="gh">Document accent</div>
+        <div class="sws">
+          <span class="sw on" style="background:#2563eb"></span><span class="sw" style="background:#dc2626"></span>
+          <span class="sw" style="background:#16a34a"></span><span class="sw" style="background:#9333ea"></span>
+          <span class="sw" style="background:#ea580c"></span><span class="sw" style="background:#0891b2"></span>
+          <span class="sw" style="background:#4f46e5"></span><span class="sw" style="background:#db2777"></span>
+          <span class="sw" style="background:#475569"></span><span class="sw" style="background:#0f766e"></span></div>
+        <div class="hexrow"><span class="hexsw" style="background:#2563eb"></span>
+          <span class="in hex">#2563EB</span></div></div>
+      <div class="grp"><div class="gh">Typeface</div>
+        <span class="lb">Heading font</span><div class="in sel">Arial<span class="cv">▾</span></div>
+        <div style="height:9px"></div>
+        <span class="lb">Body font</span><div class="in sel">Arial<span class="cv">▾</span></div></div>
+    </div>
+    <div>
+      <div class="grp"><div class="gh">Metrics</div>
+        <div class="srow"><div class="sl"><span class="lb" style="margin:0">Font size</span><span class="sv">100%</span></div>
+          <div class="track"><div class="fill" style="width:45%"></div><div class="knob" style="left:45%"></div></div></div>
+        <div class="srow"><div class="sl"><span class="lb" style="margin:0">Line spacing</span><span class="sv">1.4</span></div>
+          <div class="track"><div class="fill" style="width:48%"></div><div class="knob" style="left:48%"></div></div></div>
+        <div class="srow"><div class="sl"><span class="lb" style="margin:0">Page margin</span><span class="sv">30px</span></div>
+          <div class="track"><div class="fill" style="width:52%"></div><div class="knob" style="left:52%"></div></div></div>
+        <div class="srow"><div class="sl"><span class="lb" style="margin:0">Section spacing</span><span class="sv">15px</span></div>
+          <div class="track"><div class="fill" style="width:40%"></div><div class="knob" style="left:40%"></div></div></div>
+        <span class="rst">Reset to template defaults</span></div>
+    </div>
+  </div>
+  <div class="prevw" style="margin-top:6px"><div class="page">
+    <div class="h"></div><div class="hs"></div><div class="rule"></div><div class="sh"></div>
+    <div class="l" style="width:96%"></div><div class="l" style="width:86%"></div>
+    <div class="sh"></div><div class="l" style="width:92%"></div><div class="l" style="width:74%"></div></div></div>
+</div></div>
+
+<div class="note">
+  <h4>This is the one place document accent is allowed in the chrome</h4>
+  <p>The swatch row and hex field <em>are</em> the control for <code>Resume.AccentColor</code>, so
+  they necessarily show it. Note the selected swatch's ring is <strong>indigo</strong>
+  (<code>ui-accent</code>) around a <strong>blue</strong> swatch (the document colour) — chrome and
+  content stay visually separate even here. Nothing else in the panel picks up the document colour;
+  the slider fills are <code>ui-accent</code>.</p>
+  <p><strong>"Reset to template defaults", not "Reset to defaults".</strong> Each template carries
+  its own default accent and font, applied by <code>ApplyTemplateDefaults</code> unless
+  <code>IsAccentColorCustomized</code> / <code>IsFontCustomized</code> is set. The label should say
+  what it actually restores.</p>
+  <p><strong>Both persisted styling sources stay in step.</strong> Legacy
+  <code>Resume.AccentColor</code>/<code>FontFamily</code> and <code>Resume.TemplateSettings</code>
+  are reconciled by <code>SyncLegacyStyling()</code> on every save. The UI binds to one source; it
+  must not write both independently.</p>
+</div>

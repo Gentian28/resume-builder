@@ -1,0 +1,132 @@
+<meta charset="utf-8">
+<title>Type scale &amp; spacing</title>
+<style>
+  :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+  body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
+  h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: #a2a8b4; margin: 0 0 24px; max-width: 84ch; line-height: 1.55; }
+  h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+       color: #868d9b; margin: 24px 0 10px; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .pane { border-radius: 12px; padding: 18px 20px; border: 1px solid #2f333c; }
+  .pane.dk { background: #0f1115; }
+  .pane.lt { background: #f6f7f9; border-color: #dde1e6; color: #14161a; }
+  .pane h3 { font-size: 12.5px; margin: 0 0 14px; font-weight: 620; }
+  .spec { padding: 7px 0; border-bottom: 1px solid #24272f; }
+  .pane.lt .spec { border-bottom-color: #e4e7ec; }
+  .spec:last-child { border-bottom: none; }
+  .tk { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 9.5px;
+        color: #8b93f8; margin-bottom: 2px; }
+  .pane.lt .tk { color: #4f46e5; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+       color: #868d9b; font-weight: 600; padding: 0 12px 7px 0; border-bottom: 1px solid #2f333c; }
+  td { padding: 8px 12px 8px 0; border-bottom: 1px solid #24272f; vertical-align: middle;
+       font-size: 12px; }
+  td.tok { width: 118px; font-family: ui-monospace, "Cascadia Mono", monospace;
+           font-size: 11.5px; color: #8b93f8; }
+  td.val { width: 142px; font-size: 11.5px; color: #868d9b;
+           font-family: ui-monospace, "Cascadia Mono", monospace; }
+  td.use { color: #a2a8b4; }
+  .bar { background: #8b93f8; height: 14px; border-radius: 3px; display: inline-block;
+         vertical-align: middle; }
+  .box { display: inline-block; width: 46px; height: 30px; background: #24272f;
+         border: 1px solid #697080; vertical-align: middle; }
+
+  .note { margin-top: 24px; border: 1px solid #2f333c; background: #0f1115;
+          border-radius: 10px; padding: 15px 17px; }
+  .note h4 { margin: 0 0 7px; font-size: 12.5px; font-weight: 620; }
+  .note p { margin: 0 0 9px; font-size: 12.5px; line-height: 1.62; color: #a2a8b4; max-width: 92ch; }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 11.5px;
+         background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
+</style>
+
+<h1>Type scale &amp; spacing</h1>
+<p class="sub">Inter is already loaded via <code>.WithInterFont()</code> — no new font dependency.
+Sizes and spacing are identical across themes; only the colour each token resolves to changes.
+Both renderings are shown because a scale that reads well on dark can go muddy on light.</p>
+
+<h2>Type — same metrics, both themes</h2>
+<div class="split">
+  <div class="pane lt">
+    <h3>Light</h3>
+    <div class="spec"><div class="tk">display · 24/600/-0.02em</div>
+      <div style="font-size:24px;font-weight:600;letter-spacing:-.02em;color:#14161a">Let's build your résumé</div></div>
+    <div class="spec"><div class="tk">title · 17/600/-0.01em</div>
+      <div style="font-size:17px;font-weight:600;letter-spacing:-.01em;color:#14161a">Choose a template</div></div>
+    <div class="spec"><div class="tk">section · 13/600</div>
+      <div style="font-size:13px;font-weight:600;color:#14161a">Work Experience</div></div>
+    <div class="spec"><div class="tk">body · 13/400/1.5</div>
+      <div style="font-size:13px;color:#14161a">Senior Software Engineer at Northwind Systems</div></div>
+    <div class="spec"><div class="tk">label · 11.5/550 · text-2</div>
+      <div style="font-size:11.5px;font-weight:550;color:#5b6270">First name</div></div>
+    <div class="spec"><div class="tk">caption · 11/400 · text-3</div>
+      <div style="font-size:11px;color:#656c7a">Auto-saved at 21:48</div></div>
+    <div class="spec"><div class="tk">overline · 10.5/600/.09em</div>
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#656c7a">Foundations</div></div>
+    <div class="spec"><div class="tk">mono · 11.5/400</div>
+      <div style="font-family:ui-monospace,'Cascadia Mono',monospace;font-size:11.5px;color:#14161a">#2563EB</div></div>
+  </div>
+
+  <div class="pane dk">
+    <h3>Dark</h3>
+    <div class="spec"><div class="tk">display · 24/600/-0.02em</div>
+      <div style="font-size:24px;font-weight:600;letter-spacing:-.02em;color:#e8eaed">Let's build your résumé</div></div>
+    <div class="spec"><div class="tk">title · 17/600/-0.01em</div>
+      <div style="font-size:17px;font-weight:600;letter-spacing:-.01em;color:#e8eaed">Choose a template</div></div>
+    <div class="spec"><div class="tk">section · 13/600</div>
+      <div style="font-size:13px;font-weight:600;color:#e8eaed">Work Experience</div></div>
+    <div class="spec"><div class="tk">body · 13/400/1.5</div>
+      <div style="font-size:13px;color:#e8eaed">Senior Software Engineer at Northwind Systems</div></div>
+    <div class="spec"><div class="tk">label · 11.5/550 · text-2</div>
+      <div style="font-size:11.5px;font-weight:550;color:#a2a8b4">First name</div></div>
+    <div class="spec"><div class="tk">caption · 11/400 · text-3</div>
+      <div style="font-size:11px;color:#868d9b">Auto-saved at 21:48</div></div>
+    <div class="spec"><div class="tk">overline · 10.5/600/.09em</div>
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#868d9b">Foundations</div></div>
+    <div class="spec"><div class="tk">mono · 11.5/400</div>
+      <div style="font-family:ui-monospace,'Cascadia Mono',monospace;font-size:11.5px;color:#e8eaed">#2563EB</div></div>
+  </div>
+</div>
+
+<h2>Spacing — 4px base, theme-independent</h2>
+<table>
+  <tr><th>Token</th><th>Value</th><th>Used for</th><th>Scale</th></tr>
+  <tr><td class="tok">space-1</td><td class="val">4px</td><td class="use">Icon ↔ label, chip padding</td><td><span class="bar" style="width:4px"></span></td></tr>
+  <tr><td class="tok">space-2</td><td class="val">8px</td><td class="use">Label ↔ input, button padding</td><td><span class="bar" style="width:8px"></span></td></tr>
+  <tr><td class="tok">space-3</td><td class="val">12px</td><td class="use">Between fields</td><td><span class="bar" style="width:12px"></span></td></tr>
+  <tr><td class="tok">space-4</td><td class="val">16px</td><td class="use">Card padding</td><td><span class="bar" style="width:16px"></span></td></tr>
+  <tr><td class="tok">space-5</td><td class="val">24px</td><td class="use">Between sections</td><td><span class="bar" style="width:24px"></span></td></tr>
+  <tr><td class="tok">space-6</td><td class="val">32px</td><td class="use">Panel gutters</td><td><span class="bar" style="width:32px"></span></td></tr>
+  <tr><td class="tok">space-7</td><td class="val">48px</td><td class="use">First-run breathing room</td><td><span class="bar" style="width:48px"></span></td></tr>
+</table>
+
+<h2>Radius &amp; elevation</h2>
+<table>
+  <tr><th>Token</th><th>Value</th><th>Used for</th><th></th></tr>
+  <tr><td class="tok">radius-sm</td><td class="val">4px</td><td class="use">Chips, swatches</td><td><span class="box" style="border-radius:4px"></span></td></tr>
+  <tr><td class="tok">radius-md</td><td class="val">7px</td><td class="use">Inputs, buttons</td><td><span class="box" style="border-radius:7px"></span></td></tr>
+  <tr><td class="tok">radius-lg</td><td class="val">10px</td><td class="use">Cards, panels</td><td><span class="box" style="border-radius:10px"></span></td></tr>
+  <tr><td class="tok">radius-xl</td><td class="val">14px</td><td class="use">Modals</td><td><span class="box" style="border-radius:14px"></span></td></tr>
+  <tr><td class="tok">elev-1</td><td class="val">border only</td><td class="use">Resting cards</td><td></td></tr>
+  <tr><td class="tok">elev-2</td><td class="val">0 2px 8px / .28 dark, .10 light</td><td class="use">Hover, dropdowns</td><td></td></tr>
+  <tr><td class="tok">elev-3</td><td class="val">0 12px 32px / .42 dark, .16 light</td><td class="use">Modals</td><td></td></tr>
+</table>
+
+<div class="note">
+  <h4>Three rules this scale exists to enforce</h4>
+  <p><strong>Labels are never placeholders.</strong> Today a filled field shows "Jane" with nothing
+  indicating it is the first-name box — the placeholder was the label and it vanished on input
+  (compare <code>ui-baseline/01-empty-state.png</code> with <code>02-populated.png</code>). Every
+  field gets a persistent <code>label</code> above it. It is also what makes the form usable with a
+  screen reader, which starts mattering once the repo is public.</p>
+  <p><strong>Section headers must outrank field labels.</strong> Currently they share a size and
+  weight, so the editor reads as one undifferentiated column. <code>section</code> at 13/600 against
+  <code>label</code> at 11.5/550 is the least separation that reads as hierarchy without shouting.</p>
+  <p><strong>Shadow opacity is not shared between themes.</strong> A shadow tuned for dark
+  (.28/.42) turns into grey mud on light; light uses .10/.16. Radius and offset stay identical —
+  only alpha changes.</p>
+</div>

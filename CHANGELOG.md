@@ -1,6 +1,19 @@
 # Changelog
 
-## 1.1.0 — unreleased
+## 1.1.1
+
+### Fixed
+
+- **The app has its own icon.** Every install so far showed the default Avalonia template logo in
+  the Start menu, the taskbar, the title bar, and next to the uninstaller — it was never replaced
+  when the project was created.
+
+### Added
+
+- The Windows installer now shows the app's name and mark while it works, instead of a bare
+  progress bar.
+
+## 1.1.0
 
 The editor redesign, plus a second AI provider.
 

@@ -290,8 +290,8 @@ document accent, so the UI-accent-vs-document-accent separation holds in the run
 | Three-zone flexible layout | Done — 196px nav, editor 1\*, preview 1.15\* |
 | Command bar | Done — template/Tailor/AI/Import promoted out of the menus |
 | Persistent field labels | Partial — Personal Information only; see below |
+| Split `MainWindow.axaml` | Done — 1,900 → 347 lines, six UserControls |
 | First-run screen | Not started |
-| Split `MainWindow.axaml` | Not started — still ~1,800 lines |
 
 ### Why labels are only partly done
 
@@ -313,9 +313,25 @@ which is layout design rather than a mechanical wrap.
 
 ### Next
 
-Splitting `MainWindow.axaml` should come before further section work: the entry editors, the
-first-run screen and the remaining labels all touch it, and at ~1,800 lines each change is harder
-to review than the change deserves.
+**Split `EditorView.axaml` per section.** It is 1,274 lines — the split moved the problem rather
+than solving it. One control per section (`PersonalSection`, `ExperienceSection`, …) makes the
+remaining labels and the entry-editor redesign reviewable changes rather than edits buried in a
+thousand lines.
+
+Then the first-run screen, and the entry editors from `docs/design/components/entry-editor.html`
+— the latter carries the correctness constraint about one control per achievement bullet.
+
+### A note on verifying UI work
+
+Screenshot-and-click automation gave a false negative during the split: clicks computed from
+`GetWindowRect` land ~38px off, because the window rect includes the title bar and resize border
+while the rendered content starts at the *client* origin. The app looked completely
+unresponsive when it was fine.
+
+Two things that actually work: send a bound keyboard shortcut (`Ctrl+T` toggles the theme and
+shows in the status bar) to prove input reaches the app at all, and use `ClientToScreen` rather
+than `GetWindowRect` for click coordinates. For structural refactors, diffing every `{Binding}`
+before and after is far stronger evidence than any screenshot.
 
 ## Process: design in Claude Design before any code
 

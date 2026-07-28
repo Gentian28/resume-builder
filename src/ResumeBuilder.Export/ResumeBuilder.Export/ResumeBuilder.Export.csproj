@@ -6,6 +6,10 @@
     <PackageReference Include="PdfPig" />
     <PackageReference Include="QuestPDF" />
     <PackageReference Include="SkiaSharp" />
+    <!-- PngExporter needs Skia natives wherever Export runs. Without this, only Windows and
+         macOS get them from a RID-less build; Linux does not. Matters for the test suite today
+         and for the Linux-hosted web version in docs/web-app-plan.md. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
   </ItemGroup>
 
   <ItemGroup>

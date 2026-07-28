@@ -41,6 +41,11 @@
     <PackageVersion Include="PdfPig" Version="0.1.13" />
     <PackageVersion Include="QuestPDF" Version="2025.12.1" />
     <PackageVersion Include="SkiaSharp" Version="3.119.1" />
+    <!-- SkiaSharp depends on NativeAssets.Win32 and NativeAssets.macOS but not the Linux one:
+         it resolves that through the RID runtime graph, which only kicks in when a RID is
+         specified. A RID-less build (the test project, and any server-side host) therefore has
+         no libSkiaSharp.so and dies in SKData's static constructor. Referenced explicitly. -->
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.1" />
     <PackageVersion Include="WeCantSpell.Hunspell" Version="7.0.1" />
   </ItemGroup>
 

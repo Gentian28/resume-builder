@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.LanguagesSection"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Languages" FontWeight="SemiBold" FontSize="14"/>
+                                    <Button Grid.Column="1" Content="+ Add" Command="{Binding AddLanguageCommand}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Languages}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LanguageViewModel">
+                                            <Grid ColumnDefinitions="*,10,*,Auto,Auto,Auto" Margin="0,3">
+                                                <TextBox Grid.Column="0" Watermark="Language" Text="{Binding Name}" AutomationProperties.Name="Language"/>
+                                                <ComboBox Grid.Column="2"
+                                                          ItemsSource="{x:Static vm:LanguageViewModel.AvailableProficiencies}"
+                                                          SelectedItem="{Binding Proficiency}"
+                                                          HorizontalAlignment="Stretch"/>
+                                                <Button Grid.Column="3" Content="^" Width="28" Margin="5,0,0,0"
+                                                        ToolTip.Tip="Move Up"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLanguageUpCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Grid.Column="4" Content="v" Width="28" Margin="2,0,0,0"
+                                                        ToolTip.Tip="Move Down"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLanguageDownCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Grid.Column="5" Content="X" Margin="5,0,0,0"
+                                                        ToolTip.Tip="Remove"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveLanguageCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

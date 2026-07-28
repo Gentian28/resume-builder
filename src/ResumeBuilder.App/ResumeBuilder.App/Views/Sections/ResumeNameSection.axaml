@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.ResumeNameSection"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Resume Name" FontWeight="SemiBold" FontSize="14"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SaveStateText}"
+                                               FontSize="11" Opacity="0.7" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBox Watermark="Untitled Resume" Text="{Binding ResumeName}" AutomationProperties.Name="Untitled Resume"/>
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <Button Content="Save" Command="{Binding SaveCurrentResumeCommand}"/>
+                                    <Button Content="Save As..." Command="{Binding SaveAsCommand}"/>
+                                    <Button Content="Open..." Command="{Binding OpenResumeListCommand}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.CertificationsSection"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Certifications" FontWeight="SemiBold" FontSize="14"/>
+                                    <Button Grid.Column="1" Content="+ Add" Command="{Binding AddCertificationCommand}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Certifications}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:CertificationViewModel">
+                                            <Border Background="{DynamicResource RbSurface2}"
+                                                    CornerRadius="4" Padding="10" Margin="0,5">
+                                                <StackPanel Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                                        <TextBox Grid.Column="0" Watermark="Certification Name" Text="{Binding Name}" AutomationProperties.Name="Certification Name"/>
+                                                        <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Move Up"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveCertificationUpCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Grid.Column="2" Content="v" Width="28" Margin="2,0,0,0"
+                                                                ToolTip.Tip="Move Down"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveCertificationDownCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Grid.Column="3" Content="X" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Remove"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCertificationCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </Grid>
+                                                    <TextBox Watermark="Issuing Organization" Text="{Binding IssuingOrganization}" AutomationProperties.Name="Issuing Organization"/>
+                                                    <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
+                                                        <ComboBox Grid.Column="0" Width="70"
+                                                                  ToolTip.Tip="Issued"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                  SelectedItem="{Binding IssueMonthName}"
+                                                                  PlaceholderText="Month"/>
+                                                        <ComboBox Grid.Column="2" Width="80"
+                                                                  ToolTip.Tip="Issued"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding IssueYear}"
+                                                                  PlaceholderText="Year"/>
+                                                        <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
+                                                        <ComboBox Grid.Column="4" Width="70"
+                                                                  ToolTip.Tip="Expires"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                  SelectedItem="{Binding ExpirationMonthName}"
+                                                                  IsEnabled="{Binding !DoesNotExpire}"
+                                                                  PlaceholderText="Month"/>
+                                                        <ComboBox Grid.Column="6" Width="80"
+                                                                  ToolTip.Tip="Expires"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding ExpirationYear}"
+                                                                  IsEnabled="{Binding !DoesNotExpire}"
+                                                                  PlaceholderText="Year"/>
+                                                        <CheckBox Grid.Column="8" Content="No expiry"
+                                                                  IsChecked="{Binding DoesNotExpire}"/>
+                                                    </Grid>
+                                                    <Grid ColumnDefinitions="*,10,*">
+                                                        <TextBox Grid.Column="0" Watermark="Credential ID" Text="{Binding CredentialId}" AutomationProperties.Name="Credential ID"/>
+                                                        <TextBox Grid.Column="2" Watermark="Credential URL" Text="{Binding CredentialUrl}" AutomationProperties.Name="Credential URL"/>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

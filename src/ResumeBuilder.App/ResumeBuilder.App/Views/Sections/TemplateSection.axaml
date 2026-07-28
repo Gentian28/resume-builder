@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.TemplateSection"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Template" FontWeight="SemiBold" FontSize="14"/>
+                                <Button Content="{Binding SelectedTemplate.Name, FallbackValue='Select Template'}"
+                                        Command="{Binding OpenTemplateGalleryCommand}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"/>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

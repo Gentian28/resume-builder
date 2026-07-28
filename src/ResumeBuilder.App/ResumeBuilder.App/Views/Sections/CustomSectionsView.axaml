@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.CustomSectionsView"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Custom Sections" FontWeight="SemiBold" FontSize="14"/>
+                                    <Button Grid.Column="1" Content="+ Add Section" Command="{Binding AddCustomSectionCommand}"/>
+                                </Grid>
+                                <TextBlock Text="Anything the standard sections do not cover: publications, awards, volunteering..."
+                                           FontSize="11" Opacity="0.6"/>
+                                <ItemsControl ItemsSource="{Binding CustomSections}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:CustomSectionViewModel">
+                                            <Border Background="{DynamicResource RbSurface2}"
+                                                    CornerRadius="4" Padding="10" Margin="0,5">
+                                                <StackPanel Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBox Grid.Column="0" Watermark="Section Title" Text="{Binding Title}" AutomationProperties.Name="Section Title"/>
+                                                        <Button Grid.Column="1" Content="X" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Remove section"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCustomSectionCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </Grid>
+
+                                                    <ItemsControl ItemsSource="{Binding Items}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:CustomSectionItemViewModel">
+                                                                <Border Background="{DynamicResource RbSurface1}"
+                                                                        CornerRadius="4" Padding="8" Margin="0,4">
+                                                                    <StackPanel Spacing="6">
+                                                                        <Grid ColumnDefinitions="*,Auto">
+                                                                            <TextBox Grid.Column="0" Watermark="Item Title" Text="{Binding Title}" AutomationProperties.Name="Item Title"/>
+                                                                            <Button Grid.Column="1" Content="X" Margin="5,0,0,0"
+                                                                                    ToolTip.Tip="Remove item"
+                                                                                    Command="{Binding $parent[ItemsControl].((vm:CustomSectionViewModel)DataContext).RemoveItemCommand}"
+                                                                                    CommandParameter="{Binding}"/>
+                                                                        </Grid>
+                                                                        <TextBox Watermark="Subtitle" Text="{Binding Subtitle}" AutomationProperties.Name="Subtitle"/>
+                                                                        <TextBox Watermark="Description" Text="{Binding Description}"
+                                                                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="50" AutomationProperties.Name="Description"/>
+                                                                        <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto">
+                                                                            <ComboBox Grid.Column="0" Width="70"
+                                                                                      ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                                      SelectedItem="{Binding StartMonthName}"
+                                                                                      PlaceholderText="Month"/>
+                                                                            <ComboBox Grid.Column="2" Width="80"
+                                                                                      ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                                      SelectedItem="{Binding StartYear}"
+                                                                                      PlaceholderText="Year"/>
+                                                                            <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
+                                                                            <ComboBox Grid.Column="4" Width="70"
+                                                                                      ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                                      SelectedItem="{Binding EndMonthName}"
+                                                                                      PlaceholderText="Month"/>
+                                                                            <ComboBox Grid.Column="6" Width="80"
+                                                                                      ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                                      SelectedItem="{Binding EndYear}"
+                                                                                      PlaceholderText="Year"/>
+                                                                        </Grid>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <Button Content="+ Add Item" HorizontalAlignment="Left"
+                                                            Command="{Binding AddItemCommand}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

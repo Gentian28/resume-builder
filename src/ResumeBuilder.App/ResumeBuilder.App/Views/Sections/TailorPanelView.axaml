@@ -1,0 +1,217 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.TailorPanelView"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Tailor to Job" FontWeight="SemiBold" FontSize="14"/>
+                                    <Button Grid.Column="1" Content="X" Padding="4,0"
+                                            Command="{Binding ToggleTailorPanelCommand}"/>
+                                </Grid>
+
+                                <TextBlock Text="Paste the job description. You get a keyword match, and - when AI is configured - proposed rewrites you can accept one by one."
+                                           FontSize="11" Opacity="0.7" TextWrapping="Wrap"/>
+
+                                <TextBox Text="{Binding TargetRoleText}"
+                                         Watermark="Target role (e.g. Senior Backend Engineer)" AutomationProperties.Name="Target role"/>
+
+                                <TextBox Text="{Binding JobDescriptionText}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         Watermark="Paste job description here..."
+                                         MinHeight="100"
+                                         MaxHeight="150" AutomationProperties.Name="Paste job description here"/>
+
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <Button Content="Tailor"
+                                            Command="{Binding TailorToJobCommand}"
+                                            IsEnabled="{Binding !IsTailoring}"/>
+                                    <Button Content="Save as variant for this job"
+                                            Command="{Binding SaveAsVariantCommand}"
+                                            ToolTip.Tip="Branches this resume into a variant tailored for this posting"/>
+                                </StackPanel>
+
+                                <ProgressBar IsIndeterminate="True" Height="4"
+                                             IsVisible="{Binding IsTailoring}"/>
+
+                                <!-- AI status (never blocks the keyword analysis below) -->
+                                <Border Background="#33FFA500" CornerRadius="4" Padding="8"
+                                        IsVisible="{Binding TailorAiError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                    <TextBlock Text="{Binding TailorAiError}"
+                                               FontSize="11" TextWrapping="Wrap"/>
+                                </Border>
+
+                                <!-- Proposed rewrites -->
+                                <StackPanel Spacing="8" IsVisible="{Binding HasTailoredEdits}">
+                                    <TextBlock Text="Proposed rewrites" FontWeight="SemiBold" FontSize="12"/>
+                                    <ItemsControl ItemsSource="{Binding TailoredEdits}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:TailoredEditViewModel">
+                                                <Border Background="{DynamicResource RbSurface2}"
+                                                        CornerRadius="4" Padding="10" Margin="0,3">
+                                                    <StackPanel Spacing="6">
+                                                        <Grid ColumnDefinitions="Auto,*">
+                                                            <CheckBox Grid.Column="0" IsChecked="{Binding Accepted}"
+                                                                      VerticalAlignment="Center"
+                                                                      ToolTip.Tip="Accept this rewrite"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding TargetDescription}"
+                                                                       FontWeight="SemiBold" FontSize="12"
+                                                                       TextWrapping="Wrap"
+                                                                       VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                        <Grid ColumnDefinitions="*,8,*">
+                                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                                <TextBlock Text="Original" FontSize="10" Opacity="0.6"/>
+                                                                <TextBlock Text="{Binding Original}" FontSize="11"
+                                                                           TextWrapping="Wrap"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2" Spacing="2">
+                                                                <TextBlock Text="Proposed" FontSize="10" Opacity="0.6"/>
+                                                                <TextBlock Text="{Binding Proposed}" FontSize="11"
+                                                                           TextWrapping="Wrap"
+                                                                           Foreground="{DynamicResource RbAccent}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding Rationale}" FontSize="10"
+                                                                   Opacity="0.7" TextWrapping="Wrap"
+                                                                   IsVisible="{Binding Rationale, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Content="Apply accepted"
+                                            Command="{Binding ApplyAcceptedEditsCommand}"
+                                            ToolTip.Tip="Applies the ticked rewrites; Ctrl+Z reverts them"
+                                            HorizontalAlignment="Left"/>
+                                </StackPanel>
+
+                                <!-- Results (when available) -->
+                                <StackPanel Spacing="10" IsVisible="{Binding HasKeywordAnalysis}">
+                                    <!-- Score -->
+                                    <Border Background="{DynamicResource RbSurface2}"
+                                            CornerRadius="4" Padding="10">
+                                        <StackPanel Spacing="5">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="Match Score" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding KeywordMatchScore, StringFormat={}{0}%}"
+                                                           FontWeight="Bold" FontSize="18"/>
+                                            </Grid>
+                                            <ProgressBar Value="{Binding KeywordMatchScore}"
+                                                         Maximum="100"
+                                                         Height="8"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Missing Keywords -->
+                                    <Expander Header="Missing Keywords" IsExpanded="True"
+                                              IsVisible="{Binding MissingKeywords.Count}">
+                                        <StackPanel Spacing="4" Margin="0,5,0,0">
+                                            <TextBlock Text="Add these to improve your match:"
+                                                       FontSize="11" Opacity="0.7"/>
+                                            <ItemsControl ItemsSource="{Binding MissingKeywords}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="{Binding}"
+                                                                Margin="0,0,4,4"
+                                                                Padding="8,4"
+                                                                FontSize="11"
+                                                                ToolTip.Tip="Click to add as skill"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).AddMissingKeywordAsSkillCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Expander>
+
+                                    <!-- Matched Keywords -->
+                                    <Expander Header="Matched Keywords">
+                                        <ItemsControl ItemsSource="{Binding MatchedKeywords}" Margin="0,5,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                                                        <TextBlock Text="{Binding Keyword}" FontSize="11"/>
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding ResumeCount, StringFormat='({0}x)'}"
+                                                                   FontSize="11" Opacity="0.6"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Expander>
+
+                                    <!-- Suggestions -->
+                                    <Expander Header="Suggestions" IsExpanded="True"
+                                              IsVisible="{Binding KeywordSuggestions.Count}">
+                                        <ItemsControl ItemsSource="{Binding KeywordSuggestions}" Margin="0,5,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}"
+                                                               FontSize="11"
+                                                               TextWrapping="Wrap"
+                                                               Margin="0,2"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Expander>
+
+                                    <!-- Warnings -->
+                                    <Expander Header="Warnings"
+                                              IsVisible="{Binding KeywordWarnings.Count}">
+                                        <ItemsControl ItemsSource="{Binding KeywordWarnings}" Margin="0,5,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}"
+                                                               FontSize="11"
+                                                               Foreground="Orange"
+                                                               TextWrapping="Wrap"
+                                                               Margin="0,2"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Expander>
+
+                                    <!-- Suggested Skills -->
+                                    <Expander Header="Suggested Skills"
+                                              IsVisible="{Binding TailorSuggestedSkills.Count}">
+                                        <StackPanel Spacing="4" Margin="0,5,0,0">
+                                            <TextBlock Text="Click to add as a skill:" FontSize="11" Opacity="0.7"/>
+                                            <ItemsControl ItemsSource="{Binding TailorSuggestedSkills}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="{Binding}"
+                                                                Margin="0,0,4,4" Padding="8,4" FontSize="11"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).AddMissingKeywordAsSkillCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Expander>
+
+                                    <Button Content="Clear Analysis"
+                                            Command="{Binding ClearTailoringCommand}"
+                                            HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

@@ -1,0 +1,141 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.AppearanceSection"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Customize Appearance" FontWeight="SemiBold" FontSize="14"/>
+                                    <ToggleButton Grid.Column="1" Content="..."
+                                                  IsChecked="{Binding ShowCustomizationPanel}"
+                                                  Padding="8,2"/>
+                                </Grid>
+
+                                <StackPanel Spacing="10" IsVisible="{Binding ShowCustomizationPanel}">
+                                    <!-- Accent Color -->
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Text="Accent Color" FontSize="12" Opacity="0.8"/>
+                                        <ItemsControl ItemsSource="{Binding PresetColors}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="x:String">
+                                                    <Button Width="24" Height="24" Margin="2"
+                                                            Padding="0"
+                                                            CornerRadius="4"
+                                                            Background="{Binding Converter={x:Static vm:MainWindowViewModel.HexToColorConverter}}"
+                                                            Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).SetAccentColorCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <!-- Color Picker Button and Hex Input -->
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <Button Grid.Column="0"
+                                                    Width="30" Height="30"
+                                                    Padding="0" Margin="0,0,5,0"
+                                                    ToolTip.Tip="Open color picker"
+                                                    Background="Transparent"
+                                                    Command="{Binding ToggleAccentColorPickerCommand}">
+                                                <Border Width="28" Height="28" CornerRadius="4"
+                                                        BorderBrush="{DynamicResource RbBorder}"
+                                                        BorderThickness="1"
+                                                        Background="{Binding AccentColor, Converter={x:Static vm:MainWindowViewModel.HexToColorConverter}}"/>
+                                            </Button>
+                                            <TextBox Grid.Column="1"
+                                                     Watermark="Hex color (e.g., #2563eb)"
+                                                     Text="{Binding AccentColor, Mode=TwoWay}"
+                                                     MaxLength="7" AutomationProperties.Name="Hex color"/>
+                                        </Grid>
+                                        <!-- Inline Color Picker (shown when toggled) -->
+                                        <ColorView IsVisible="{Binding ShowAccentColorPicker}"
+                                                   Color="{Binding AccentColorValue, Mode=TwoWay}"
+                                                   ColorSpectrumShape="Ring"
+                                                   IsAlphaVisible="False"
+                                                   IsColorSpectrumSliderVisible="True"
+                                                   IsComponentSliderVisible="False"
+                                                   IsHexInputVisible="False"
+                                                   Margin="0,5,0,0"
+                                                   HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+
+                                    <!-- Font Family -->
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Text="Body Font" FontSize="12" Opacity="0.8"/>
+                                        <ComboBox ItemsSource="{Binding AvailableFonts}"
+                                                  SelectedItem="{Binding SelectedFontFamily}"
+                                                  HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Text="Heading Font" FontSize="12" Opacity="0.8"/>
+                                        <ComboBox ItemsSource="{Binding AvailableFonts}"
+                                                  SelectedItem="{Binding SelectedHeadingFontFamily}"
+                                                  HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+
+                                    <!-- Font Size Scale -->
+                                    <StackPanel Spacing="5">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="Font Size" FontSize="12" Opacity="0.8"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding FontSizeScale, StringFormat={}{0:P0}}"
+                                                       FontSize="12" Opacity="0.8"/>
+                                        </Grid>
+                                        <Slider Minimum="0.8" Maximum="1.3"
+                                                Value="{Binding FontSizeScale}"
+                                                TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                    </StackPanel>
+
+                                    <!-- Line Spacing -->
+                                    <StackPanel Spacing="5">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="Line Spacing" FontSize="12" Opacity="0.8"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding LineSpacing, StringFormat={}{0:F1}}"
+                                                       FontSize="12" Opacity="0.8"/>
+                                        </Grid>
+                                        <Slider Minimum="1.0" Maximum="2.0"
+                                                Value="{Binding LineSpacing}"
+                                                TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                                    </StackPanel>
+
+                                    <!-- Page Margin -->
+                                    <StackPanel Spacing="5">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="Page Margin" FontSize="12" Opacity="0.8"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding PageMargin, StringFormat={}{0:F0}px}"
+                                                       FontSize="12" Opacity="0.8"/>
+                                        </Grid>
+                                        <Slider Minimum="15" Maximum="50"
+                                                Value="{Binding PageMargin}"
+                                                TickFrequency="5" IsSnapToTickEnabled="True"/>
+                                    </StackPanel>
+
+                                    <!-- Section Spacing -->
+                                    <StackPanel Spacing="5">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="Section Spacing" FontSize="12" Opacity="0.8"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding SectionSpacing, StringFormat={}{0:F0}px}"
+                                                       FontSize="12" Opacity="0.8"/>
+                                        </Grid>
+                                        <Slider Minimum="5" Maximum="30"
+                                                Value="{Binding SectionSpacing}"
+                                                TickFrequency="5" IsSnapToTickEnabled="True"/>
+                                    </StackPanel>
+
+                                    <!-- Reset Button -->
+                                    <Button Content="Reset to Defaults"
+                                            Command="{Binding ResetCustomizationCommand}"
+                                            HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

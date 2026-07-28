@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.EducationSection"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Education" FontWeight="SemiBold" FontSize="14"/>
+                                    <Button Grid.Column="1" Content="+ Add" Command="{Binding AddEducationCommand}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding EducationList}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:EducationViewModel">
+                                            <Border Background="{DynamicResource RbSurface2}"
+                                                    CornerRadius="4" Padding="10" Margin="0,5">
+                                                <StackPanel Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                                        <TextBox Grid.Column="0" Watermark="Degree" Text="{Binding Degree}" AutomationProperties.Name="Degree"/>
+                                                        <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Move Up"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveEducationUpCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Grid.Column="2" Content="v" Width="28" Margin="2,0,0,0"
+                                                                ToolTip.Tip="Move Down"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveEducationDownCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Grid.Column="3" Content="X" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Remove"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveEducationCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </Grid>
+                                                    <TextBox Watermark="Field of Study" Text="{Binding FieldOfStudy}" AutomationProperties.Name="Field of Study"/>
+                                                    <TextBox Watermark="Institution" Text="{Binding Institution}" AutomationProperties.Name="Institution"/>
+                                                    <TextBox Watermark="Location" Text="{Binding Location}" AutomationProperties.Name="Location"/>
+                                                    <Grid ColumnDefinitions="Auto,20,Auto,10,*">
+                                                        <ComboBox Grid.Column="0" Width="80"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding StartYear}"
+                                                                  PlaceholderText="Start Year"/>
+                                                        <ComboBox Grid.Column="2" Width="80"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding EndYear}"
+                                                                  IsEnabled="{Binding !IsCurrentlyStudying}"
+                                                                  PlaceholderText="End Year"/>
+                                                        <CheckBox Grid.Column="4" Content="Currently studying"
+                                                                  IsChecked="{Binding IsCurrentlyStudying}"/>
+                                                    </Grid>
+                                                    <TextBox Watermark="Grade/GPA" Text="{Binding Grade}" AutomationProperties.Name="Grade/GPA"/>
+                                                    <TextBox Watermark="Description" Text="{Binding Description}"
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Description"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

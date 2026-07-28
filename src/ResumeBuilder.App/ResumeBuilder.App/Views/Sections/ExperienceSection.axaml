@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.Sections.ExperienceSection"
+             x:DataType="vm:MainWindowViewModel">
+
+                        <Border Background="{DynamicResource RbSurface1}"
+                                CornerRadius="8" Padding="15">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Work Experience" FontWeight="SemiBold" FontSize="14"/>
+                                    <Button Grid.Column="1" Content="+ Add" Command="{Binding AddExperienceCommand}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Experiences}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ExperienceViewModel">
+                                            <Border Background="{DynamicResource RbSurface2}"
+                                                    CornerRadius="4" Padding="10" Margin="0,5">
+                                                <StackPanel Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                                                        <TextBox Grid.Column="0" Watermark="Job Title" Text="{Binding JobTitle}" AutomationProperties.Name="Job Title"/>
+                                                        <Button Grid.Column="1" Content="^" Width="28" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Move Up"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceUpCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Grid.Column="2" Content="v" Width="28" Margin="2,0,0,0"
+                                                                ToolTip.Tip="Move Down"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceDownCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Grid.Column="3" Content="X" Margin="5,0,0,0"
+                                                                ToolTip.Tip="Remove"
+                                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveExperienceCommand}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </Grid>
+                                                    <TextBox Watermark="Company" Text="{Binding Company}" AutomationProperties.Name="Company"/>
+                                                    <TextBox Watermark="Location" Text="{Binding Location}" AutomationProperties.Name="Location"/>
+                                                    <Grid ColumnDefinitions="Auto,5,Auto,20,Auto,5,Auto,10,Auto">
+                                                        <ComboBox Grid.Column="0" Width="70"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                  SelectedItem="{Binding StartMonthName}"
+                                                                  PlaceholderText="Month"/>
+                                                        <ComboBox Grid.Column="2" Width="80"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding StartYear}"
+                                                                  PlaceholderText="Year"/>
+                                                        <TextBlock Grid.Column="3" Text="to" VerticalAlignment="Center"/>
+                                                        <ComboBox Grid.Column="4" Width="70"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Months}"
+                                                                  SelectedItem="{Binding EndMonthName}"
+                                                                  IsEnabled="{Binding !IsCurrentRole}"
+                                                                  PlaceholderText="Month"/>
+                                                        <ComboBox Grid.Column="6" Width="80"
+                                                                  ItemsSource="{x:Static vm:DateOptions.Years}"
+                                                                  SelectedItem="{Binding EndYear}"
+                                                                  IsEnabled="{Binding !IsCurrentRole}"
+                                                                  PlaceholderText="Year"/>
+                                                        <CheckBox Grid.Column="8" Content="Current" IsChecked="{Binding IsCurrentRole}"/>
+                                                    </Grid>
+                                                    <TextBox Watermark="Description" Text="{Binding Description}"
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Description"/>
+                                                    <TextBox Watermark="Achievements (one per line)" Text="{Binding Achievements}"
+                                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" AutomationProperties.Name="Achievements"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+</UserControl>

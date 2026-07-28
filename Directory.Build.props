@@ -8,6 +8,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 
+    <!-- Symbols travel inside the assembly instead of as sidecar .pdb files. Keeps a single-file
+         publish actually single (project-reference .pdbs are copied to the publish dir otherwise)
+         and means stack traces in bug reports keep their line numbers. -->
+    <DebugType>embedded</DebugType>
+
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>

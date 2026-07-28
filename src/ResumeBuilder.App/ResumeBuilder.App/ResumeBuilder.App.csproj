@@ -5,6 +5,32 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
+  <!-- Distribution. These live here and not in Directory.Build.props on purpose: the class
+       libraries and the test project must stay RID-agnostic, and a self-contained test host
+       would just slow the suite down. -->
+  <PropertyGroup>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <!-- Only when a RID is actually selected (`dotnet publish -r win-x64`). Setting SelfContained
+       or PublishSingleFile unconditionally makes the plain `dotnet build ResumeBuilder.sln`
+       fail with NETSDK1031 — both require a RuntimeIdentifier. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <!-- SkiaSharp, HarfBuzz and e_sqlite3 ship as native libs, and QuestPDF ships 12 MB of Lato
+         (its fallback font) as loose content. Without these two, the "single file" arrives with a
+         LatoFont/ folder and native .dlls beside it. Content is extracted once per version to
+         %TEMP%/.net on first launch, so the startup cost is paid only after an update. -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- Trimming is not safe here: EF Core builds its model by reflection, QuestPDF discovers
+         components by reflection, and Avalonia resolves XAML types by name. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>

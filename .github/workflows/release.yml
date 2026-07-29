@@ -150,6 +150,11 @@ jobs:
     needs: package
     runs-on: ubuntu-latest
     steps:
+      # Must come first. actions/checkout cleans the workspace, so running it after the artifacts
+      # are downloaded and flattened deletes them - which is exactly how 1.2.0 failed, with all
+      # four platforms built and nothing left to publish.
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -174,8 +179,6 @@ jobs:
             ver="${GITHUB_REF_NAME#v}"
           fi
           echo "tag=v$ver" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/checkout@v4
 
       # The release notes are the changelog entry, not a list of commit subjects. Commit subjects
       # describe what changed in the code; the changelog says what changed for the person reading

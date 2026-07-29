@@ -61,7 +61,7 @@ Two things worth keeping:
 
 **Let the 1.0.3 PR merge first, then submit 1.2.0 separately. Do not update the open one.**
 
-The instinct is to bump the pending PR to 1.1.1 since 1.0.3 is two versions behind. Don't:
+The instinct is to bump the pending PR to 1.2.0 since 1.0.3 is three versions behind. Don't:
 
 - **Pushing to that branch restarts validation and loses its queue position** — trading a
   nearly-approved PR for a fresh one at the back of the line.

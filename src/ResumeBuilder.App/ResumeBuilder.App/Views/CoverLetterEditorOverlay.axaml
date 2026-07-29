@@ -6,14 +6,20 @@
              x:Class="ResumeBuilder.App.Views.CoverLetterEditorOverlay"
              x:DataType="vm:MainWindowViewModel">
 
-        <Border Background="#80000000">
-            <Border Background="{DynamicResource RbSurface1}"
-                    CornerRadius="12" Margin="40" Padding="20">
+        <!-- Full surface rather than a scrim-and-margin dialog. A cover letter is a document you
+             work in for a while, not a prompt to dismiss, and the modal treatment made it read as
+             the latter — it also dimmed a preview the user is trying to read. It keeps its own
+             header instead of the résumé command bar because the actions genuinely differ, and it
+             needs no navigation rail: a letter has one section. -->
+        <Border Background="{DynamicResource RbBg}">
+            <Border Padding="20">
                 <Grid RowDefinitions="Auto,*,Auto">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="Cover Letter" FontSize="24" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding LetterSaveStateText}" FontSize="12" Opacity="0.7"
+                            <TextBlock Text="Cover Letter" FontSize="20" FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding LetterSaveStateText}" FontSize="12"
+                                       Foreground="{DynamicResource RbText2}"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
@@ -32,11 +38,11 @@
                                     </MenuFlyout>
                                 </SplitButton.Flyout>
                             </SplitButton>
-                            <Button Content="Close" Command="{Binding CloseCoverLetterEditorCommand}"/>
+                            <Button Content="Done" Classes="accent" Command="{Binding CloseCoverLetterEditorCommand}"/>
                         </StackPanel>
                     </Grid>
 
-                    <Grid Grid.Row="1" ColumnDefinitions="420,*">
+                    <Grid Grid.Row="1" ColumnDefinitions="460,*">
                         <!-- Letter Editor -->
                         <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled"
                                       VerticalScrollBarVisibility="Auto" Margin="0,0,15,0">

@@ -5,6 +5,35 @@ list of commits. This file *is* the GitHub release notes — the release workflo
 section matching the tag and fails the build if there isn't one.
 
 
+## 1.2.0
+
+Keeping track of where your résumés actually went.
+
+### Added
+
+- **Applications.** Track which résumé you sent to which company, when, and what happened. The
+  point is the moment weeks later when they call: one click opens the exact version they read,
+  with the bullets you rewrote for them. Anything waiting on a reply for more than a fortnight is
+  marked *worth chasing*, and the header tells you what needs attention — "14 tracked · 3 waiting ·
+  2 silent 2+ weeks".
+- **One-click cloud sync.** The sync panel now finds your Google Drive, OneDrive, Dropbox or
+  iCloud folder and offers it as a button, instead of asking you to type a path. Your résumés live
+  in the cloud folder you already have; no account, no upload to us.
+- **The first-run screen says what the app does** — tailoring, ATS keyword checking, cover letters
+  — rather than only how to start a document.
+
+### Changed
+
+- **Experience entries fold up.** Each collapses to its job title, company and dates, so a
+  six-role history is a list you can scan rather than a page you scroll.
+- **The cover letter editor uses the whole window** instead of a dimmed dialog, so the preview
+  stays readable while you write.
+
+### Fixed
+
+- **Your résumés are backed up before any upgrade that changes the database.** The last three
+  copies are kept. Nothing you have written should ever depend on an upgrade going perfectly.
+
 ## 1.1.1
 
 ### Fixed

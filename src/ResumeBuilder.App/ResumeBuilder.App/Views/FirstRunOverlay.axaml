@@ -77,6 +77,31 @@
 
                 </UniformGrid>
 
+                <!-- What the app does after the form is filled in. Without this the first session
+                     ends at "typed my details, exported a PDF" and the rest is never found —
+                     which is the difference between a form with a PDF button and a tool someone
+                     comes back to. Three capabilities, not a feature list. -->
+                <UniformGrid Columns="3" Margin="0,2,0,0">
+                    <StackPanel Spacing="3" Margin="7,0">
+                        <TextBlock Text="Tailor to a job" FontSize="12.5" FontWeight="SemiBold"/>
+                        <TextBlock Text="Paste a job posting and rewrite your bullets against it, keeping a separate version per application."
+                                   FontSize="11.5" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource RbText2}"/>
+                    </StackPanel>
+                    <StackPanel Spacing="3" Margin="7,0">
+                        <TextBlock Text="Check it against the ATS" FontSize="12.5" FontWeight="SemiBold"/>
+                        <TextBlock Text="See which keywords from the posting you are missing. Runs on this machine — no AI needed."
+                                   FontSize="11.5" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource RbText2}"/>
+                    </StackPanel>
+                    <StackPanel Spacing="3" Margin="7,0">
+                        <TextBlock Text="Write the cover letter" FontSize="12.5" FontWeight="SemiBold"/>
+                        <TextBlock Text="Draft one from the résumé you already have, in three templates."
+                                   FontSize="11.5" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource RbText2}"/>
+                    </StackPanel>
+                </UniformGrid>
+
                 <!-- Stated once, here, at the moment someone decides whether to trust this with
                      their employment history. Repeating it everywhere turns it into chrome. -->
                 <Border Background="{DynamicResource RbSuccessBg}"

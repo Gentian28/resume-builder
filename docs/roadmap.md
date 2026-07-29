@@ -40,10 +40,13 @@ Tools → Tailor to Job → Save as Variant for This Job
 Tools → Sync         → Show Sync Panel
 ```
 
+*Correction: tailoring itself is not buried — the three-zone redesign put "Tailor to Job" in the
+command bar. What is buried is saving the result as a variant, and sync.*
+
 So the realistic first session is: install, pick a template, fill in the form, export a PDF, done.
-That user never learns the app can rewrite their bullets against a job posting, keep a tailored
-version per application, or put their résumés on Drive. They have used a form with a PDF button,
-and they will describe it to other people that way.
+That user may notice the tailor button, but never learns they can keep a tailored version per
+application or put their résumés on Drive — and the first-run screen, the one place with their
+full attention, says nothing about what the app does beyond starting a document.
 
 None of this needs new features. It needs three existing ones surfaced at the moment they are
 relevant rather than filed under Tools:

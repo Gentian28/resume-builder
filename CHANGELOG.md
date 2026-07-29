@@ -1,5 +1,10 @@
 # Changelog
 
+Every released version and what changed in it, written for the person reading it rather than as a
+list of commits. This file *is* the GitHub release notes — the release workflow extracts the
+section matching the tag and fails the build if there isn't one.
+
+
 ## 1.1.1
 
 ### Fixed

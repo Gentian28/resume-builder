@@ -175,11 +175,32 @@ jobs:
           fi
           echo "tag=v$ver" >> "$GITHUB_OUTPUT"
 
+      - uses: actions/checkout@v4
+
+      # The release notes are the changelog entry, not a list of commit subjects. Commit subjects
+      # describe what changed in the code; the changelog says what changed for the person reading
+      # it, which is the only thing a release page is for.
+      - name: Extract the changelog section
+        shell: bash
+        run: |
+          ver="${{ steps.v.outputs.tag }}"
+          ver="${ver#v}"
+          awk -v v="$ver" '
+            $0 ~ "^## +" v "( |$)" { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > NOTES.md
+          if [ ! -s NOTES.md ]; then
+            echo "::error::no CHANGELOG.md section for $ver"
+            exit 1
+          fi
+          cat NOTES.md
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: out/**
           tag_name: ${{ steps.v.outputs.tag }}
           draft: true          # reviewed before it goes public
-          generate_release_notes: true
+          body_path: NOTES.md
           fail_on_unmatched_files: true

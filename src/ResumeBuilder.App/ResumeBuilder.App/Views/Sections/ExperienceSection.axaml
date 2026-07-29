@@ -24,24 +24,45 @@
                                      share a row with the job-title box, which is what stopped that
                                      field taking a label: stacking one above the box pushed the
                                      buttons out of vertical alignment. The header also names the
-                                     entry, so a long list stays readable while scrolling. -->
-                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                                    <TextBlock Text="{Binding JobTitle}" FontSize="12.5" FontWeight="SemiBold"
-                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                               Foreground="{DynamicResource RbText2}"/>
-                                    <Button Grid.Column="1" Content="^" Width="28" Padding="0"
+                                     entry, so a long list stays readable while scrolling, and
+                                     doubles as the collapse toggle — six roles fully expanded is a
+                                     page of form to scroll past to reach the one you came for. -->
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                                    <Button Grid.Column="0" Width="22" Padding="0" Margin="0,0,5,0"
+                                            Background="Transparent" BorderThickness="0"
+                                            Content="{Binding IsExpanded, Converter={x:Static conv:BoolToChevronConverter.Instance}}"
+                                            ToolTip.Tip="Show or hide this entry"
+                                            AutomationProperties.Name="Show or hide this entry"
+                                            Command="{Binding ToggleExpandedCommand}"/>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding Headline}" FontSize="12.5" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource RbText2}"/>
+                                        <!-- Company and dates, so a collapsed row still identifies
+                                             itself when several roles share a job title. -->
+                                        <TextBlock Text="{Binding Subtitle}" FontSize="11.5"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   IsVisible="{Binding !IsExpanded}"
+                                                   Foreground="{DynamicResource RbText3}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Content="^" Width="28" Padding="0"
                                             ToolTip.Tip="Move up" AutomationProperties.Name="Move up"
                                             Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceUpCommand}"
                                             CommandParameter="{Binding}"/>
-                                    <Button Grid.Column="2" Content="v" Width="28" Padding="0" Margin="3,0,0,0"
+                                    <Button Grid.Column="3" Content="v" Width="28" Padding="0" Margin="3,0,0,0"
                                             ToolTip.Tip="Move down" AutomationProperties.Name="Move down"
                                             Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveExperienceDownCommand}"
                                             CommandParameter="{Binding}"/>
-                                    <Button Grid.Column="3" Content="X" Width="28" Padding="0" Margin="6,0,0,0"
+                                    <Button Grid.Column="4" Content="X" Width="28" Padding="0" Margin="6,0,0,0"
                                             ToolTip.Tip="Remove" AutomationProperties.Name="Remove"
                                             Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveExperienceCommand}"
                                             CommandParameter="{Binding}"/>
                                 </Grid>
+
+                                <!-- Every field collapses together; the header row stays, so a long
+                                     list reads as a list of roles rather than a wall of form. -->
+                                <StackPanel Spacing="9" IsVisible="{Binding IsExpanded}">
 
                                 <StackPanel Spacing="3">
                                     <TextBlock Classes="fieldlabel" Text="Job title"/>
@@ -133,6 +154,8 @@
                                     <Button Content="+ Add achievement" Padding="8,3" FontSize="11.5"
                                             HorizontalAlignment="Left"
                                             Command="{Binding AddAchievementCommand}"/>
+                                </StackPanel>
+
                                 </StackPanel>
 
                             </StackPanel>

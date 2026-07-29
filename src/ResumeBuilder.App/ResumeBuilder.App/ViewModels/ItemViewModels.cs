@@ -99,6 +99,44 @@ public partial class AchievementLineViewModel : ObservableObject
 
 public partial class ExperienceViewModel : ItemViewModelBase
 {
+    /// <summary>
+    /// Whether this entry's fields are showing. Collapsed entries render as a one-line summary,
+    /// because six roles fully expanded is a page of form the user has to scroll past to reach
+    /// the one they came to edit.
+    ///
+    /// Not persisted: which entry you were editing is a fact about this session, and restoring it
+    /// days later would be surprising rather than helpful.
+    /// </summary>
+    [ObservableProperty] private bool _isExpanded = true;
+
+    /// <summary>The collapsed line. Falls back to the company, then to a placeholder, so an entry
+    /// mid-typing never renders as a blank clickable row.</summary>
+    public string Headline =>
+        !string.IsNullOrWhiteSpace(JobTitle) ? JobTitle :
+        !string.IsNullOrWhiteSpace(Company) ? Company :
+        "New role";
+
+    /// <summary>Company and dates, shown beside the headline when collapsed.</summary>
+    public string Subtitle
+    {
+        get
+        {
+            var dates = (StartYear, EndYear, IsCurrentRole) switch
+            {
+                (null, _, _) => "",
+                ({ } start, _, true) => $"{start} – present",
+                ({ } start, { } end, _) => start == end ? $"{start}" : $"{start} – {end}",
+                ({ } start, null, _) => $"{start}"
+            };
+
+            var company = string.IsNullOrWhiteSpace(Company) || Company == Headline ? "" : Company;
+            return string.Join(" · ", new[] { company, dates }.Where(s => !string.IsNullOrWhiteSpace(s)));
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleExpanded() => IsExpanded = !IsExpanded;
+
     [ObservableProperty] private string _jobTitle = "";
     [ObservableProperty] private string _company = "";
     [ObservableProperty] private string _location = "";
@@ -126,8 +164,24 @@ public partial class ExperienceViewModel : ItemViewModelBase
         RebuildAchievementItems();
     }
 
-    partial void OnJobTitleChanged(string? oldValue, string newValue) => TextChanged(nameof(JobTitle), oldValue, newValue, v => JobTitle = v);
-    partial void OnCompanyChanged(string? oldValue, string newValue) => TextChanged(nameof(Company), oldValue, newValue, v => Company = v);
+    partial void OnJobTitleChanged(string? oldValue, string newValue)
+    {
+        TextChanged(nameof(JobTitle), oldValue, newValue, v => JobTitle = v);
+        RefreshSummary();
+    }
+
+    partial void OnCompanyChanged(string? oldValue, string newValue)
+    {
+        TextChanged(nameof(Company), oldValue, newValue, v => Company = v);
+        RefreshSummary();
+    }
+
+    /// <summary>Headline and Subtitle are computed from the fields, so they need telling.</summary>
+    private void RefreshSummary()
+    {
+        OnPropertyChanged(nameof(Headline));
+        OnPropertyChanged(nameof(Subtitle));
+    }
     partial void OnLocationChanged(string? oldValue, string newValue) => TextChanged(nameof(Location), oldValue, newValue, v => Location = v);
     partial void OnDescriptionChanged(string? oldValue, string newValue) => TextChanged(nameof(Description), oldValue, newValue, v => Description = v);
     partial void OnAchievementsChanged(string? oldValue, string newValue)
@@ -257,10 +311,22 @@ public partial class ExperienceViewModel : ItemViewModelBase
         CommitAchievementItems();
     }
     partial void OnStartMonthNameChanged(string? value) => ValueChanged();
-    partial void OnStartYearChanged(int? value) => ValueChanged();
+    partial void OnStartYearChanged(int? value)
+    {
+        ValueChanged();
+        RefreshSummary();
+    }
     partial void OnEndMonthNameChanged(string? value) => ValueChanged();
-    partial void OnEndYearChanged(int? value) => ValueChanged();
-    partial void OnIsCurrentRoleChanged(bool value) => ValueChanged();
+    partial void OnEndYearChanged(int? value)
+    {
+        ValueChanged();
+        RefreshSummary();
+    }
+    partial void OnIsCurrentRoleChanged(bool value)
+    {
+        ValueChanged();
+        RefreshSummary();
+    }
 
     public Experience ToModel(int order) => new()
     {

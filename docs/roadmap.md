@@ -90,15 +90,33 @@ Rough shape: a `JobApplication` entity (company, role, variant, applied date, st
 optional link), a board view, five-ish statuses. The export layer already writes JSON, so "export
 my applications" is nearly free.
 
-## 3. Finish the polish already specced
+## 3. Finish the polish already specced — done, except one decision
 
-Small, known, and specced in `docs/ui-redesign-proposal.md`:
+- ~~Collapse entries~~ — done. Each folds to a chevron, headline and dates.
+- ~~Cover letters off the modal treatment~~ — done. Full surface; kept its own header, since a
+  letter has one section and genuinely different actions.
+- **API key persistence — still open, and it is yours to call.**
 
-- Collapse all but the entry being edited — Experience gets long with several roles.
-- Move cover letters onto the three-zone surface; they still use the old overlay.
-- Decide whether API keys persist. They are memory-only today and the privacy notice promises
-  exactly that, so re-entering a key every launch is the honest cost of that promise. If it
-  changes, it should be opt-in and use the OS credential store — never a config file.
+### The API key decision
+
+Keys are held in memory for the session only, and the AI panel says exactly that. With two
+providers, re-entering a key every launch is real friction — but the fix changes a promise the
+product makes, so it should not be made quietly.
+
+Three options:
+
+1. **Leave it.** The promise stays absolute and needs no caveat. Cost: friction every launch,
+   which is worst for exactly the users who use AI most.
+2. **Opt-in, OS credential store.** A "remember this key" checkbox writing to Windows DPAPI /
+   macOS Keychain / libsecret. Honest, and off by default — but that is three platform
+   integrations, and a half-done version that silently falls back to a plain file on Linux would
+   be worse than not offering it, because the notice would then be lying on that platform.
+3. **Opt-in, Windows only.** Ship where the credential store is a one-liner, hide the option
+   elsewhere. Pragmatic, at the cost of an inconsistent product.
+
+**Recommendation: (1) until someone asks.** The friction is real but the promise is the product's
+main differentiator, and no user has yet said the current behaviour bothers them. If it does come
+up, (2) properly — not (3).
 
 ## 4. The web version — a decision, not a plan
 

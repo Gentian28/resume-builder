@@ -3,6 +3,7 @@
              xmlns:vm="using:ResumeBuilder.App.ViewModels"
              xmlns:conv="using:ResumeBuilder.App.Converters"
              xmlns:models="using:ResumeBuilder.Core.Models"
+             xmlns:sync="using:ResumeBuilder.Core.Sync"
              x:Class="ResumeBuilder.App.Views.Sections.SyncPanelView"
              x:DataType="vm:MainWindowViewModel">
 
@@ -15,12 +16,35 @@
                                             Command="{Binding ToggleSyncPanelCommand}"/>
                                 </Grid>
 
-                                <TextBlock Text="Two-way sync with a local folder (which can itself be a cloud-synced folder like Dropbox, OneDrive, or Google Drive). Newer changes are copied in both directions."
+                                <TextBlock Text="Keep your résumés in a folder that syncs itself — Google Drive, OneDrive, Dropbox — and they follow you to every machine. Changes are copied both ways; the newer one wins."
                                            FontSize="11" Opacity="0.7" TextWrapping="Wrap"/>
+
+                                <!-- One click per cloud folder actually present on this machine.
+                                     Hidden entirely when none are installed, rather than showing
+                                     an empty row that implies something is missing. -->
+                                <StackPanel Spacing="5" IsVisible="{Binding HasDetectedCloudFolders}">
+                                    <TextBlock Text="Found on this computer" FontSize="12" FontWeight="SemiBold"/>
+                                    <ItemsControl ItemsSource="{Binding DetectedCloudFolders}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="sync:CloudFolder">
+                                                <Button Content="{Binding Name}"
+                                                        Padding="9,4" FontSize="11.5" Margin="0,0,5,5"
+                                                        ToolTip.Tip="{Binding Path}"
+                                                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).UseCloudFolderCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
 
                                 <!-- Configuration -->
                                 <StackPanel Spacing="5">
-                                    <TextBlock Text="Sync Folder:" FontSize="12"/>
+                                    <TextBlock Text="Or choose a folder:" FontSize="12"/>
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBox Text="{Binding SyncFolderPath}"
                                                  Watermark="C:\Users\...\ResumeBackups" AutomationProperties.Name="C:\Users\...\ResumeBackups"/>

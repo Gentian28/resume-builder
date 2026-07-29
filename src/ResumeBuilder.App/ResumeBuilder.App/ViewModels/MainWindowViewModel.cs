@@ -2171,6 +2171,31 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
     }
 
+    /// <summary>
+    /// Cloud folders found on this machine, offered as one-click choices.
+    ///
+    /// The panel used to ask for a folder path, which is a question most people cannot answer
+    /// without going to look — so the feature that puts résumés on Drive read as a technical
+    /// setting. Detecting what is already mounted turns it into picking a name.
+    /// </summary>
+    public IReadOnlyList<CloudFolder> DetectedCloudFolders { get; } = CloudFolders.Detect();
+
+    public bool HasDetectedCloudFolders => DetectedCloudFolders.Count > 0;
+
+    /// <summary>
+    /// Fills in a subfolder of the chosen cloud folder and configures sync in one step — picking
+    /// "Google Drive" should not then require a second click on Configure.
+    /// </summary>
+    [RelayCommand]
+    private async Task UseCloudFolderAsync(CloudFolder? folder)
+    {
+        if (folder is null)
+            return;
+
+        SyncFolderPath = CloudFolders.SuggestSyncPath(folder);
+        await ConfigureSyncAsync();
+    }
+
     [RelayCommand]
     private async Task ConfigureSyncAsync()
     {

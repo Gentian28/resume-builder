@@ -2,14 +2,14 @@
 
 > Everything automatable is automated. This is what needs a human, in the order it needs one.
 
-**v1.1.1 is live.** Downloads serve it on all four platforms and existing installs auto-update.
+**v1.2.0 is live.** Downloads serve it on all four platforms and existing installs auto-update.
 Nothing here is blocking a user from installing the app — the rest is reach and polish.
 
 | # | What | Status |
 |---|---|---|
 | 1 | Send screenshots to the portfolio session | **ready — your move** |
 | 2 | winget PR #408983 for 1.0.3 | waiting on a moderator |
-| 3 | Submit winget 1.1.1 | blocked on 2 |
+| 3 | Submit winget 1.2.0 | blocked on 2 |
 | 4 | Turn on automatic winget submission | blocked on 2 |
 | 5 | SignPath code-signing | waiting on review |
 | 6 | macOS notarisation | optional, costs $99/yr |
@@ -32,7 +32,7 @@ Without the key those three tests report **Skipped**, which is how CI stays offl
 ## 1. Send the screenshots to the portfolio session
 
 The message itself is in `docs/portfolio-message-today.md` and is version-agnostic — it needs no
-edit now that 1.1.1 is out, because the download links always resolve to the newest release.
+edit now that 1.2.0 is out, because the download links always resolve to the newest release.
 
 What that session still needs is the image files: `docs/screenshots/editor.png`,
 `template-gallery.png`, `first-run.png`. Have them committed into the portfolio repo rather than
@@ -57,9 +57,9 @@ Two things worth keeping:
 
 ---
 
-## 3. Submit winget 1.1.1 — after #408983 merges
+## 3. Submit winget 1.2.0 — after #408983 merges
 
-**Let the 1.0.3 PR merge first, then submit 1.1.1 separately. Do not update the open one.**
+**Let the 1.0.3 PR merge first, then submit 1.2.0 separately. Do not update the open one.**
 
 The instinct is to bump the pending PR to 1.1.1 since 1.0.3 is two versions behind. Don't:
 
@@ -67,15 +67,15 @@ The instinct is to bump the pending PR to 1.1.1 since 1.0.3 is two versions behi
   nearly-approved PR for a fresh one at the back of the line.
 - **The first submission is the expensive one.** It carries package-identity review — publisher,
   package ID, licence, installer type. Later version bumps are near-automatic. Merging 1.0.3 buys
-  that scrutiny once; 1.1.1 then rides through on the established identity.
+  that scrutiny once; 1.2.0 then rides through on the established identity.
 - **The 1.0.3 manifest stays valid.** It points at v1.0.3 assets, which are not deleted, and
-  anyone who installs it is auto-updated to 1.1.1 on next launch. Nobody is stranded.
+  anyone who installs it is auto-updated to 1.2.0 on next launch. Nobody is stranded.
 
 Then:
 
 ```powershell
-.\packaging\winget\new-version.ps1 -Version 1.1.1
-wingetcreate submit --token <github-PAT> packaging\winget\1.1.1
+.\packaging\winget\new-version.ps1 -Version 1.2.0
+wingetcreate submit --token <github-PAT> packaging\winget\1.2.0
 ```
 
 `new-version.ps1` must run **after** publishing — it reads the released `SHA256SUMS` so the hash
@@ -92,7 +92,7 @@ winget settings --enable LocalManifestFiles
 Then from a normal PowerShell (Velopack installs per-user, nothing to elevate):
 
 ```powershell
-winget install --manifest C:\Users\Pc\source\repos\resumebuilder\packaging\winget\1.1.1
+winget install --manifest C:\Users\Pc\source\repos\resumebuilder\packaging\winget\1.2.0
 winget uninstall Gentian28.ResumeBuilder
 ```
 
@@ -112,7 +112,7 @@ A hash mismatch means the manifest and the release have drifted — regenerate w
 
 **This has never run.** The individual commands are the ones you ran by hand for 1.0.3, but the
 workflow around them is untested. Try it manually first — Actions → Submit to winget → Run workflow
-→ `1.1.1` — rather than finding out during a real release.
+→ `1.2.0` — rather than finding out during a real release.
 
 ---
 

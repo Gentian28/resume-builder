@@ -2,36 +2,23 @@
 
 > Everything automatable is automated. This is what needs a human, in the order it needs one.
 
-**Right now:** publish the v1.1.0 draft. Everything else is either waiting on someone else or
-optional.
+**v1.1.1 is live.** Downloads serve it on all four platforms and existing installs auto-update.
+Nothing here is blocking a user from installing the app — the rest is reach and polish.
 
 | # | What | Status |
 |---|---|---|
-| 1 | Publish the v1.1.0 draft release | **ready — one click** |
-| 2 | Send screenshots to the portfolio session | ready |
-| 3 | winget PR #408983 for 1.0.3 | waiting on a moderator |
-| 4 | Submit winget 1.1.0 | blocked on 3 |
-| 5 | Turn on automatic winget submission | blocked on 3 |
-| 6 | SignPath code-signing | waiting on review |
-| 7 | macOS notarisation | optional, costs $99/yr |
+| 1 | Send screenshots to the portfolio session | **ready — your move** |
+| 2 | winget PR #408983 for 1.0.3 | waiting on a moderator |
+| 3 | Submit winget 1.1.1 | blocked on 2 |
+| 4 | Turn on automatic winget submission | blocked on 2 |
+| 5 | SignPath code-signing | waiting on review |
+| 6 | macOS notarisation | optional, costs $99/yr |
+| — | Verify the Anthropic provider against the real API | optional, 60 seconds |
 
----
+### Still unverified: the Anthropic provider
 
-## 1. Publish the v1.1.0 draft — DO THIS FIRST
-
-The release is **built and waiting**. Tag `v1.1.0` pushed, all four platforms packaged, 27 assets
-uploaded, sitting as a draft.
-
-**Releases → v1.1.0 (Draft) → Publish release.**
-
-Until you click that, nothing has changed for anyone: `releases/latest/download/` still serves
-1.0.3 and no installed copy auto-updates. Publishing does two things at once — the download URLs
-start resolving to 1.1.0, and the Velopack feed updates so **every existing 1.0.3 install picks up
-1.1.0 on next launch**.
-
-**Optional first — verify the Anthropic provider against the real API.** It is the one surface in
-this release nothing has exercised: it compiles and every offline test passes, but no request has
-been made. Costs a fraction of a cent:
+It is the one surface nothing has exercised — it compiles and every offline test passes, but no
+real request has ever been made. If you have a key it costs a fraction of a cent:
 
 ```powershell
 $env:ANTHROPIC_API_KEY = "sk-ant-..."
@@ -40,15 +27,12 @@ dotnet test ResumeBuilder.sln --filter "FullyQualifiedName~AnthropicLiveTests"
 
 Without the key those three tests report **Skipped**, which is how CI stays offline and green.
 
-If you have no key, publish anyway — the provider degrades to an error message rather than
-crashing, AI is optional, and the rest of the release stands on its own.
-
 ---
 
-## 2. Send the screenshots to the portfolio session
+## 1. Send the screenshots to the portfolio session
 
 The message itself is in `docs/portfolio-message-today.md` and is version-agnostic — it needs no
-edit now that 1.1.0 exists, because the download links always resolve to the newest release.
+edit now that 1.1.1 is out, because the download links always resolve to the newest release.
 
 What that session still needs is the image files: `docs/screenshots/editor.png`,
 `template-gallery.png`, `first-run.png`. Have them committed into the portfolio repo rather than
@@ -56,7 +40,7 @@ hotlinked from GitHub.
 
 ---
 
-## 3. winget PR #408983 — waiting on a moderator
+## 2. winget PR #408983 — waiting on a moderator
 
 Submitted 2026-07-28 for v1.0.3. CLA signed, checks green. Nothing to do but wait, and
 specifically **do not push to that branch** — new commits restart validation and reset its place
@@ -73,25 +57,25 @@ Two things worth keeping:
 
 ---
 
-## 4. Submit winget 1.1.0 — after #408983 merges
+## 3. Submit winget 1.1.1 — after #408983 merges
 
-**Let the 1.0.3 PR merge first, then submit 1.1.0 separately. Do not update the open one.**
+**Let the 1.0.3 PR merge first, then submit 1.1.1 separately. Do not update the open one.**
 
-The instinct is to bump the pending PR to 1.1.0 since 1.0.3 is superseded. Don't:
+The instinct is to bump the pending PR to 1.1.1 since 1.0.3 is two versions behind. Don't:
 
 - **Pushing to that branch restarts validation and loses its queue position** — trading a
   nearly-approved PR for a fresh one at the back of the line.
 - **The first submission is the expensive one.** It carries package-identity review — publisher,
   package ID, licence, installer type. Later version bumps are near-automatic. Merging 1.0.3 buys
-  that scrutiny once; 1.1.0 then rides through on the established identity.
+  that scrutiny once; 1.1.1 then rides through on the established identity.
 - **The 1.0.3 manifest stays valid.** It points at v1.0.3 assets, which are not deleted, and
-  anyone who installs it is auto-updated to 1.1.0 on next launch. Nobody is stranded.
+  anyone who installs it is auto-updated to 1.1.1 on next launch. Nobody is stranded.
 
 Then:
 
 ```powershell
-.\packaging\winget\new-version.ps1 -Version 1.1.0
-wingetcreate submit --token <github-PAT> packaging\winget\1.1.0
+.\packaging\winget\new-version.ps1 -Version 1.1.1
+wingetcreate submit --token <github-PAT> packaging\winget\1.1.1
 ```
 
 `new-version.ps1` must run **after** publishing — it reads the released `SHA256SUMS` so the hash
@@ -108,7 +92,7 @@ winget settings --enable LocalManifestFiles
 Then from a normal PowerShell (Velopack installs per-user, nothing to elevate):
 
 ```powershell
-winget install --manifest C:\Users\Pc\source\repos\resumebuilder\packaging\winget\1.1.0
+winget install --manifest C:\Users\Pc\source\repos\resumebuilder\packaging\winget\1.1.1
 winget uninstall Gentian28.ResumeBuilder
 ```
 
@@ -117,7 +101,7 @@ A hash mismatch means the manifest and the release have drifted — regenerate w
 
 ---
 
-## 5. Turn on automatic winget submission — after #408983 merges
+## 4. Turn on automatic winget submission — after #408983 merges
 
 `.github/workflows/winget.yml` generates the manifest and opens the PR on every published release.
 **Inert until you opt in**, so it does nothing today.
@@ -128,11 +112,11 @@ A hash mismatch means the manifest and the release have drifted — regenerate w
 
 **This has never run.** The individual commands are the ones you ran by hand for 1.0.3, but the
 workflow around them is untested. Try it manually first — Actions → Submit to winget → Run workflow
-→ `1.1.0` — rather than finding out during a real release.
+→ `1.1.1` — rather than finding out during a real release.
 
 ---
 
-## 6. SignPath code-signing — awaiting review
+## 5. SignPath code-signing — awaiting review
 
 Applied 2026-07-28. Days to a few weeks; it is a human review. The download page and README already
 credit SignPath as the programme requires, marked application-pending rather than claiming signed
@@ -160,7 +144,7 @@ the biggest thing between a stranger and running the app. On approval:
 
 ---
 
-## 7. macOS notarisation — optional
+## 6. macOS notarisation — optional
 
 Needs a paid Apple Developer account ($99/yr) in your name; SignPath does not cover it. Until then
 Mac users allow the app once under **System Settings → Privacy & Security**. Both Mac builds work;
@@ -180,7 +164,7 @@ git tag v1.2.0
 git push public v1.2.0
 ```
 
-~4 minutes → review the draft → **Publish** → winget PR opens itself (once step 5 is on) and users
+~4 minutes → review the draft → **Publish** → winget PR opens itself (once step 4 is on) and users
 auto-update on next launch.
 
 Two things stay manual on purpose:

@@ -697,3 +697,82 @@ public class RemoteResumeViewModel
 
     public string LastModifiedDisplay => LastModified.ToString("g");
 }
+
+/// <summary>
+/// One row in the application tracker. Wraps the entity so status changes save immediately —
+/// a tracker you have to remember to save is a tracker that goes out of date.
+/// </summary>
+public partial class JobApplicationViewModel : ObservableObject
+{
+    private readonly Func<JobApplicationViewModel, Task>? _onChanged;
+    private bool _loading = true;
+
+    [ObservableProperty] private string _company = "";
+    [ObservableProperty] private string _role = "";
+    [ObservableProperty] private ApplicationStatus _status;
+    [ObservableProperty] private string _notes = "";
+    [ObservableProperty] private string _link = "";
+
+    public int Id { get; }
+
+    /// <summary>The résumé that was sent, so the row can open it.</summary>
+    public int? ResumeId { get; }
+
+    public DateTime? AppliedOn { get; }
+
+    /// <summary>"Applied 21 days ago" — the reading that makes the list worth opening.</summary>
+    public string Age => AppliedOn is null
+        ? "Not sent yet"
+        : Days switch
+        {
+            0 => "Applied today",
+            1 => "Applied yesterday",
+            _ => $"Applied {Days} days ago"
+        };
+
+    private int Days => (int)(DateTime.UtcNow.Date - AppliedOn!.Value.Date).TotalDays;
+
+    /// <summary>Waiting on them, long enough to chase.</summary>
+    public bool IsStale => Status == ApplicationStatus.Applied && AppliedOn is not null && Days >= 14;
+
+    public JobApplicationViewModel(JobApplication model, Func<JobApplicationViewModel, Task>? onChanged = null)
+    {
+        Id = model.Id;
+        ResumeId = model.ResumeId;
+        AppliedOn = model.AppliedOn;
+        _company = model.Company;
+        _role = model.Role;
+        _status = model.Status;
+        _notes = model.Notes;
+        _link = model.Link;
+        _onChanged = onChanged;
+        _loading = false;
+    }
+
+    partial void OnStatusChanged(ApplicationStatus value) => Persist();
+    partial void OnCompanyChanged(string value) => Persist();
+    partial void OnRoleChanged(string value) => Persist();
+    partial void OnNotesChanged(string value) => Persist();
+    partial void OnLinkChanged(string value) => Persist();
+
+    private void Persist()
+    {
+        // Skip the writes fired while the constructor assigns initial values.
+        if (_loading || _onChanged is null)
+            return;
+
+        _ = _onChanged(this);
+    }
+
+    public JobApplication ToModel() => new()
+    {
+        Id = Id,
+        ResumeId = ResumeId,
+        Company = Company,
+        Role = Role,
+        Status = Status,
+        AppliedOn = AppliedOn,
+        Notes = Notes,
+        Link = Link
+    };
+}

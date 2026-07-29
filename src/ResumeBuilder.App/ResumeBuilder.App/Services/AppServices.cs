@@ -12,6 +12,7 @@ public class AppServices
 {
     public IResumeRepository Repository { get; }
     public ICoverLetterRepository CoverLetterRepository { get; }
+    public IJobApplicationRepository JobApplicationRepository { get; }
     public TemplateRegistry TemplateRegistry { get; }
     public ExportService ExportService { get; }
     public CoverLetterExportService CoverLetterExportService { get; }
@@ -28,6 +29,7 @@ public class AppServices
     public AppServices(
         IResumeRepository repository,
         ICoverLetterRepository coverLetterRepository,
+        IJobApplicationRepository jobApplicationRepository,
         TemplateRegistry templateRegistry,
         ExportService exportService,
         CoverLetterExportService coverLetterExportService,
@@ -43,6 +45,7 @@ public class AppServices
     {
         Repository = repository;
         CoverLetterRepository = coverLetterRepository;
+        JobApplicationRepository = jobApplicationRepository;
         TemplateRegistry = templateRegistry;
         ExportService = exportService;
         CoverLetterExportService = coverLetterExportService;

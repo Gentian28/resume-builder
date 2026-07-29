@@ -14,6 +14,7 @@ public class ResumeDbContext : DbContext
 
     public DbSet<Resume> Resumes => Set<Resume>();
     public DbSet<CoverLetter> CoverLetters => Set<CoverLetter>();
+    public DbSet<JobApplication> JobApplications => Set<JobApplication>();
 
     private readonly string _dbPath;
 
@@ -48,6 +49,23 @@ public class ResumeDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<JobApplication>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Company).IsRequired().HasMaxLength(200);
+            entity.Property(a => a.Role).HasMaxLength(200);
+            entity.Property(a => a.Link).HasMaxLength(2000);
+            entity.Property(a => a.Notes).HasMaxLength(4000);
+            // Stored as text so the database stays readable and a reordered enum cannot silently
+            // change what every existing row means.
+            entity.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+
+            // No foreign key on purpose. Deleting a resume must not delete the record that you
+            // applied somewhere - the history is worth more than the referential tidiness, and
+            // the tracker copies Company and Role so a row still reads correctly on its own.
+            entity.Ignore(a => a.DaysSinceApplied);
+        });
 
         modelBuilder.Entity<Resume>(entity =>
         {

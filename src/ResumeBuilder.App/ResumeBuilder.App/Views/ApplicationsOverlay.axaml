@@ -1,0 +1,116 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ResumeBuilder.App.ViewModels"
+             xmlns:conv="using:ResumeBuilder.App.Converters"
+             xmlns:models="using:ResumeBuilder.Core.Models"
+             x:Class="ResumeBuilder.App.Views.ApplicationsOverlay"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Border Background="{DynamicResource RbBg}">
+        <Grid RowDefinitions="Auto,*,Auto" Margin="26,22"
+              MaxWidth="1040" HorizontalAlignment="Stretch">
+
+            <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Applications" FontSize="20" FontWeight="SemiBold"/>
+                    <Button Grid.Column="1" Content="Done" Classes="accent"
+                            Command="{Binding CloseApplicationsCommand}"/>
+                </Grid>
+                <!-- Leads with what is waiting on someone else, because that is the only part
+                     the user can act on today. -->
+                <TextBlock Text="{Binding ApplicationSummary}" FontSize="12"
+                           Foreground="{DynamicResource RbText2}"
+                           IsVisible="{Binding HasApplications}"/>
+            </StackPanel>
+
+            <!-- Empty state explains what the thing is for, rather than saying "no items". -->
+            <StackPanel Grid.Row="1" Spacing="9" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        MaxWidth="460" IsVisible="{Binding !HasApplications}">
+                <TextBlock Text="Nothing tracked yet" FontSize="15" FontWeight="SemiBold"
+                           HorizontalAlignment="Center"/>
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center" FontSize="12.5"
+                           Foreground="{DynamicResource RbText2}"
+                           Text="Track an application and this remembers which résumé you sent, when, and what happened — so when they call weeks later you know exactly what they read."/>
+                <Button Content="Track the résumé I have open" HorizontalAlignment="Center"
+                        Classes="accent" Margin="0,6,0,0"
+                        Command="{Binding TrackCurrentResumeCommand}"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" Margin="0,14,0,0" IsVisible="{Binding HasApplications}">
+                <ItemsControl ItemsSource="{Binding Applications}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:JobApplicationViewModel">
+                            <Border Background="{DynamicResource RbSurface1}" CornerRadius="8"
+                                    Padding="14,12" Margin="0,0,0,8">
+                                <StackPanel Spacing="9">
+
+                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                        <StackPanel Spacing="3">
+                                            <TextBox Text="{Binding Company}" Watermark="Company"
+                                                     FontSize="14" FontWeight="SemiBold"
+                                                     AutomationProperties.Name="Company"/>
+                                            <TextBox Text="{Binding Role}" Watermark="Role"
+                                                     FontSize="12"
+                                                     AutomationProperties.Name="Role"/>
+                                        </StackPanel>
+
+                                        <ComboBox Grid.Column="1" MinWidth="130" Margin="10,0,0,0"
+                                                  VerticalAlignment="Top"
+                                                  ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).ApplicationStatuses}"
+                                                  SelectedItem="{Binding Status}"
+                                                  AutomationProperties.Name="Status"/>
+
+                                        <!-- The whole point: open the exact résumé this company
+                                             received. Hidden when the row was never linked to one. -->
+                                        <TextBlock Grid.Column="2" Text="Not linked to a résumé"
+                                                   FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                   Foreground="{DynamicResource RbText3}"
+                                                   IsVisible="{Binding ResumeId, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+                                        <Button Grid.Column="2" Content="Open résumé" Margin="6,0,0,0"
+                                                VerticalAlignment="Top"
+                                                IsVisible="{Binding ResumeId, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).OpenApplicationResumeCommand}"
+                                                CommandParameter="{Binding}"/>
+
+                                        <Button Grid.Column="3" Content="X" Width="28" Padding="0"
+                                                Margin="6,0,0,0" VerticalAlignment="Top"
+                                                ToolTip.Tip="Stop tracking"
+                                                AutomationProperties.Name="Stop tracking"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DeleteApplicationCommand}"
+                                                CommandParameter="{Binding}"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Text="{Binding Age}" FontSize="11.5"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource RbText2}"/>
+                                        <!-- Only shown when it is actually waiting on them and has
+                                             been a while: a nudge, not a decoration. -->
+                                        <Border Grid.Column="1" HorizontalAlignment="Left" Margin="9,0,0,0"
+                                                Background="{DynamicResource RbWarningBg}"
+                                                BorderBrush="{DynamicResource RbWarningBorder}"
+                                                BorderThickness="1" CornerRadius="10" Padding="7,1"
+                                                IsVisible="{Binding IsStale}">
+                                            <TextBlock Text="worth chasing" FontSize="10.5"
+                                                       Foreground="{DynamicResource RbWarning}"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <TextBox Text="{Binding Notes}" Watermark="Notes — who you spoke to, what they asked"
+                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="42"
+                                             FontSize="12" AutomationProperties.Name="Notes"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Button Grid.Row="2" Content="+ Track the résumé I have open" Margin="0,12,0,0"
+                    HorizontalAlignment="Left" IsVisible="{Binding HasApplications}"
+                    Command="{Binding TrackCurrentResumeCommand}"/>
+        </Grid>
+    </Border>
+
+</UserControl>

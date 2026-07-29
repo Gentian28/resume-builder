@@ -38,6 +38,7 @@ public partial class App : Application
 
             var repository = new ResumeRepository(contextFactory);
             var coverLetterRepository = new CoverLetterRepository(contextFactory);
+            var jobApplicationRepository = new JobApplicationRepository(contextFactory);
             var templateRegistry = new TemplateRegistry();
             var exportService = new ExportService(templateRegistry);
             var coverLetterExportService = new CoverLetterExportService(templateRegistry);
@@ -60,6 +61,7 @@ public partial class App : Application
             Services = new AppServices(
                 repository,
                 coverLetterRepository,
+                jobApplicationRepository,
                 templateRegistry,
                 exportService,
                 coverLetterExportService,

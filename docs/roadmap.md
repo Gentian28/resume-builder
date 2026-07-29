@@ -32,36 +32,60 @@ five phases, and an honest risk list. It does not need rewriting. It needs a *de
 
 ## 1. Make what exists discoverable — next
 
-The app has features nobody will find. Sync is behind a panel toggle; variants and tailoring are
-in menus; the achievement-level AI rewrite is invisible until you own an API key. Every one of
-these is built, tested, and shipping — and a first-run user meets none of them.
+**The problem, concretely.** The menu has 30+ items, and the most valuable thing the app does is
+three levels down:
 
-This is the cheapest possible work with the largest effect, because the alternative reading is
-that the app is a form with a PDF button.
+```
+Tools → Tailor to Job → Save as Variant for This Job
+Tools → Sync         → Show Sync Panel
+```
 
-- **Say that folder sync means cloud sync.** The sync panel should name Drive, OneDrive and
-  Dropbox explicitly, and offer a folder picker that starts in the user's Drive folder if one
-  exists. One sentence and a default path turn an obscure feature into the answer to "where are
-  my résumés?"
-- **Surface variants.** Tailoring a résumé per application is the product's real value and it is
-  currently a menu item.
-- **A "what can this do" pass on the first-run screen** — the three routes in are good, but the
-  screen never mentions tailoring, ATS scoring, or cover letters.
+So the realistic first session is: install, pick a template, fill in the form, export a PDF, done.
+That user never learns the app can rewrite their bullets against a job posting, keep a tailored
+version per application, or put their résumés on Drive. They have used a form with a PDF button,
+and they will describe it to other people that way.
+
+None of this needs new features. It needs three existing ones surfaced at the moment they are
+relevant rather than filed under Tools:
+
+- **Exporting a PDF is the moment someone is applying to something.** That is where "tailor this
+  to the job description?" belongs.
+- **Saving a second résumé is the moment "where do these live?" becomes a real question.** That is
+  where sync belongs — and it should name Drive, OneDrive and Dropbox outright, defaulting the
+  folder picker to a Drive folder if one exists. One sentence turns an obscure panel into the
+  answer.
+- **The first-run screen never mentions tailoring, ATS scoring, or cover letters.** The three
+  routes in are right; the pitch is missing.
 
 ## 2. Close the application loop — the highest-value new feature
 
-The data model already carries `TargetRole` and `JobDescription` on variants. That is most of an
-application tracker without knowing it.
+**Where you end up today** after applying to ten jobs the intended way:
 
-A simple board — which variant went to which company, when, and what happened — is a small step
-from what exists, and it is the thing that turns a résumé builder from a tool you use twice into
-one you open weekly. `docs/web-app-plan.md` §7 spotted this too, but filed it as web-only. It is
-not: it needs no server, and shipping it on the desktop first is a way to learn whether people want
-it before paying for infrastructure to host it.
+```
+My Resume
+  └─ Senior Backend Engineer     ← variant: stores TargetRole + JobDescription
+  └─ Platform Engineer           ← variant
+  └─ Senior Backend Engineer     ← ...which company was this one?
+```
+
+A flat list, some entries identically named, no way to tell them apart or see what happened. The
+tailoring work is done and stored — it just isn't organised into anything actionable.
+
+**What is missing is three fields:** company, date applied, status. With those:
+
+> *"14 applications. 3 waiting on me. That one has been silent three weeks. And when Stripe calls
+> on Thursday, this is the exact CV they read, with the bullets I rewrote for them."*
+
+That last clause is the actual feature. **When the interview call comes, you need to know precisely
+what you claimed to that company** — and the app already holds it.
+
+`docs/web-app-plan.md` §7 spotted this too but filed it as web-only. It is not: it needs no server,
+and shipping it on the desktop first is how you learn whether it is what makes people return,
+before paying for infrastructure to host it.
 
 Rough shape: a `JobApplication` entity (company, role, variant, applied date, status, notes,
-optional link), a board view, and a status field with maybe five states. The export layer already
-knows how to write JSON, so "export my applications" is nearly free.
+optional link), a board view, five-ish statuses. The export layer already writes JSON, so "export
+my applications" is nearly free.
 
 ## 3. Finish the polish already specced
 

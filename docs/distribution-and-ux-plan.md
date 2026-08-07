@@ -97,8 +97,9 @@ Consider **Semi.Avalonia** as a modern base theme rather than styling stock Flue
 5. ~~Add Velopack packaging.~~ **Done** — verified locally, see below.
 6. ~~Release workflow: tag → matrix build → package → upload.~~ **Done** —
    `.github/workflows/release.yml`. Not yet exercised on a real runner.
-7. Repo public ~~+ apply for the SignPath OSS certificate~~ — **public done**
-   ([resume-builder](https://github.com/Gentian28/resume-builder)); SignPath still to apply for.
+7. ~~Repo public + apply for the SignPath OSS certificate~~ — **public done**
+   ([resume-builder](https://github.com/Gentian28/resume-builder)); applied 2026-07-28,
+   **declined 2026-07-29** (not enough public adoption yet — reapply once there is).
 8. ~~Download page on the portfolio.~~ **Done** — `docs/download-page/index.html`, also on the
    Portfolio project at claude.ai/design.
 9. Optional channels: winget manifest, then Flathub.
@@ -221,7 +222,12 @@ was latent from the start; CI had only ever run on `windows-latest`. Fixed by re
 4. **Builds are unsigned**, so Windows SmartScreen still warns and macOS Gatekeeper refuses the
    package until allowed by hand. This is the only remaining gap, and it needs a human.
 
-### Applying for the SignPath OSS certificate — needs you, not an agent
+### Applying for the SignPath OSS certificate — applied and declined; reapply later
+
+**Status 2026-08-07: applied 2026-07-28, declined 2026-07-29.** The Foundation programme wants
+public adoption signals (stars, forks, external references, sustained activity) a new project
+doesn't have; they invited reapplying once it does. Everything below still applies to that
+reapplication.
 
 The prerequisite (a public repo under an OSI licence, built in public CI) is now satisfied:
 `resume-builder` is public, MIT, and every release is built by GitHub Actions from public source.

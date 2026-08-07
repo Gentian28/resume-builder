@@ -65,16 +65,14 @@ point that session at it if you want the markup rather than a description.
 
 ---
 
-## winget — leave it out for now
+## winget — live as of 2026-08-07, send the follow-up
 
-`winget install Gentian28.ResumeBuilder` **does not work yet.** The submission
-(microsoft/winget-pkgs#408983) is still open awaiting a moderator, so that command currently
-returns *"No package found matching input criteria"*.
+`winget install Gentian28.ResumeBuilder` **works now.** microsoft/winget-pkgs#408983 merged and
+the publish pipeline completed on 2026-08-07; the package is verified present in the index
+(currently serving 1.0.3, which auto-updates to the latest on first launch — a 1.2.0 manifest
+bump is open as microsoft/winget-pkgs#413617).
 
-Do not put it on the page until the PR merges — a copy-paste command that fails is worse than no
-command, because it reads as a broken project rather than a pending review.
-
-Once it merges, send this follow-up:
+Send this follow-up to the portfolio session:
 
 > The winget submission went through. On the Windows card, add a package-manager option under the
 > download button:
@@ -91,8 +89,9 @@ Once it merges, send this follow-up:
 ## After you cut a release
 
 Nothing on the page needs changing — the `releases/latest/download/` URLs resolve to whatever the
-newest release is. Only revisit it if an asset is renamed, or when the SignPath certificate comes
-through and the SmartScreen section can be deleted.
+newest release is. Only revisit it if an asset is renamed, or if a SignPath reapplication ever
+succeeds (the first application was declined 2026-07-29 for lack of public adoption) and the
+SmartScreen section can be deleted.
 
 **But cut 1.1.0 before you build the page.** The links work today and resolve to v1.0.3 — the
 pre-redesign build, without the first-run screen, the three-zone layout, or Anthropic support. A

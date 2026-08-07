@@ -67,11 +67,9 @@ own. If you skip it, the page still works — visitors just get 1.0.3.
 
 ## Deliberately left out
 
-**winget.** `winget install Gentian28.ResumeBuilder` doesn't work yet — the submission
-(microsoft/winget-pkgs#408983) is still open awaiting a moderator, so it returns *"No package
-found"*. A copy-paste command that fails reads as a broken project rather than a pending review.
-
-Send this once the PR merges:
+**winget.** ~~Deliberately left out~~ — no longer. microsoft/winget-pkgs#408983 merged and
+published on 2026-08-07 and `winget install Gentian28.ResumeBuilder` now works (verified in the
+index). Include this with the message above:
 
 > The winget submission merged. On the Windows card, add a package-manager option under the
 > download button:
@@ -83,5 +81,6 @@ Send this once the PR merges:
 > Worth one line noting this route also avoids the SmartScreen prompt entirely, since winget
 > installs through its own trusted client — that's the main reason a Windows user would pick it.
 
-**Code-signing.** When the SignPath certificate comes through, the whole SmartScreen section can be
-deleted rather than reworded.
+**Code-signing.** SignPath declined the application (2026-07-29 — new project, not enough public
+adoption for their Foundation programme), so the SmartScreen section stays. If a future
+reapplication succeeds, the whole section can be deleted rather than reworded.

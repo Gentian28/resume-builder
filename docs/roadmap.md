@@ -148,9 +148,11 @@ already a rule in `CLAUDE.md`.
 
 ## 5. Distribution and trust — in flight
 
-Tracked in `docs/manual-steps.md`, not repeated here. The short version: SignPath code-signing is
-the single highest-impact item outstanding, because the Windows "unknown publisher" warning is the
-biggest thing between a stranger and a running app.
+Tracked in `docs/manual-steps.md`, not repeated here. The short version: winget is live and is
+the recommended Windows route because it skips SmartScreen entirely. SignPath declined the
+code-signing application (2026-07-29, not enough public adoption yet — their bar, invited to
+reapply); until a reapplication succeeds, the "unknown publisher" warning remains on the direct
+download only.
 
 ---
 

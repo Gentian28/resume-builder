@@ -6,7 +6,14 @@ A cross-platform desktop resume builder: edit a resume in a live editor, see a r
 
 ## Download
 
-Grab the latest build from the [releases page](https://github.com/Gentian28/resume-builder/releases).
+On Windows, the quickest route is winget — it also skips the SmartScreen prompt, since winget
+installs through its own trusted client:
+
+```
+winget install Gentian28.ResumeBuilder
+```
+
+Or grab the latest build from the [releases page](https://github.com/Gentian28/resume-builder/releases).
 
 | Platform | Download | Notes |
 | --- | --- | --- |
@@ -23,13 +30,14 @@ No .NET runtime needed — every build is self-contained.
 
 ### Code signing
 
-Free code signing for Windows builds is provided by [SignPath.io](https://signpath.io/), with the
-certificate issued by the [SignPath Foundation](https://signpath.org/).
-
-*Status: application pending.* Until it is granted, Windows builds are unsigned and SmartScreen
-shows an "unknown publisher" warning — choose **More info → Run anyway**. macOS Gatekeeper
-likewise refuses the package until you allow it under **System Settings → Privacy & Security**;
-that needs Apple notarisation, which is separate from code signing and not yet in place.
+Windows builds are not yet code-signed. An application to the [SignPath
+Foundation](https://signpath.org/) free-signing programme was declined in July 2026 — the
+programme wants public adoption signals a brand-new project doesn't have yet — and will be
+resubmitted once the project has them. Until then, the direct download triggers SmartScreen's
+"unknown publisher" warning — choose **More info → Run anyway** — while installing via winget
+avoids it entirely. macOS Gatekeeper likewise refuses the package until you allow it under
+**System Settings → Privacy & Security**; that needs Apple notarisation, which is separate from
+code signing and not yet in place.
 
 ### Privacy
 

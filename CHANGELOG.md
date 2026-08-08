@@ -5,6 +5,32 @@ list of commits. This file *is* the GitHub release notes — the release workflo
 section matching the tag and fails the build if there isn't one.
 
 
+## 1.2.1
+
+The rough edges a real import session showed up.
+
+### Fixed
+
+- **Importing and exporting now show progress.** The work used to run on the UI thread, so the
+  loading overlay never appeared — a slow PDF import just froze the window with no sign anything
+  was happening. The overlay now shows, animates, and says what it is doing ("Importing PDF...",
+  "Exporting DOCX...").
+- **The Skills editor no longer draws each row's name and category on top of each other** — a
+  layout bug that made every imported skill list look corrupted.
+- **Spell check knows industry vocabulary.** Kubernetes, SaaS, microservices, DevOps, "agentic",
+  "architecting" and some 180 other terms a résumé routinely contains are no longer flagged — and
+  no longer "corrected" to the nearest dictionary word (Kubernetes → "Rubbernecks").
+
+### Changed
+
+- **Buttons use real glyphs.** Move up/down is ↑/↓ instead of the letters "^" and "v"; every
+  remove/close button is a proper × instead of the letter X.
+- **One standard separator.** Every template's contact line uses the same "  |  " pipe; the
+  Starter template's links line matches its contact line in size and colour instead of rendering
+  its pipes smaller and fainter.
+- Row controls line up with their text boxes, and the spelling-issues badge lines up with its
+  Check button.
+
 ## 1.2.0
 
 Keeping track of where your résumés actually went.

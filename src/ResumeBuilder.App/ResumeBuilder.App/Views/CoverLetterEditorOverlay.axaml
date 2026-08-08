@@ -88,11 +88,11 @@
                                                              MinHeight="70"
                                                              Watermark="Paragraph text..." AutomationProperties.Name="Paragraph text"/>
                                                     <StackPanel Grid.Column="1" Spacing="2" Margin="5,0,0,0">
-                                                        <Button Content="^" Width="28" Height="28" Padding="0"
+                                                        <Button Content="↑" Width="28" Height="28" Padding="0"
                                                                 ToolTip.Tip="Move Up"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLetterParagraphUpCommand}"
                                                                 CommandParameter="{Binding}"/>
-                                                        <Button Content="v" Width="28" Height="28" Padding="0"
+                                                        <Button Content="↓" Width="28" Height="28" Padding="0"
                                                                 ToolTip.Tip="Move Down"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLetterParagraphDownCommand}"
                                                                 CommandParameter="{Binding}"/>

@@ -564,10 +564,14 @@ public partial class MainWindowViewModel
             if (file == null)
                 return;
 
+            LoadingMessage = $"Exporting {format}...";
             IsLoading = true;
             var filePath = file.Path.LocalPath;
 
-            await _services.CoverLetterExportService.ExportToFileAsync(CurrentLetter, format, filePath);
+            // Same as the resume export: rendering is synchronous CPU work, and the overlay only
+            // paints if the UI thread is free. Snapshot so the editor can't race the render.
+            var snapshot = JsonSerializer.Deserialize<CoverLetter>(JsonSerializer.Serialize(CurrentLetter))!;
+            await Task.Run(() => _services.CoverLetterExportService.ExportToFileAsync(snapshot, format, filePath));
             StatusMessage = $"Exported to: {filePath}";
         }
         catch (Exception ex)

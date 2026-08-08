@@ -30,11 +30,11 @@
                                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
                                                                    VerticalAlignment="Center" Margin="8,0"
                                                                    Classes.dimmed="{Binding !IsVisible}"/>
-                                                        <Button Grid.Column="2" Content="^" Width="28" Height="28"
+                                                        <Button Grid.Column="2" Content="↑" Width="28" Height="28"
                                                                 Padding="0" Margin="2,0"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSectionUpCommand}"
                                                                 CommandParameter="{Binding}"/>
-                                                        <Button Grid.Column="3" Content="v" Width="28" Height="28"
+                                                        <Button Grid.Column="3" Content="↓" Width="28" Height="28"
                                                                 Padding="0"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSectionDownCommand}"
                                                                 CommandParameter="{Binding}"/>

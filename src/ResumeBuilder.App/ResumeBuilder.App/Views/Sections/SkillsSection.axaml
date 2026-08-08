@@ -17,27 +17,27 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SkillViewModel">
                                             <Grid ColumnDefinitions="*,10,*,10,Auto,Auto,Auto,Auto" Margin="0,3">
-                                                <StackPanel Spacing="3">
+                                                <StackPanel Grid.Column="0" Spacing="3">
                                                     <TextBlock Classes="fieldlabel" Text="Skill Name"/>
-                                                    <TextBox Grid.Column="0" Text="{Binding Name}" AutomationProperties.Name="Skill Name"/>
+                                                    <TextBox Text="{Binding Name}" AutomationProperties.Name="Skill Name"/>
                                                 </StackPanel>
-                                                <StackPanel Spacing="3">
+                                                <StackPanel Grid.Column="2" Spacing="3">
                                                     <TextBlock Classes="fieldlabel" Text="Category"/>
-                                                    <TextBox Grid.Column="2" Text="{Binding Category}" AutomationProperties.Name="Category"/>
+                                                    <TextBox Text="{Binding Category}" AutomationProperties.Name="Category"/>
                                                 </StackPanel>
-                                                <ComboBox Grid.Column="4" Width="120"
+                                                <ComboBox Grid.Column="4" Width="120" VerticalAlignment="Bottom"
                                                           ToolTip.Tip="Proficiency level"
                                                           ItemsSource="{x:Static vm:SkillViewModel.AvailableLevels}"
                                                           SelectedItem="{Binding Level}"/>
-                                                <Button Grid.Column="5" Content="^" Width="28" Margin="5,0,0,0"
+                                                <Button Grid.Column="5" Content="↑" Width="28" Margin="5,0,0,0" VerticalAlignment="Bottom"
                                                         ToolTip.Tip="Move Up"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSkillUpCommand}"
                                                         CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="6" Content="v" Width="28" Margin="2,0,0,0"
+                                                <Button Grid.Column="6" Content="↓" Width="28" Margin="2,0,0,0" VerticalAlignment="Bottom"
                                                         ToolTip.Tip="Move Down"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSkillDownCommand}"
                                                         CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="7" Content="X" Margin="5,0,0,0"
+                                                <Button Grid.Column="7" Content="X" Margin="5,0,0,0" VerticalAlignment="Bottom"
                                                         ToolTip.Tip="Remove"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveSkillCommand}"
                                                         CommandParameter="{Binding}"/>

@@ -67,6 +67,10 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [ObservableProperty]
     private bool _isLoading;
 
+    /// <summary>What the loading overlay says while <see cref="IsLoading"/> is up.</summary>
+    [ObservableProperty]
+    private string _loadingMessage = "Working...";
+
     [ObservableProperty]
     private string _statusMessage = "Ready";
 
@@ -2825,10 +2829,15 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             if (file == null)
                 return;
 
+            LoadingMessage = $"Exporting {format}...";
             IsLoading = true;
             var filePath = file.Path.LocalPath;
 
-            await _services.ExportService.ExportToFileAsync(CurrentResume, format, filePath);
+            // QuestPDF/DOCX rendering is synchronous CPU work — run it off the UI thread so the
+            // overlay actually shows. Render from a snapshot: the autosave path mutates
+            // CurrentResume (SyncLegacyStyling) and must not race the background render.
+            var snapshot = JsonSerializer.Deserialize<Resume>(JsonSerializer.Serialize(CurrentResume))!;
+            await Task.Run(() => _services.ExportService.ExportToFileAsync(snapshot, format, filePath));
             StatusMessage = $"Exported to: {filePath}";
         }
         catch (Exception ex)
@@ -2908,11 +2917,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
             if (files.Count == 0) return;
 
+            LoadingMessage = $"Importing {importerName}...";
             IsLoading = true;
             StatusMessage = $"Importing {importerName}...";
 
             await using var stream = await files[0].OpenReadAsync();
-            var result = await _services.ExportService.ImportAsync(stream, importerName);
+            // The importers are CPU-bound (PdfPig, zip, JSON parsing) despite their async
+            // signatures — run them off the UI thread or the overlay never gets a frame.
+            var result = await Task.Run(() => _services.ExportService.ImportAsync(stream, importerName));
 
             if (!result.Success || result.Data == null)
             {

@@ -2,17 +2,21 @@
 
 > Everything automatable is automated. This is what needs a human, in the order it needs one.
 
-**v1.2.1 is live** (published 2026-08-08). Downloads serve it on all four platforms and existing
+**v1.2.2 is live** (published 2026-08-08). Downloads serve it on all four platforms and existing
 installs auto-update. Nothing here is blocking a user from installing the app — the rest is reach
 and polish.
+
+Releases are now fully automated end-to-end: changelog section + tag push + one Publish click on
+the draft; the winget PR opens itself (proven live with 1.2.2 → PR #414036).
 
 | # | What | Status |
 |---|---|---|
 | 1 | Send screenshots to the portfolio session (+ winget follow-up, see `portfolio-brief.md`) | **ready — your move** |
 | 2 | winget PR #408983 for 1.0.3 | **done — merged & published 2026-08-07** |
 | 3 | Submit winget 1.2.0 | **done — PR #413617 merged & published 2026-08-08** |
-| 3b | Submit winget 1.2.1 | **done — PR #414016 opened 2026-08-08 by the workflow, waiting on validation** |
-| 4 | Turn on automatic winget submission | **done — PAT installed 2026-08-08; first live run submitted 1.2.1 (after granting the workflow `contents: write`)** |
+| 3b | Submit winget 1.2.2 | **done — PR #414036 opened automatically 2026-08-08, waiting on validation (1.2.1's #414016 closed as superseded)** |
+| 4 | Turn on automatic winget submission | **done — PAT installed 2026-08-08; proven live end-to-end with 1.2.2** |
+| 4b | Rotate the winget PAT | **your move — the current token transited a chat session; scope is only public_repo, but replace it when convenient (new PAT → update `WINGET_TOKEN` secret)** |
 | 5 | SignPath code-signing | **declined 2026-07-29 — reapply once the project has visible adoption** |
 | 6 | macOS notarisation | optional, costs $99/yr |
 | — | Verify the Anthropic provider against the real API | optional, 60 seconds |

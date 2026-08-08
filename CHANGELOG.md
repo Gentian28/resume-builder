@@ -5,6 +5,29 @@ list of commits. This file *is* the GitHub release notes — the release workflo
 section matching the tag and fails the build if there isn't one.
 
 
+## 1.2.3
+
+A polish pass over the editor and the printed page.
+
+### Changed
+
+- **Real icons.** Every reorder, remove, close and collapse control now uses a proper vector
+  icon at one consistent size and spacing, instead of the mix of "^", "v", "×" and "..."
+  characters that rendered differently row to row.
+- **Section headers can't be orphaned in the PDF anymore.** A section title now brings the
+  start of its content with it or moves to the next page whole, and an entry title always
+  keeps a couple of lines attached — no more "Projects" alone at the bottom of a page.
+- **Appearance and Section order are open by default** instead of hiding behind a "..." button.
+- **Navigating closes tool panels.** Opening a section from the left nav dismisses the AI
+  Assistant / Tailor / Sync panel instead of stacking your section underneath it.
+
+### Fixed
+
+- **Importing shows its progress.** The loading overlay now reliably appears the moment an
+  import starts and stays until the résumé is fully loaded into the editor — previously a
+  quick parse followed by the editor filling in could freeze the window with no feedback.
+- The first-run screen's privacy note wraps inside its card instead of running off the edge.
+
 ## 1.2.2
 
 Always knowing where your work is.

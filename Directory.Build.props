@@ -17,7 +17,7 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
-    <Version>1.2.2</Version>
+    <Version>1.2.3</Version>
     <Authors>Gentian Shkembi</Authors>
     <Product>ResumeBuilder</Product>
   </PropertyGroup>

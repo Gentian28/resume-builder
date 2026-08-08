@@ -21,6 +21,7 @@
         <KeyBinding Gesture="Ctrl+Shift+Z" Command="{Binding RedoCommand}"/>
         <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCurrentResumeCommand}"/>
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}"/>
+        <KeyBinding Gesture="Ctrl+E" Command="{Binding ExportCommand}" CommandParameter="PDF"/>
         <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenResumeListCommand}"/>
         <KeyBinding Gesture="Ctrl+N" Command="{Binding CreateNewResumeCommand}"/>
         <KeyBinding Gesture="Ctrl+T" Command="{Binding ToggleThemeCommand}"/>
@@ -37,7 +38,9 @@
                 <MenuItem Header="_New Resume" Command="{Binding CreateNewResumeCommand}" InputGesture="Ctrl+N"/>
                 <MenuItem Header="_Open..." Command="{Binding OpenResumeListCommand}" InputGesture="Ctrl+O"/>
                 <MenuItem Header="_Save" Command="{Binding SaveCurrentResumeCommand}" InputGesture="Ctrl+S"/>
-                <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
+                <!-- "Duplicate", not "Save As": it clones inside the app. The Word phrase promises
+                     a choose-a-location dialog this command has never shown. Files come from Export. -->
+                <MenuItem Header="_Duplicate..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
                 <Separator/>
                 <MenuItem Header="New _Cover Letter" Command="{Binding NewCoverLetterCommand}"/>
                 <MenuItem Header="Cover _Letters..." Command="{Binding OpenCoverLetterListCommand}"/>
@@ -72,6 +75,7 @@
                     <MenuItem Header="LinkedIn Export (.zip)" Command="{Binding ImportLinkedInCommand}"/>
                     <MenuItem Header="PDF Resume (.pdf)" Command="{Binding ImportPdfCommand}"/>
                 </MenuItem>
+                <MenuItem Header="_Export as PDF..." Command="{Binding ExportCommand}" CommandParameter="PDF" InputGesture="Ctrl+E"/>
                 <MenuItem Header="Export">
                     <MenuItem Header="PDF" Command="{Binding ExportCommand}" CommandParameter="PDF"/>
                     <MenuItem Header="Word (DOCX)" Command="{Binding ExportCommand}" CommandParameter="DOCX"/>
@@ -354,5 +358,27 @@
         <views:CoverLetterListOverlay Grid.RowSpan="4" IsVisible="{Binding ShowCoverLetterList}"/>
         <!-- Loading Overlay -->
         <views:LoadingOverlay Grid.RowSpan="4" IsVisible="{Binding IsLoading}"/>
+
+        <!-- Export toast: keeps the exported file one click away, browser-download style.
+             Declared last so it sits above every overlay. -->
+        <Border Grid.RowSpan="4" IsVisible="{Binding ShowExportToast}"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,44"
+                Background="{DynamicResource RbSurface2}"
+                BorderBrush="{DynamicResource RbBorder}" BorderThickness="1"
+                CornerRadius="8" Padding="14,10"
+                BoxShadow="0 4 16 0 #40000000">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <TextBlock VerticalAlignment="Center">
+                    <Run Text="Exported"/>
+                    <Run Text="{Binding ExportToastFileName}" FontWeight="SemiBold"/>
+                </TextBlock>
+                <Button Content="Open" Classes="accent" Padding="10,4"
+                        Command="{Binding OpenExportedFileCommand}"/>
+                <Button Content="Show in folder" Padding="10,4"
+                        Command="{Binding ShowExportedInFolderCommand}"/>
+                <Button Content="×" Padding="6,2"
+                        Command="{Binding DismissExportToastCommand}"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

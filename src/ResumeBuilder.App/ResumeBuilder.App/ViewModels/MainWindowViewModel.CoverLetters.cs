@@ -573,6 +573,7 @@ public partial class MainWindowViewModel
             var snapshot = JsonSerializer.Deserialize<CoverLetter>(JsonSerializer.Serialize(CurrentLetter))!;
             await Task.Run(() => _services.CoverLetterExportService.ExportToFileAsync(snapshot, format, filePath));
             StatusMessage = $"Exported to: {filePath}";
+            ShowExportedToast(filePath);
         }
         catch (Exception ex)
         {

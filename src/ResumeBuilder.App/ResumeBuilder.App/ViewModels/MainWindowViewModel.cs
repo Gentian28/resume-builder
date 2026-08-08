@@ -1204,12 +1204,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
     private void UpdateSaveState()
     {
+        // Doubles as the app's storage-model explainer: "on this computer" answers "where did it
+        // go?" at the exact moment someone looks for reassurance, Google-Docs style.
         SaveStateText = IsSaving
             ? "Saving..."
             : IsDirty
-                ? "Unsaved changes"
+                ? "Unsaved changes (autosaves shortly)"
                 : _lastSavedAt.HasValue
-                    ? $"Saved at {_lastSavedAt:HH:mm:ss}"
+                    ? "All changes saved on this computer"
                     : "No changes";
     }
 
@@ -2619,7 +2621,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private async Task SaveAsAsync()
     {
-        var name = await DialogService.PromptAsync("Save As", "Name for the new resume:", ResumeName);
+        var name = await DialogService.PromptAsync("Duplicate", "Name for the copy:", ResumeName);
         if (name == null) return;
 
         try
@@ -2642,11 +2644,11 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             UpdateSaveState();
 
             await LoadSavedResumesAsync();
-            StatusMessage = $"Saved as: {name}";
+            StatusMessage = $"Created copy: {name}";
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Save As failed", ex.Message);
+            await DialogService.ShowErrorAsync("Duplicate failed", ex.Message);
         }
     }
 
@@ -2839,6 +2841,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             var snapshot = JsonSerializer.Deserialize<Resume>(JsonSerializer.Serialize(CurrentResume))!;
             await Task.Run(() => _services.ExportService.ExportToFileAsync(snapshot, format, filePath));
             StatusMessage = $"Exported to: {filePath}";
+            ShowExportedToast(filePath);
         }
         catch (Exception ex)
         {
@@ -2869,6 +2872,74 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     {
         var invalid = Path.GetInvalidFileNameChars();
         return string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    // ------------------------------------------------------------- Export toast
+    // The status bar line is easy to miss and gone on the next status change; the toast keeps
+    // the exported file reachable ("where did it go?") until dismissed or timed out.
+
+    [ObservableProperty]
+    private bool _showExportToast;
+
+    [ObservableProperty]
+    private string _exportToastFileName = "";
+
+    private string? _exportedFilePath;
+    private DispatcherTimer? _exportToastTimer;
+
+    private void ShowExportedToast(string filePath)
+    {
+        _exportedFilePath = filePath;
+        ExportToastFileName = Path.GetFileName(filePath);
+        ShowExportToast = true;
+
+        if (_exportToastTimer == null)
+        {
+            _exportToastTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(12) };
+            _exportToastTimer.Tick += (_, _) =>
+            {
+                _exportToastTimer!.Stop();
+                ShowExportToast = false;
+            };
+        }
+
+        _exportToastTimer.Stop();
+        _exportToastTimer.Start();
+    }
+
+    [RelayCommand]
+    private async Task OpenExportedFileAsync()
+    {
+        if (_exportedFilePath == null) return;
+        try
+        {
+            FileRevealer.Open(_exportedFilePath);
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Could not open file", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ShowExportedInFolderAsync()
+    {
+        if (_exportedFilePath == null) return;
+        try
+        {
+            FileRevealer.RevealInFolder(_exportedFilePath);
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorAsync("Could not open folder", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private void DismissExportToast()
+    {
+        _exportToastTimer?.Stop();
+        ShowExportToast = false;
     }
 
     [RelayCommand]

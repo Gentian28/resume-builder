@@ -113,7 +113,7 @@
                         <TextBlock FontSize="12" TextWrapping="Wrap">
                             <Run Text="Everything stays on this computer." FontWeight="SemiBold"
                                  Foreground="{DynamicResource RbSuccess}"/>
-                            <Run Text="No account, no upload. Résumés are stored locally, and the AI features can run against a model on your own machine."
+                            <Run Text="No account, no upload. Résumés save automatically inside the app — export a PDF when you need a file to send, or turn on sync to have them on your other machines. AI features can run against a model on your own machine."
                                  Foreground="{DynamicResource RbText2}"/>
                         </TextBlock>
                     </StackPanel>

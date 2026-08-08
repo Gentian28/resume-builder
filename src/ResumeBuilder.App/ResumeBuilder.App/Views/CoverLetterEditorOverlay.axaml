@@ -96,7 +96,7 @@
                                                                 ToolTip.Tip="Move Down"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLetterParagraphDownCommand}"
                                                                 CommandParameter="{Binding}"/>
-                                                        <Button Content="X" Width="28" Height="28" Padding="0"
+                                                        <Button Content="×" Width="28" Height="28" Padding="0"
                                                                 ToolTip.Tip="Remove"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveLetterParagraphCommand}"
                                                                 CommandParameter="{Binding}"/>

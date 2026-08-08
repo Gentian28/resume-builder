@@ -73,7 +73,7 @@
                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).OpenApplicationResumeCommand}"
                                                 CommandParameter="{Binding}"/>
 
-                                        <Button Grid.Column="3" Content="X" Width="28" Padding="0"
+                                        <Button Grid.Column="3" Content="×" Width="28" Padding="0"
                                                 Margin="6,0,0,0" VerticalAlignment="Top"
                                                 ToolTip.Tip="Stop tracking"
                                                 AutomationProperties.Name="Stop tracking"

@@ -33,7 +33,7 @@
                                                         ToolTip.Tip="Move Down"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveLanguageDownCommand}"
                                                         CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="5" Content="X" Margin="5,0,0,0" VerticalAlignment="Bottom"
+                                                <Button Grid.Column="5" Content="×" Margin="5,0,0,0" VerticalAlignment="Bottom"
                                                         ToolTip.Tip="Remove"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveLanguageCommand}"
                                                         CommandParameter="{Binding}"/>

@@ -11,7 +11,7 @@
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
                                     <TextBlock Text="AI Assistant" FontWeight="SemiBold" FontSize="14"/>
-                                    <Button Grid.Column="2" Content="X" Padding="4,0"
+                                    <Button Grid.Column="2" Content="×" Padding="4,0"
                                             Command="{Binding ToggleAiPanelCommand}"
                                             AutomationProperties.Name="Close AI panel"/>
                                 </Grid>
@@ -175,7 +175,7 @@
                                                                         ToolTip.Tip="Add this skill"
                                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).AddSuggestedSkillCommand}"
                                                                         CommandParameter="{Binding}"/>
-                                                                <Button Grid.Column="2" Content="X" Width="24" Height="24"
+                                                                <Button Grid.Column="2" Content="×" Width="24" Height="24"
                                                                         Padding="0"
                                                                         ToolTip.Tip="Dismiss"
                                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DismissSuggestedSkillCommand}"

@@ -125,7 +125,7 @@ public class ChronologyTemplate : BaseTemplate
                     case SectionType.Languages:
                         column.Item().Element(c => ComposeSection(c, "Languages", col =>
                             col.Item().Element(e => ComposeRow(e, string.Empty, body =>
-                                body.Item().Text(string.Join("   |   ", resume.Languages.OrderBy(l => l.Order).Select(l => FormatLanguage(l))))
+                                body.Item().Text(string.Join(ContactSeparator, resume.Languages.OrderBy(l => l.Order).Select(l => FormatLanguage(l))))
                                     .FontSize(9 * FontSizeScale)))));
                         break;
 

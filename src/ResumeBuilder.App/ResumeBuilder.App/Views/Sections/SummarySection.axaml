@@ -12,7 +12,8 @@
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Text="Professional Summary" FontWeight="SemiBold" FontSize="14"/>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
-                                        <Border Background="#FFA500" CornerRadius="10" Padding="6,2"
+                                        <Border Background="#FFA500" CornerRadius="10" Padding="8,3"
+                                                VerticalAlignment="Center"
                                                 IsVisible="{Binding SummarySpellErrorCount}"
                                                 Cursor="Hand">
                                             <Border.Styles>
@@ -20,7 +21,7 @@
                                                     <Setter Property="Opacity" Value="0.8"/>
                                                 </Style>
                                             </Border.Styles>
-                                            <TextBlock Foreground="White" FontSize="11">
+                                            <TextBlock Foreground="White" FontSize="11" VerticalAlignment="Center">
                                                 <TextBlock.Text>
                                                     <MultiBinding StringFormat="{}{0} spelling issue(s)">
                                                         <Binding Path="SummarySpellErrorCount"/>
@@ -28,7 +29,7 @@
                                                 </TextBlock.Text>
                                             </TextBlock>
                                         </Border>
-                                        <Button Content="Check" Padding="8,2"
+                                        <Button Content="Check" Padding="8,2" VerticalAlignment="Center"
                                                 Command="{Binding ShowSpellingSuggestionsCommand}"
                                                 IsVisible="{Binding SummarySpellErrorCount}"/>
                                     </StackPanel>
@@ -49,7 +50,7 @@
                                     <StackPanel Spacing="8">
                                         <Grid ColumnDefinitions="*,Auto">
                                             <TextBlock Text="Spelling Suggestions" FontWeight="SemiBold"/>
-                                            <Button Grid.Column="1" Content="X" Padding="4,0"
+                                            <Button Grid.Column="1" Content="×" Padding="4,0"
                                                     Command="{Binding CloseSpellSuggestionsCommand}"/>
                                         </Grid>
                                         <ItemsControl ItemsSource="{Binding SpellSuggestions}">

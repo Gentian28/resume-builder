@@ -166,7 +166,7 @@ public class ClassicTemplate : BaseTemplate
 
             if (contactLine.Any())
             {
-                column.Item().AlignCenter().Text(string.Join("  |  ", contactLine)).FontSize(10 * FontSizeScale);
+                column.Item().AlignCenter().Text(string.Join(ContactSeparator, contactLine)).FontSize(10 * FontSizeScale);
             }
 
             column.Item().Height(8);

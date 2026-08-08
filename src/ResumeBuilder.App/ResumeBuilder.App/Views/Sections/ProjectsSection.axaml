@@ -31,7 +31,7 @@
                                                                 ToolTip.Tip="Move Down"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveProjectDownCommand}"
                                                                 CommandParameter="{Binding}"/>
-                                                        <Button Grid.Column="3" Content="X" Margin="5,0,0,0"
+                                                        <Button Grid.Column="3" Content="×" Margin="5,0,0,0"
                                                                 ToolTip.Tip="Remove"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveProjectCommand}"
                                                                 CommandParameter="{Binding}"/>

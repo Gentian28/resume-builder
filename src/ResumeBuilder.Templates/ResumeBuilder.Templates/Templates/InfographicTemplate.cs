@@ -86,7 +86,7 @@ public class InfographicTemplate : BaseTemplate
                     if (!string.IsNullOrWhiteSpace(info.GitHub)) contacts.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
                     if (!string.IsNullOrWhiteSpace(info.Website)) contacts.Add(FormatWebsiteDisplay(info.Website));
 
-                    nameCol.Item().Text(string.Join("  |  ", contacts))
+                    nameCol.Item().Text(string.Join(ContactSeparator, contacts))
                         .FontSize(8 * FontSizeScale)
                         .FontColor(Colors.White.WithAlpha(0.8f));
                 });

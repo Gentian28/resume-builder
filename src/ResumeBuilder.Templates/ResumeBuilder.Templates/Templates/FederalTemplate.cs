@@ -144,7 +144,7 @@ public class FederalTemplate : BaseTemplate
                 .ToList();
 
             if (contacts.Count > 0)
-                column.Item().AlignCenter().Text(string.Join("  |  ", contacts)).FontSize(10 * FontSizeScale);
+                column.Item().AlignCenter().Text(string.Join(ContactSeparator, contacts)).FontSize(10 * FontSizeScale);
 
             var links = new List<string>();
             if (!string.IsNullOrWhiteSpace(info.LinkedIn)) links.Add(FormatLinkedInDisplay(info.LinkedIn));
@@ -152,7 +152,7 @@ public class FederalTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.Website)) links.Add(FormatWebsiteDisplay(info.Website));
 
             if (links.Count > 0)
-                column.Item().AlignCenter().Text(string.Join("  |  ", links)).FontSize(10 * FontSizeScale);
+                column.Item().AlignCenter().Text(string.Join(ContactSeparator, links)).FontSize(10 * FontSizeScale);
 
             column.Item().Height(8);
             column.Item().LineHorizontal(1.5f).LineColor(accent);

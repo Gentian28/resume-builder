@@ -186,7 +186,7 @@ public class ModernTemplate : BaseTemplate
                     if (!string.IsNullOrWhiteSpace(info.Website))
                         contactItems.Add(FormatWebsiteDisplay(info.Website));
 
-                    contactRow.RelativeItem().Text(string.Join("  |  ", contactItems))
+                    contactRow.RelativeItem().Text(string.Join(ContactSeparator, contactItems))
                         .FontSize(9 * FontSizeScale)
                         .FontColor(Colors.Grey.Darken1);
                 });

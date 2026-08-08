@@ -193,7 +193,7 @@ public class AcademicTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.Phone)) contacts.Add($"Tel: {info.Phone}");
 
             if (contacts.Any())
-                column.Item().AlignCenter().Text(string.Join("  |  ", contacts)).FontSize(10 * FontSizeScale);
+                column.Item().AlignCenter().Text(string.Join(ContactSeparator, contacts)).FontSize(10 * FontSizeScale);
 
             var links = new List<string>();
             if (!string.IsNullOrWhiteSpace(info.Website)) links.Add(FormatWebsiteDisplay(info.Website));
@@ -201,7 +201,7 @@ public class AcademicTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.GitHub)) links.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
 
             if (links.Any())
-                column.Item().AlignCenter().Text(string.Join("  |  ", links)).FontSize(10 * FontSizeScale);
+                column.Item().AlignCenter().Text(string.Join(ContactSeparator, links)).FontSize(10 * FontSizeScale);
 
             column.Item().Height(8);
             column.Item().LineHorizontal(1).LineColor(Colors.Black);

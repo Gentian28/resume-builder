@@ -169,7 +169,7 @@ public class CompactTemplate : BaseTemplate
             case SectionType.Languages:
                 ComposeSection(container, "LANGUAGES", ct =>
                 {
-                    ct.Item().Text(string.Join(" | ", resume.Languages.OrderBy(l => l.Order)
+                    ct.Item().Text(string.Join(ContactSeparator, resume.Languages.OrderBy(l => l.Order)
                         .Select(l => $"{l.Name} ({GetLanguageProficiencyText(l.Proficiency)})")))
                         .FontSize(7 * FontSizeScale);
                 });
@@ -206,7 +206,7 @@ public class CompactTemplate : BaseTemplate
                     if (!string.IsNullOrWhiteSpace(info.Website)) links.Add(FormatWebsiteDisplay(info.Website));
 
                     if (links.Any())
-                        contactCol.Item().AlignRight().Text(string.Join(" | ", links)).FontSize(7 * FontSizeScale);
+                        contactCol.Item().AlignRight().Text(string.Join(ContactSeparator, links)).FontSize(7 * FontSizeScale);
                 });
             });
 

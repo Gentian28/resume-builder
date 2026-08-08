@@ -12,7 +12,7 @@
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Text="Sync Settings" FontWeight="SemiBold" FontSize="14"/>
-                                    <Button Grid.Column="1" Content="X" Padding="4,0"
+                                    <Button Grid.Column="1" Content="×" Padding="4,0"
                                             Command="{Binding ToggleSyncPanelCommand}"/>
                                 </Grid>
 

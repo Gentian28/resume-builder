@@ -109,6 +109,10 @@ public class HunspellService : ISpellChecker, IDisposable
                 return true;
         }
 
+        // Industry vocabulary the stock dictionaries lack (Kubernetes, SaaS, microservices...)
+        if (BuiltInVocabulary.Contains(word))
+            return true;
+
         // Skip numbers, emails, URLs
         if (IsSpecialWord(word))
             return true;

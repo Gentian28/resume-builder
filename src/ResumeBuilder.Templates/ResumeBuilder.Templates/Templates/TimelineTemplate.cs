@@ -245,7 +245,7 @@ public class TimelineTemplate : BaseTemplate
             if (!string.IsNullOrWhiteSpace(info.GitHub)) contacts.Add($"github.com/{FormatGitHubDisplay(info.GitHub)}");
             if (!string.IsNullOrWhiteSpace(info.Website)) contacts.Add(FormatWebsiteDisplay(info.Website));
 
-            column.Item().Text(string.Join("  |  ", contacts))
+            column.Item().Text(string.Join(ContactSeparator, contacts))
                 .FontSize(9 * FontSizeScale)
                 .FontColor(Colors.Grey.Darken1);
 

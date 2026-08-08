@@ -132,7 +132,7 @@ public class CoverLetterTemplate : ICoverLetterTemplate
 
             if (contacts.Count > 0)
             {
-                column.Item().PaddingTop(3).Text(string.Join("  |  ", contacts))
+                column.Item().PaddingTop(3).Text(string.Join(BaseTemplate.ContactSeparator, contacts))
                     .FontSize(9 * scale)
                     .FontColor(Colors.Grey.Darken1);
             }

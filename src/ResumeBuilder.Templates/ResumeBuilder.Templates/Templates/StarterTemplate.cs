@@ -166,7 +166,7 @@ public class StarterTemplate : BaseTemplate
                 if (!string.IsNullOrWhiteSpace(info.Phone)) contacts.Add(info.Phone);
                 if (!string.IsNullOrWhiteSpace(info.Location)) contacts.Add(info.Location);
 
-                row.RelativeItem().Text(string.Join("  |  ", contacts))
+                row.RelativeItem().Text(string.Join(ContactSeparator, contacts))
                     .FontSize(9 * FontSizeScale).FontColor(Colors.White.WithAlpha(0.9f));
             });
 
@@ -177,8 +177,10 @@ public class StarterTemplate : BaseTemplate
 
             if (links.Any())
             {
-                column.Item().Text(string.Join("  |  ", links))
-                    .FontSize(8 * FontSizeScale).FontColor(Colors.White.WithAlpha(0.8f));
+                // Same size and opacity as the contact line above — a smaller, fainter second
+                // line makes the identical "|" separators read as two different glyphs.
+                column.Item().Text(string.Join(ContactSeparator, links))
+                    .FontSize(9 * FontSizeScale).FontColor(Colors.White.WithAlpha(0.9f));
             }
         });
     }

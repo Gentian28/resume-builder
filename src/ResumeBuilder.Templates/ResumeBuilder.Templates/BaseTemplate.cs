@@ -321,6 +321,13 @@ public abstract class BaseTemplate : IResumeTemplate
         return string.IsNullOrEmpty(end) ? start : $"{start} - {end}";
     }
 
+    /// <summary>
+    /// The one separator for pipe-joined strips (contact lines, link lines, language rows).
+    /// Templates that want a different glyph (·, •, ◆) keep their own, but every "|" must use
+    /// this so the pipes read identically across lines and templates.
+    /// </summary>
+    public const string ContactSeparator = "  |  ";
+
     // Shared entry blocks. Styles let a template keep its own type scale and accents while
     // sharing the layout that is otherwise copy-pasted between templates.
     protected sealed record EntryStyle

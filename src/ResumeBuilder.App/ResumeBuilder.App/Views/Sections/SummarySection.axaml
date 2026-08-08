@@ -50,8 +50,8 @@
                                     <StackPanel Spacing="8">
                                         <Grid ColumnDefinitions="*,Auto">
                                             <TextBlock Text="Spelling Suggestions" FontWeight="SemiBold"/>
-                                            <Button Grid.Column="1" Content="×" Padding="4,0"
-                                                    Command="{Binding CloseSpellSuggestionsCommand}"/>
+                                            <Button Classes="icon" Grid.Column="1"
+                                                    Command="{Binding CloseSpellSuggestionsCommand}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                         </Grid>
                                         <ItemsControl ItemsSource="{Binding SpellSuggestions}">
                                             <ItemsControl.ItemTemplate>

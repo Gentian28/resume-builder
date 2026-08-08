@@ -223,7 +223,7 @@ public class CompactTemplate : BaseTemplate
 
     private void ComposeSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title).FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor)).LetterSpacing(0.05f);
             column.Item().Height(4);

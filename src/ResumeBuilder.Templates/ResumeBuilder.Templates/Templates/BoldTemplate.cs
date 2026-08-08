@@ -190,7 +190,7 @@ public class BoldTemplate : BaseTemplate
 
     private void ComposeSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             // Full-width accent background bar for section title
             column.Item().Background(ParseColor(AccentColor)).Padding(6).PaddingLeft(10)

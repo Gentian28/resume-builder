@@ -199,7 +199,7 @@ public class ModernTemplate : BaseTemplate
 
     private void ComposeSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title)
                 .FontSize(14 * FontSizeScale)

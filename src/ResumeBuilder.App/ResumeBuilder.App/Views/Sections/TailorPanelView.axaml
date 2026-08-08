@@ -11,8 +11,8 @@
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Text="Tailor to Job" FontWeight="SemiBold" FontSize="14"/>
-                                    <Button Grid.Column="1" Content="×" Padding="4,0"
-                                            Command="{Binding ToggleTailorPanelCommand}"/>
+                                    <Button Classes="icon" Grid.Column="1"
+                                            Command="{Binding ToggleTailorPanelCommand}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                 </Grid>
 
                                 <TextBlock Text="Paste the job description. You get a keyword match, and - when AI is configured - proposed rewrites you can accept one by one."

@@ -187,7 +187,7 @@ public class StarterTemplate : BaseTemplate
 
     private void ComposeSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().BorderBottom(2).BorderColor(ParseColor(AccentColor)).PaddingBottom(3)
                 .Text(title).FontSize(12 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));

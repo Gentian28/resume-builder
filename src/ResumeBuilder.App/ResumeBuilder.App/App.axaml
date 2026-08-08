@@ -11,6 +11,15 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://ResumeBuilder.App/Styles/Tokens.axaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Icon geometries (12x12 design grid; PathIcon stretches uniformly). Real vector
+                 icons instead of ASCII/glyph stand-ins, so every button reads the same at any
+                 size and inherits the text colour. -->
+            <StreamGeometry x:Key="IconArrowUp">M6,1 L10.2,5.2 L9.14,6.26 L6.75,3.87 L6.75,11 L5.25,11 L5.25,3.87 L2.86,6.26 L1.8,5.2 Z</StreamGeometry>
+            <StreamGeometry x:Key="IconArrowDown">M6,11 L1.8,6.8 L2.86,5.74 L5.25,8.13 L5.25,1 L6.75,1 L6.75,8.13 L9.14,5.74 L10.2,6.8 Z</StreamGeometry>
+            <StreamGeometry x:Key="IconClose">M2.05,3.11 L3.11,2.05 L6,4.94 L8.89,2.05 L9.95,3.11 L7.06,6 L9.95,8.89 L8.89,9.95 L6,7.06 L3.11,9.95 L2.05,8.89 L4.94,6 Z</StreamGeometry>
+            <StreamGeometry x:Key="IconChevronDown">M2,4 L10,4 L6,8.6 Z</StreamGeometry>
+            <StreamGeometry x:Key="IconChevronRight">M4,2 L8.6,6 L4,10 Z</StreamGeometry>
         </ResourceDictionary>
     </Application.Resources>
 
@@ -50,6 +59,20 @@
         </Style>
         <Style Selector="TextBox.error">
             <Setter Property="BorderBrush" Value="{DynamicResource RbDanger}"/>
+        </Style>
+
+        <!-- Square icon buttons: one size and one glyph scale for every reorder/remove/close/
+             collapse control, so button clusters align instead of each row improvising. -->
+        <Style Selector="Button.icon, ToggleButton.icon">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.icon PathIcon, ToggleButton.icon PathIcon">
+            <Setter Property="Width" Value="11"/>
+            <Setter Property="Height" Value="11"/>
         </Style>
     </Application.Styles>
 </Application>

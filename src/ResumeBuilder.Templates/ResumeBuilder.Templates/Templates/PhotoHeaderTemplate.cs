@@ -221,7 +221,7 @@ public class PhotoHeaderTemplate : BaseTemplate
     {
         var accent = ParseColor(AccentColor);
 
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Row(row =>
             {

@@ -158,7 +158,7 @@ public class TwoColumnTemplate : BaseTemplate
 
     private void ComposeSidebarSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(col =>
+        container.EnsureSpace(90).Column(col =>
         {
             col.Item().Text(title).FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor)).LetterSpacing(0.1f);
             col.Item().Height(5);
@@ -224,7 +224,7 @@ public class TwoColumnTemplate : BaseTemplate
 
     private void ComposeMainSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(col =>
+        container.EnsureSpace(90).Column(col =>
         {
             col.Item().Text(title).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
             col.Item().Height(5);

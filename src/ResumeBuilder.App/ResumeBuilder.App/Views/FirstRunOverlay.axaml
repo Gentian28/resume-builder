@@ -107,16 +107,18 @@
                 <Border Background="{DynamicResource RbSuccessBg}"
                         BorderBrush="{DynamicResource RbSuccessBorder}" BorderThickness="1"
                         CornerRadius="9" Padding="13,11">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
+                    <!-- Grid, not a horizontal StackPanel: a StackPanel gives the TextBlock
+                         unbounded width, so it never wraps and overflows the card. -->
+                    <Grid ColumnDefinitions="Auto,10,*">
                         <Ellipse Width="7" Height="7" VerticalAlignment="Center"
                                  Fill="{DynamicResource RbSuccess}"/>
-                        <TextBlock FontSize="12" TextWrapping="Wrap">
+                        <TextBlock Grid.Column="2" FontSize="12" TextWrapping="Wrap">
                             <Run Text="Everything stays on this computer." FontWeight="SemiBold"
                                  Foreground="{DynamicResource RbSuccess}"/>
                             <Run Text="No account, no upload. Résumés save automatically inside the app — export a PDF when you need a file to send, or turn on sync to have them on your other machines. AI features can run against a model on your own machine."
                                  Foreground="{DynamicResource RbText2}"/>
                         </TextBlock>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <Button Content="Skip" HorizontalAlignment="Center" FontSize="12"

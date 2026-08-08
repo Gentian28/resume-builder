@@ -343,7 +343,7 @@ public abstract class BaseTemplate : IResumeTemplate
 
     protected void ComposeExperienceEntry(IContainer container, Experience exp, EntryStyle style)
     {
-        container.Column(column =>
+        container.EnsureSpace(48).Column(column =>
         {
             column.Item().Row(row =>
             {
@@ -378,7 +378,7 @@ public abstract class BaseTemplate : IResumeTemplate
 
     protected void ComposeEducationEntry(IContainer container, Education edu, EntryStyle style)
     {
-        container.Column(column =>
+        container.EnsureSpace(48).Column(column =>
         {
             column.Item().Row(row =>
             {
@@ -416,7 +416,7 @@ public abstract class BaseTemplate : IResumeTemplate
 
     protected void ComposeProjectEntry(IContainer container, Project project, EntryStyle style)
     {
-        container.Column(column =>
+        container.EnsureSpace(48).Column(column =>
         {
             column.Item().Row(row =>
             {

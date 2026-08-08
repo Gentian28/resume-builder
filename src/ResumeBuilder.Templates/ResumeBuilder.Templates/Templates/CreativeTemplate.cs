@@ -270,7 +270,7 @@ public class CreativeTemplate : BaseTemplate
 
     private void ComposeSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(col =>
+        container.EnsureSpace(90).Column(col =>
         {
             col.Item().Text(title).FontSize(11 * FontSizeScale).Bold().FontFamily(HeadingFontFamily).FontColor(ParseColor(AccentColor));
             col.Item().Height(5);

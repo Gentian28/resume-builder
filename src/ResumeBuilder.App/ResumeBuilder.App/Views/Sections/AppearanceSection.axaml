@@ -11,9 +11,14 @@
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Text="Customize Appearance" FontWeight="SemiBold" FontSize="14"/>
-                                    <ToggleButton Grid.Column="1" Content="..."
-                                                  IsChecked="{Binding ShowCustomizationPanel}"
-                                                  Padding="8,2"/>
+                                    <ToggleButton Grid.Column="1" Classes="icon"
+                                                  ToolTip.Tip="Show or hide this section"
+                                                  IsChecked="{Binding ShowCustomizationPanel}">
+                                        <Panel>
+                                            <PathIcon Data="{StaticResource IconChevronDown}" IsVisible="{Binding ShowCustomizationPanel}"/>
+                                            <PathIcon Data="{StaticResource IconChevronRight}" IsVisible="{Binding !ShowCustomizationPanel}"/>
+                                        </Panel>
+                                    </ToggleButton>
                                 </Grid>
 
                                 <StackPanel Spacing="10" IsVisible="{Binding ShowCustomizationPanel}">

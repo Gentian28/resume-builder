@@ -267,7 +267,7 @@ public class ChronologyTemplate : BaseTemplate
 
     private void ComposeSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             // The heading starts in the gutter so it anchors the column it labels.
             column.Item().Text(title.ToUpperInvariant())

@@ -73,12 +73,12 @@
                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).OpenApplicationResumeCommand}"
                                                 CommandParameter="{Binding}"/>
 
-                                        <Button Grid.Column="3" Content="×" Width="28" Padding="0"
-                                                Margin="6,0,0,0" VerticalAlignment="Top"
+                                        <Button Classes="icon" Grid.Column="3"
+                                                Margin="8,0,0,0" VerticalAlignment="Top"
                                                 ToolTip.Tip="Stop tracking"
                                                 AutomationProperties.Name="Stop tracking"
                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DeleteApplicationCommand}"
-                                                CommandParameter="{Binding}"/>
+                                                CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*">

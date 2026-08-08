@@ -376,8 +376,8 @@
                         Command="{Binding OpenExportedFileCommand}"/>
                 <Button Content="Show in folder" Padding="10,4"
                         Command="{Binding ShowExportedInFolderCommand}"/>
-                <Button Content="×" Padding="6,2"
-                        Command="{Binding DismissExportToastCommand}"/>
+                <Button Classes="icon"
+                        Command="{Binding DismissExportToastCommand}"><PathIcon Data="{StaticResource IconClose}"/></Button>
             </StackPanel>
         </Border>
     </Grid>

@@ -11,9 +11,9 @@
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
                                     <TextBlock Text="AI Assistant" FontWeight="SemiBold" FontSize="14"/>
-                                    <Button Grid.Column="2" Content="×" Padding="4,0"
+                                    <Button Classes="icon" Grid.Column="2"
                                             Command="{Binding ToggleAiPanelCommand}"
-                                            AutomationProperties.Name="Close AI panel"/>
+                                            AutomationProperties.Name="Close AI panel"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                 </Grid>
 
                                 <!-- Three states, stated in words rather than left to be inferred
@@ -175,11 +175,10 @@
                                                                         ToolTip.Tip="Add this skill"
                                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).AddSuggestedSkillCommand}"
                                                                         CommandParameter="{Binding}"/>
-                                                                <Button Grid.Column="2" Content="×" Width="24" Height="24"
-                                                                        Padding="0"
+                                                                <Button Classes="icon" Grid.Column="2"
                                                                         ToolTip.Tip="Dismiss"
                                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DismissSuggestedSkillCommand}"
-                                                                        CommandParameter="{Binding}"/>
+                                                                        CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                                             </Grid>
                                                         </Border>
                                                     </DataTemplate>

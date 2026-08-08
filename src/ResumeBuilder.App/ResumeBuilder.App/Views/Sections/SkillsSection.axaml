@@ -29,18 +29,18 @@
                                                           ToolTip.Tip="Proficiency level"
                                                           ItemsSource="{x:Static vm:SkillViewModel.AvailableLevels}"
                                                           SelectedItem="{Binding Level}"/>
-                                                <Button Grid.Column="5" Content="↑" Width="28" Margin="5,0,0,0" VerticalAlignment="Bottom"
+                                                <Button Classes="icon" Grid.Column="5" Margin="8,0,0,0" VerticalAlignment="Bottom"
                                                         ToolTip.Tip="Move Up"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSkillUpCommand}"
-                                                        CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="6" Content="↓" Width="28" Margin="2,0,0,0" VerticalAlignment="Bottom"
+                                                        CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconArrowUp}"/></Button>
+                                                <Button Classes="icon" Grid.Column="6" Margin="4,0,0,0" VerticalAlignment="Bottom"
                                                         ToolTip.Tip="Move Down"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSkillDownCommand}"
-                                                        CommandParameter="{Binding}"/>
-                                                <Button Grid.Column="7" Content="×" Margin="5,0,0,0" VerticalAlignment="Bottom"
+                                                        CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconArrowDown}"/></Button>
+                                                <Button Classes="icon" Grid.Column="7" Margin="8,0,0,0" VerticalAlignment="Bottom"
                                                         ToolTip.Tip="Remove"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveSkillCommand}"
-                                                        CommandParameter="{Binding}"/>
+                                                        CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

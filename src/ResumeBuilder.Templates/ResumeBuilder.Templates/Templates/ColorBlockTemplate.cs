@@ -192,7 +192,7 @@ public class ColorBlockTemplate : BaseTemplate
 
     private void ComposeSidebarSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title.ToUpperInvariant())
                 .FontSize(9 * FontSizeScale)
@@ -286,7 +286,7 @@ public class ColorBlockTemplate : BaseTemplate
 
     private void ComposeMainSection(IContainer container, string title, Color accent, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title.ToUpperInvariant())
                 .FontSize(12 * FontSizeScale)

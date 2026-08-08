@@ -11,9 +11,14 @@
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Text="Section Order" FontWeight="SemiBold" FontSize="14"/>
-                                    <ToggleButton Grid.Column="1" Content="..."
-                                                  IsChecked="{Binding ShowSectionOrderPanel}"
-                                                  Padding="8,2"/>
+                                    <ToggleButton Grid.Column="1" Classes="icon"
+                                                  ToolTip.Tip="Show or hide this section"
+                                                  IsChecked="{Binding ShowSectionOrderPanel}">
+                                        <Panel>
+                                            <PathIcon Data="{StaticResource IconChevronDown}" IsVisible="{Binding ShowSectionOrderPanel}"/>
+                                            <PathIcon Data="{StaticResource IconChevronRight}" IsVisible="{Binding !ShowSectionOrderPanel}"/>
+                                        </Panel>
+                                    </ToggleButton>
                                 </Grid>
 
                                 <StackPanel Spacing="5" IsVisible="{Binding ShowSectionOrderPanel}">
@@ -30,14 +35,12 @@
                                                         <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
                                                                    VerticalAlignment="Center" Margin="8,0"
                                                                    Classes.dimmed="{Binding !IsVisible}"/>
-                                                        <Button Grid.Column="2" Content="↑" Width="28" Height="28"
-                                                                Padding="0" Margin="2,0"
+                                                        <Button Classes="icon" Grid.Column="2" Margin="2,0"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSectionUpCommand}"
-                                                                CommandParameter="{Binding}"/>
-                                                        <Button Grid.Column="3" Content="↓" Width="28" Height="28"
-                                                                Padding="0"
+                                                                CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconArrowUp}"/></Button>
+                                                        <Button Classes="icon" Grid.Column="3"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).MoveSectionDownCommand}"
-                                                                CommandParameter="{Binding}"/>
+                                                                CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconArrowDown}"/></Button>
                                                     </Grid>
                                                 </Border>
                                             </DataTemplate>

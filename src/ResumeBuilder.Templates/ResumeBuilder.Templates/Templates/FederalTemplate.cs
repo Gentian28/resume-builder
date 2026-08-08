@@ -163,7 +163,7 @@ public class FederalTemplate : BaseTemplate
     {
         var accent = ParseColor(AccentColor);
 
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title)
                 .FontSize(12 * FontSizeScale)

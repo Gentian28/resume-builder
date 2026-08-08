@@ -210,7 +210,7 @@ public class AcademicTemplate : BaseTemplate
 
     private void ComposeSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
             column.Item().Height(6);

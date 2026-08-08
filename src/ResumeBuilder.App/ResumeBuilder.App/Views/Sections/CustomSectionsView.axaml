@@ -26,10 +26,10 @@
                                                             <TextBlock Classes="fieldlabel" Text="Section Title"/>
                                                             <TextBox Grid.Column="0" Text="{Binding Title}" AutomationProperties.Name="Section Title"/>
                                                         </StackPanel>
-                                                        <Button Grid.Column="1" Content="×" Margin="5,0,0,0"
+                                                        <Button Classes="icon" Grid.Column="1" Margin="8,0,0,0"
                                                                 ToolTip.Tip="Remove section"
                                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveCustomSectionCommand}"
-                                                                CommandParameter="{Binding}"/>
+                                                                CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                                     </Grid>
 
                                                     <ItemsControl ItemsSource="{Binding Items}">
@@ -43,10 +43,10 @@
                                                                                 <TextBlock Classes="fieldlabel" Text="Item Title"/>
                                                                                 <TextBox Grid.Column="0" Text="{Binding Title}" AutomationProperties.Name="Item Title"/>
                                                                             </StackPanel>
-                                                                            <Button Grid.Column="1" Content="×" Margin="5,0,0,0"
+                                                                            <Button Classes="icon" Grid.Column="1" Margin="8,0,0,0"
                                                                                     ToolTip.Tip="Remove item"
                                                                                     Command="{Binding $parent[ItemsControl].((vm:CustomSectionViewModel)DataContext).RemoveItemCommand}"
-                                                                                    CommandParameter="{Binding}"/>
+                                                                                    CommandParameter="{Binding}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                                                         </Grid>
                                                                         <StackPanel Spacing="3">
                                                                             <TextBlock Classes="fieldlabel" Text="Subtitle"/>

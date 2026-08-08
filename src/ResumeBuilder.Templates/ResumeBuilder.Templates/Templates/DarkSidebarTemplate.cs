@@ -251,7 +251,7 @@ public class DarkSidebarTemplate : BaseTemplate
     private void ComposeMainSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
         var accent = ParseColor(AccentColor);
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title)
                 .FontSize(13 * FontSizeScale)

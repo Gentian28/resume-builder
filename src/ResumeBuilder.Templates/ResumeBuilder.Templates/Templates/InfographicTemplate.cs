@@ -302,7 +302,7 @@ public class InfographicTemplate : BaseTemplate
     private void ComposeTextSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
         var accent = ParseColor(AccentColor);
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title)
                 .FontSize(12 * FontSizeScale)

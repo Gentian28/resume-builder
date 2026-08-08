@@ -12,8 +12,8 @@
                             <StackPanel Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Text="Sync Settings" FontWeight="SemiBold" FontSize="14"/>
-                                    <Button Grid.Column="1" Content="×" Padding="4,0"
-                                            Command="{Binding ToggleSyncPanelCommand}"/>
+                                    <Button Classes="icon" Grid.Column="1"
+                                            Command="{Binding ToggleSyncPanelCommand}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                 </Grid>
 
                                 <TextBlock Text="Keep your résumés in a folder that syncs itself — Google Drive, OneDrive, Dropbox — and they follow you to every machine. Changes are copied both ways; the newer one wins."

@@ -235,7 +235,7 @@ public class OnePageTemplate : BaseTemplate
     {
         var accent = ParseColor(AccentColor);
 
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title.ToUpperInvariant())
                 .FontSize(Size(9))

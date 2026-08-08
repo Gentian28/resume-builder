@@ -205,8 +205,9 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [ObservableProperty]
     private float _pageMargin = 30f;
 
+    // Open by default: a nav entry that lands on a bare header with a hidden body reads as broken.
     [ObservableProperty]
-    private bool _showCustomizationPanel;
+    private bool _showCustomizationPanel = true;
 
     [ObservableProperty]
     private bool _showAccentColorPicker;
@@ -221,7 +222,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private ObservableCollection<SectionViewModel> _sections = new();
 
     [ObservableProperty]
-    private bool _showSectionOrderPanel;
+    private bool _showSectionOrderPanel = true;
 
     // Spell Check
     [ObservableProperty]
@@ -781,8 +782,15 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private void SelectEditorSection(EditorSection? section)
     {
-        if (section is not null)
-            SelectedEditorSection = section.Key;
+        if (section is null) return;
+
+        SelectedEditorSection = section.Key;
+
+        // Navigating is a statement of intent: a tool panel left open would stack above the
+        // section the user just asked for, pushing it below the fold.
+        ShowAiPanel = false;
+        ShowTailorPanel = false;
+        ShowSyncPanel = false;
     }
 
     partial void OnSelectedEditorSectionChanged(string value)
@@ -2991,6 +2999,11 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             LoadingMessage = $"Importing {importerName}...";
             IsLoading = true;
             StatusMessage = $"Importing {importerName}...";
+
+            // Let the renderer actually paint the overlay before the UI thread gets busy again.
+            // A fast parse followed by the (UI-thread) editor population otherwise completes
+            // without a single frame showing the overlay — "nothing happened, then it froze".
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
 
             await using var stream = await files[0].OpenReadAsync();
             // The importers are CPU-bound (PdfPig, zip, JSON parsing) despite their async

@@ -163,7 +163,7 @@ public class MinimalTemplate : BaseTemplate
 
     private void ComposeSection(IContainer container, string title, Action<ColumnDescriptor> content)
     {
-        container.Column(column =>
+        container.EnsureSpace(90).Column(column =>
         {
             column.Item().Text(title.ToUpper())
                 .FontSize(9 * FontSizeScale)

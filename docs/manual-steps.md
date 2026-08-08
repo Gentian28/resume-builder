@@ -10,9 +10,9 @@ and polish.
 |---|---|---|
 | 1 | Send screenshots to the portfolio session (+ winget follow-up, see `portfolio-brief.md`) | **ready — your move** |
 | 2 | winget PR #408983 for 1.0.3 | **done — merged & published 2026-08-07** |
-| 3 | Submit winget 1.2.0 | **superseded by 1.2.1 — PR #413617 was still in validation; submit 1.2.1 (or close #413617 in its favour)** |
-| 3b | Submit winget 1.2.1 | **ready — manual, or enable step 4 and re-run the winget workflow with `version: 1.2.1`** |
-| 4 | Turn on automatic winget submission | **unblocked — needs your PAT** |
+| 3 | Submit winget 1.2.0 | **done — PR #413617 merged & published 2026-08-08** |
+| 3b | Submit winget 1.2.1 | **done — PR #414016 opened 2026-08-08 by the workflow, waiting on validation** |
+| 4 | Turn on automatic winget submission | **done — PAT installed 2026-08-08; first live run submitted 1.2.1 (after granting the workflow `contents: write`)** |
 | 5 | SignPath code-signing | **declined 2026-07-29 — reapply once the project has visible adoption** |
 | 6 | macOS notarisation | optional, costs $99/yr |
 | — | Verify the Anthropic provider against the real API | optional, 60 seconds |

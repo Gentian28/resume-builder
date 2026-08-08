@@ -5,6 +5,27 @@ list of commits. This file *is* the GitHub release notes — the release workflo
 section matching the tag and fails the build if there isn't one.
 
 
+## 1.2.2
+
+Always knowing where your work is.
+
+### Added
+
+- **After every export, a toast offers Open and Show in folder** — producing a PDF and finding
+  it are now one flow, browser-download style. Works for cover letters too.
+- **"Export as PDF..." sits directly in the File menu** with Ctrl+E, since producing a PDF is
+  the point of the app.
+
+### Changed
+
+- **The save indicator says "All changes saved on this computer"** instead of a timestamp — it
+  answers "did it save, and where?" at a glance.
+- **"Save As..." is now "Duplicate..."** — it makes a copy inside the app, and has never asked
+  for a file location, so the Word phrase promised the wrong thing. Files come from Export.
+- **The first-run screen states the storage model in one breath:** résumés save automatically
+  inside the app, export a PDF when you need a file to send, turn on sync to have them on your
+  other machines.
+
 ## 1.2.1
 
 The rough edges a real import session showed up.

@@ -59,8 +59,8 @@ jobs:
       - name: Commit the manifest
         shell: bash
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "Gentian Shkembi"
+          git config user.email "gentian.shkembi@gmail.com"
           git add packaging/winget
           git commit -m "Add winget manifest for ${{ steps.v.outputs.version }}" || {
             echo "nothing to commit - manifest already present"

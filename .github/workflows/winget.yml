@@ -15,6 +15,11 @@ on:
         description: "Version to submit (no leading v), e.g. 1.1.0"
         required: true
 
+# The job commits the generated manifest back to main; without this the push is refused
+# with a 403 (default workflow permissions are read-only).
+permissions:
+  contents: write
+
 jobs:
   submit:
     # Two gates. The variable is the opt-in; the tag check keeps a pre-release or a hand-made

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Generate winget manifests for a released version.
 
@@ -56,12 +56,24 @@ $target = Join-Path $root $Version
 if (Test-Path $target) { throw "$target already exists - delete it first if you mean to regenerate." }
 New-Item -ItemType Directory -Path $target | Out-Null
 
-$today = (Get-Date).ToString('yyyy-MM-dd')
+# The date the version was RELEASED, not the date this script ran. Those are the same
+# whenever winget.yml fires on release: published, which is why this has always looked
+# right here. It bites on the workflow_dispatch path and on any hand run afterwards:
+# pgp-utility submitted 1.1.0 seventeen days late and the manifest claimed the version
+# had come out that afternoon. Kept in step with that repo's copy, per the README.
+$releaseDate = try {
+    $meta = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/tags/v$Version" -UseBasicParsing
+    ([datetime]$meta.published_at).ToString('yyyy-MM-dd')
+} catch {
+    Write-Warning "Could not read the release date from the API, falling back to today: $_"
+    (Get-Date).ToString('yyyy-MM-dd')
+}
+Write-Host "ReleaseDate: $releaseDate"
 foreach ($file in Get-ChildItem -Path $previous.FullName -Filter *.yaml) {
     $text = Get-Content $file.FullName -Raw
     $text = $text -replace 'PackageVersion: .+', "PackageVersion: $Version"
     $text = $text -replace 'InstallerSha256: [0-9A-Fa-f]{64}', "InstallerSha256: $hash"
-    $text = $text -replace 'ReleaseDate: \d{4}-\d{2}-\d{2}', "ReleaseDate: $today"
+    $text = $text -replace 'ReleaseDate: \d{4}-\d{2}-\d{2}', "ReleaseDate: $releaseDate"
     $text = $text -replace 'releases/download/v[0-9.]+/', "releases/download/v$Version/"
     $text = $text -replace 'releases/tag/v[0-9.]+', "releases/tag/v$Version"
     Set-Content -Path (Join-Path $target $file.Name) -Value $text -Encoding utf8 -NoNewline

@@ -144,6 +144,7 @@ jobs:
           name: release-${{ matrix.rid }}
           path: artifacts/**
           if-no-files-found: error
+          retention-days: 1
 
   publish:
     name: publish GitHub release

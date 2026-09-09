@@ -8,7 +8,7 @@ public record CloudFolder(string Name, string Path);
 ///
 /// Sync is the app's answer to "where do my résumés live?", but the panel asks for a folder path,
 /// which is a question most people cannot answer without going to look. Detecting the folders that
-/// are already mounted turns that into picking a name off a list — the same outcome as a native
+/// are already mounted turns that into picking a name off a list, the same outcome as a native
 /// cloud integration, without an OAuth flow, a client secret in a desktop binary, or the app
 /// holding a credential to someone's Drive.
 /// </summary>
@@ -16,7 +16,7 @@ public static class CloudFolders
 {
     /// <summary>
     /// Every provider folder present on this machine, most-likely-intended first. Empty when none
-    /// are installed — callers fall back to the folder picker.
+    /// are installed, and callers fall back to the folder picker.
     /// </summary>
     public static IReadOnlyList<CloudFolder> Detect()
     {

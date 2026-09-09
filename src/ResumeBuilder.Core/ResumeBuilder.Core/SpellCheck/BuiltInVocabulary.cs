@@ -4,7 +4,7 @@ namespace ResumeBuilder.Core.SpellCheck;
 /// Words the stock Hunspell dictionaries don't know but a résumé routinely contains. Without
 /// this list the checker flags ordinary industry vocabulary and then offers its nearest
 /// dictionary neighbour as a "fix" (Kubernetes → "Rubbernecks"), which reads as a broken
-/// feature. Ships with the app — unlike the personal dictionary, every install gets it and
+/// feature. Ships with the app: unlike the personal dictionary, every install gets it and
 /// updates extend it.
 /// </summary>
 public static class BuiltInVocabulary

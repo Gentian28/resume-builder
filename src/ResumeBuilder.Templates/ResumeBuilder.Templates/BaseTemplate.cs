@@ -155,7 +155,7 @@ public abstract class BaseTemplate : IResumeTemplate
 
     /// <summary>
     /// Display text for a LinkedIn link as a full typeable address: "https://www.linkedin.com/in/user/"
-    /// renders as "linkedin.com/in/user" — same convention as the "github.com/user" call sites.
+    /// renders as "linkedin.com/in/user", the same convention as the "github.com/user" call sites.
     /// </summary>
     protected static string FormatLinkedInDisplay(string? value)
     {

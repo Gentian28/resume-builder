@@ -6,7 +6,7 @@ namespace ResumeBuilder.Data;
 /// Takes a copy of the database before the schema is changed, and keeps the last few.
 ///
 /// Schema upgrades are the one moment this app rewrites a file holding work the user cannot
-/// reproduce — an employment history is not something you retype from memory. There are no EF
+/// reproduce: an employment history is not something you retype from memory. There are no EF
 /// migrations here, so an upgrade is hand-written steps against a live database; a mistake in
 /// <see cref="DatabaseInitializer.AddedColumns"/> is discovered on a user's machine, not in CI.
 /// A copy costs milliseconds and makes that recoverable instead of terminal.

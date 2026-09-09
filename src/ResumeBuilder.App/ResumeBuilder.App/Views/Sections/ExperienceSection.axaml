@@ -25,7 +25,7 @@
                                      field taking a label: stacking one above the box pushed the
                                      buttons out of vertical alignment. The header also names the
                                      entry, so a long list stays readable while scrolling, and
-                                     doubles as the collapse toggle — six roles fully expanded is a
+                                     doubles as the collapse toggle: six roles fully expanded is a
                                      page of form to scroll past to reach the one you came for. -->
                                 <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                                     <Button Grid.Column="0" Classes="icon" Margin="0,0,5,0"

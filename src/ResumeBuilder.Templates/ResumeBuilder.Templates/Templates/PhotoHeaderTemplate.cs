@@ -43,7 +43,7 @@ public class PhotoHeaderTemplate : BaseTemplate
         container.Column(page =>
         {
             // The header band is chrome rather than a section, so it is drawn whenever the personal
-            // info section is visible — and the body below still follows the configured order.
+            // info section is visible, and the body below still follows the configured order.
             if (ShouldRenderSection(SectionType.PersonalInfo, resume))
                 page.Item().Element(c => ComposeHeaderBand(c, resume));
 

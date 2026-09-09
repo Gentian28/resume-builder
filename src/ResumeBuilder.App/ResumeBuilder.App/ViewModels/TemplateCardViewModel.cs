@@ -25,7 +25,7 @@ public partial class TemplateCardViewModel : ObservableObject
     /// <summary>
     /// Drives a placeholder so a card never renders as an empty hole while its preview is being
     /// generated. Also false when rendering failed, in which case Thumbnail stays null and the
-    /// card falls back to text — a template you cannot preview is still a template you can pick.
+    /// card falls back to text: a template you cannot preview is still a template you can pick.
     /// </summary>
     [ObservableProperty]
     private bool _isLoadingThumbnail = true;

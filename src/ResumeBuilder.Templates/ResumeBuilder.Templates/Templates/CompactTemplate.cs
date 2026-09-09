@@ -40,7 +40,7 @@ public class CompactTemplate : BaseTemplate
 
             var sections = GetVisibleSections(resume);
 
-            // The summary rides along with the header rather than getting its own heading — but only
+            // The summary rides along with the header rather than getting its own heading, but only
             // when the header is actually rendered, otherwise it falls back to a section of its own.
             var summaryInHeader = sections.Contains(SectionType.Summary) && sections.Contains(SectionType.PersonalInfo);
 

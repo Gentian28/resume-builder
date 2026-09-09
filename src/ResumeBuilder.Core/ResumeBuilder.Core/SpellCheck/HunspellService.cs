@@ -170,7 +170,7 @@ public class HunspellService : ISpellChecker, IDisposable
 
         foreach (Match match in matches)
         {
-            // Trimming apostrophes shifts the word, so the reported offset has to shift with it —
+            // Trimming apostrophes shifts the word, so the reported offset has to shift with it,
             // otherwise the caller underlines (or replaces) the wrong span of text.
             var word = match.Value;
             var leadingQuotes = word.Length - word.TrimStart('\'').Length;

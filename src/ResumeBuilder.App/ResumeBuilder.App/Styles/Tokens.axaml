@@ -5,7 +5,7 @@
     Design tokens. The single source for colour, type and spacing in the app chrome.
 
     Every value here comes from the approved spec in docs/design/foundations/ and the contrast
-    ratios were computed, not eyeballed — see docs/ui-redesign-proposal.md for the arithmetic.
+    ratios were computed, not eyeballed. See docs/ui-redesign-proposal.md for the arithmetic.
     Light and dark are peers; the app follows the OS via RequestedThemeVariant="Default".
 
     These layer on top of Semi.Avalonia rather than replacing it. Semi owns buttons, inputs,
@@ -50,7 +50,7 @@
 
       <!-- Semi accent override. Semi's palette (SemiColorPrimary) is built with StaticResource
            and cannot be retargeted from outside, but its ControlThemes read this *alias* layer
-           via DynamicResource — so this is the supported override point.
+           via DynamicResource, so this is the supported override point.
            Light theme: dark accent carrying a white label. -->
       <SolidColorBrush x:Key="ButtonDefaultPrimaryForeground" Color="#4F46E5" />
       <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#4F46E5" />
@@ -93,11 +93,11 @@
       <SolidColorBrush x:Key="RbDanger" Color="#F85149" />
       <SolidColorBrush x:Key="RbDangerBg" Color="#2A1512" />
 
-      <!-- Semi accent override — dark. Note the inversion against the light dictionary: the
+      <!-- Semi accent override, dark. Note the inversion against the light dictionary: the
            accent used as *text* must be light to clear 4.5:1 on a dark panel (#8B93F8 = 6.45),
            while a filled button flips to a light fill with a near-black label (6.86). Giving
-           both roles the same colour is impossible here — see the arithmetic in
-           docs/ui-redesign-proposal.md — which is why Semi's own split between
+           both roles the same colour is impossible here (see the arithmetic in
+           docs/ui-redesign-proposal.md), which is why Semi's own split between
            ButtonDefaultPrimaryForeground and ButtonSolid* is what makes this expressible. -->
       <SolidColorBrush x:Key="ButtonDefaultPrimaryForeground" Color="#8B93F8" />
       <SolidColorBrush x:Key="ButtonSolidPrimaryBackground" Color="#8B93F8" />

@@ -8,7 +8,7 @@
 
         <!-- Full surface rather than a scrim-and-margin dialog. A cover letter is a document you
              work in for a while, not a prompt to dismiss, and the modal treatment made it read as
-             the latter — it also dimmed a preview the user is trying to read. It keeps its own
+             the latter: it also dimmed a preview the user is trying to read. It keeps its own
              header instead of the résumé command bar because the actions genuinely differ, and it
              needs no navigation rail: a letter has one section. -->
         <Border Background="{DynamicResource RbBg}">

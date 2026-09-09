@@ -13,7 +13,7 @@ namespace ResumeBuilder.App.Services;
 ///
 /// Degrades rather than gates, like the AI features. Running from source, from the portable zip, or
 /// from any build that was not installed by Velopack leaves <see cref="IsSupported"/> false and every
-/// operation a no-op — there is no install to update, and pretending otherwise would surface errors
+/// operation a no-op: there is no install to update, and pretending otherwise would surface errors
 /// to users who did nothing wrong.
 /// </summary>
 public sealed class UpdateService
@@ -96,7 +96,7 @@ public sealed class UpdateService
 
     /// <summary>
     /// Applies the downloaded update and restarts. This exits the process, so callers must save
-    /// first — an unsaved résumé lost to an update the user did not initiate would be inexcusable.
+    /// first: an unsaved résumé lost to an update the user did not initiate would be inexcusable.
     /// </summary>
     public void ApplyAndRestart()
     {

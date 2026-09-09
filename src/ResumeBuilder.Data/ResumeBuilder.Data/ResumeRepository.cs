@@ -206,7 +206,7 @@ public class ResumeRepository : IResumeRepository
     /// <summary>
     /// Clears the primary keys on a resume and everything under it, so it saves as a new record
     /// instead of overwriting whichever row happens to own those ids. Also mints a fresh
-    /// <see cref="Resume.SyncId"/> — a copy that kept the original's would be treated as the same
+    /// <see cref="Resume.SyncId"/>: a copy that kept the original's would be treated as the same
     /// resume by sync and overwrite it.
     /// </summary>
     public static void ResetIdentity(Resume resume)

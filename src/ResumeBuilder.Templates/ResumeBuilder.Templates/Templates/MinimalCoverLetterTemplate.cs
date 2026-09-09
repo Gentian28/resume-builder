@@ -7,7 +7,7 @@ namespace ResumeBuilder.Templates.Templates;
 
 /// <summary>
 /// The spare, modern letter: a letterspaced name, one hairline of accent, and then a great deal of
-/// air around a short body. Everything that can be implied is left out — no "RE:", no boxed blocks —
+/// air around a short body. Everything that can be implied is left out (no "RE:", no boxed blocks),
 /// on the assumption the letter is three paragraphs and wants to look like it.
 /// </summary>
 public class MinimalCoverLetterTemplate : BaseCoverLetterTemplate

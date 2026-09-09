@@ -99,7 +99,7 @@ public class ResumeDbContext : DbContext
 
             // Collections and settings objects are stored as JSON columns. Each needs a
             // ValueComparer, otherwise EF compares by reference and never notices in-place edits
-            // (list.Add(...), settings.AccentColor = ...) — those changes would silently not save.
+            // (list.Add(...), settings.AccentColor = ...): those changes would silently not save.
             entity.JsonList(r => r.Experiences);
             entity.JsonList(r => r.EducationList);
             entity.JsonList(r => r.Skills);

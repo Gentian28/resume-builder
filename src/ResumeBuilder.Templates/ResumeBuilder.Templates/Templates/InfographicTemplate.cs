@@ -33,7 +33,7 @@ public class InfographicTemplate : BaseTemplate
             // Two-column split
             column.Item().Row(row =>
             {
-                // Left column — visual elements
+                // Left column: visual elements
                 row.ConstantItem(LeftColumnWidth).Column(left =>
                 {
                     left.Spacing(SectionSpacing);
@@ -42,7 +42,7 @@ public class InfographicTemplate : BaseTemplate
 
                 row.ConstantItem(20); // Gutter
 
-                // Right column — text content
+                // Right column: text content
                 row.RelativeItem().Column(right =>
                 {
                     right.Spacing(SectionSpacing);

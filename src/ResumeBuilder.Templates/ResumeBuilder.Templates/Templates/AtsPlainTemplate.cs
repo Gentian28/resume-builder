@@ -7,7 +7,7 @@ namespace ResumeBuilder.Templates.Templates;
 /// <summary>
 /// Deliberately featureless: one column, one font, no rules, no bars, no tables, no images.
 /// Everything a naive resume parser trips over has been left out, so the text it lifts out of the
-/// PDF reads in the same order a human does. The accent color is honoured but defaults to black —
+/// PDF reads in the same order a human does. The accent color is honoured but defaults to black,
 /// color does not affect text extraction, layout does.
 /// </summary>
 public class AtsPlainTemplate : BaseTemplate

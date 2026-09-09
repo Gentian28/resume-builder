@@ -6,7 +6,7 @@ namespace ResumeBuilder.Templates;
 
 /// <summary>
 /// Shared plumbing for the letter templates: page setup and the recipient block. The settings are
-/// taken as they stand rather than through <see cref="TemplateSettings.ApplyTemplateDefaults"/> —
+/// taken as they stand rather than through <see cref="TemplateSettings.ApplyTemplateDefaults"/>,
 /// they were resolved against the resume's template, and re-defaulting them here would undo the match
 /// between a letter and the resume it accompanies.
 /// </summary>

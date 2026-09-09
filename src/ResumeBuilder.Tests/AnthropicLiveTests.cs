@@ -7,8 +7,8 @@ namespace ResumeBuilder.Tests;
 /// <summary>
 /// The one thing the rest of the suite cannot cover: an actual request to Anthropic.
 ///
-/// Everything else about the provider is verified offline — configuration, isolation between
-/// providers, graceful failure — but none of it proves the request shape is accepted or that the
+/// Everything else about the provider is verified offline, configuration, isolation between
+/// providers, graceful failure, but none of it proves the request shape is accepted or that the
 /// reply parses. Compiling proves the SDK's type names exist; only a real call proves the model ID,
 /// the effort level, and the response handling are right.
 ///

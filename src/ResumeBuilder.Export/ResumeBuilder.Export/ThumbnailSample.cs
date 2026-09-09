@@ -9,7 +9,7 @@ namespace ResumeBuilder.Export;
 /// because a file was missing or moved at runtime. It mirrors that fixture: entirely synthetic,
 /// no real person's details.
 ///
-/// Deliberately full enough to exercise every section a template might render — a thumbnail of an
+/// Deliberately full enough to exercise every section a template might render: a thumbnail of an
 /// empty résumé shows nothing about the design, which is the whole point of having one.
 /// </summary>
 public static class ThumbnailSample

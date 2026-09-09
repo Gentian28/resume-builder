@@ -7,7 +7,7 @@ namespace ResumeBuilder.Templates.Templates;
 
 /// <summary>
 /// The traditional full-block business letter: sender address block flush left, date, inside address,
-/// subject line, salutation, body and a signature space. Serif type, no colour, no rules — the format
+/// subject line, salutation, body and a signature space. Serif type, no colour, no rules: the format
 /// a law firm, a bank or a university expects to receive.
 /// </summary>
 public class ClassicCoverLetterTemplate : BaseCoverLetterTemplate

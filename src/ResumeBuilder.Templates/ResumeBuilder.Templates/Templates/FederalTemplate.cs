@@ -9,7 +9,7 @@ namespace ResumeBuilder.Templates.Templates;
 /// A long-form public-sector CV. Government reviewers score against a posting line by line, so
 /// nothing is abbreviated: every role carries its employer, location, month-precision dates and the
 /// complete list of achievements, and every credential carries its identifier. Verbosity is the
-/// feature — this template is expected to run to several pages.
+/// feature: this template is expected to run to several pages.
 /// </summary>
 public class FederalTemplate : BaseTemplate
 {

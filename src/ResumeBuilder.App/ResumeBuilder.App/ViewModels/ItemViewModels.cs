@@ -765,7 +765,7 @@ public class RemoteResumeViewModel
 }
 
 /// <summary>
-/// One row in the application tracker. Wraps the entity so status changes save immediately —
+/// One row in the application tracker. Wraps the entity so status changes save immediately,
 /// a tracker you have to remember to save is a tracker that goes out of date.
 /// </summary>
 public partial class JobApplicationViewModel : ObservableObject
@@ -786,7 +786,7 @@ public partial class JobApplicationViewModel : ObservableObject
 
     public DateTime? AppliedOn { get; }
 
-    /// <summary>"Applied 21 days ago" — the reading that makes the list worth opening.</summary>
+    /// <summary>"Applied 21 days ago": the reading that makes the list worth opening.</summary>
     public string Age => AppliedOn is null
         ? "Not sent yet"
         : Days switch

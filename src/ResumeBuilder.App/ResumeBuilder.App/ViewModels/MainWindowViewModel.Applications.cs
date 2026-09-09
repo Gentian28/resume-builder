@@ -14,7 +14,7 @@ namespace ResumeBuilder.App.ViewModels;
 /// The application tracker.
 ///
 /// Tailoring already produces a résumé per application and stores the target role and the posting
-/// with it — but a list of variants with no company, date, or outcome cannot answer the question
+/// with it, but a list of variants with no company, date, or outcome cannot answer the question
 /// that matters when the phone rings: which version did *they* read, and how long have they had it.
 /// This is that answer.
 /// </summary>
@@ -170,7 +170,7 @@ public partial class MainWindowViewModel
         UpdateApplicationSummary();
     }
 
-    /// <summary>Opens the résumé that was actually sent — the reason the tracker exists.</summary>
+    /// <summary>Opens the résumé that was actually sent: the reason the tracker exists.</summary>
     [RelayCommand]
     private async Task OpenApplicationResumeAsync(JobApplicationViewModel? row)
     {

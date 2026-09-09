@@ -177,7 +177,7 @@ public class StarterTemplate : BaseTemplate
 
             if (links.Any())
             {
-                // Same size and opacity as the contact line above — a smaller, fainter second
+                // Same size and opacity as the contact line above, a smaller, fainter second
                 // line makes the identical "|" separators read as two different glyphs.
                 column.Item().Text(string.Join(ContactSeparator, links))
                     .FontSize(9 * FontSizeScale).FontColor(Colors.White.WithAlpha(0.9f));

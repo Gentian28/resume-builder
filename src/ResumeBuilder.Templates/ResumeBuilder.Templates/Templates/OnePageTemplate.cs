@@ -7,7 +7,7 @@ namespace ResumeBuilder.Templates.Templates;
 
 /// <summary>
 /// Built for a long career that still has to fit on one sheet. The density comes entirely from the
-/// layout — a tighter type scale, tighter leading, narrow margins and two columns that let the short
+/// layout: a tighter type scale, tighter leading, narrow margins and two columns that let the short
 /// sections stack beside the long ones. Nothing is dropped to buy the space: every skill, achievement
 /// and certification is still printed, and a resume that genuinely will not fit runs to a second page
 /// rather than silently losing content.

@@ -14,8 +14,8 @@ sealed class Program
     {
         // Must be the first thing that runs, before Avalonia and before any window exists.
         // Velopack re-launches the app with hook arguments during install, update and uninstall;
-        // Run() handles those and exits the process. If this is called late — or after a window
-        // opens — the installer flashes a UI at the user and first-run/update hooks never fire.
+        // Run() handles those and exits the process. If this is called late, or after a window
+        // opens, the installer flashes a UI at the user and first-run/update hooks never fire.
         VelopackApp.Build().Run();
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

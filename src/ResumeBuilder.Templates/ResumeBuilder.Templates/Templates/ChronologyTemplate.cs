@@ -8,7 +8,7 @@ namespace ResumeBuilder.Templates.Templates;
 /// <summary>
 /// A date gutter rather than a timeline: dates sit in a fixed left column and content flows in the
 /// wide right column, so every "when" lines up down the page and a career reads at a glance. Unlike
-/// the Timeline template there are no dots or connectors — the alignment alone carries the structure,
+/// the Timeline template there are no dots or connectors: the alignment alone carries the structure,
 /// which keeps the page quiet and prints cleanly in black and white.
 /// </summary>
 public class ChronologyTemplate : BaseTemplate

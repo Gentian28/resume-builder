@@ -22,7 +22,7 @@ public partial class MainWindow : Window
     /// The declared 1400x900 is in device-independent units, so on a display with display scaling
     /// the usable logical area can be far smaller than it looks: 1920x1080 at 150% is only
     /// 1280x720. The window was then larger than the screen and WindowStartupLocation="CenterScreen"
-    /// centred the overflow, putting the title bar above the top edge — no close, no minimise, no
+    /// centred the overflow, putting the title bar above the top edge: no close, no minimise, no
     /// way to drag it back, because MinWidth/MinHeight also blocked shrinking.
     ///
     /// Maximising rather than merely resizing is deliberate: if the preferred size does not fit,

@@ -8,7 +8,7 @@ namespace ResumeBuilder.App.Converters;
 /// <summary>
 /// Colours the AI status dot in the command bar.
 ///
-/// Green means a model is reachable on this machine and nothing leaves it — the product's
+/// Green means a model is reachable on this machine and nothing leaves it, the product's
 /// strongest claim, so it is the only state that gets the affirmative colour. Any other state is
 /// neutral rather than red: not having configured a model is not an error, and keyword analysis
 /// and ATS scoring work regardless.

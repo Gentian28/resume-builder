@@ -415,7 +415,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     /// Looks for a newer release and pre-downloads it, so "Restart &amp; update" is instant.
     /// Fire-and-forget on purpose: this must never delay startup, and
     /// <see cref="UpdateService"/> already swallows offline/feed errors rather than surfacing
-    /// them — a failed update check is not the user's problem to solve.
+    /// them: a failed update check is not the user's problem to solve.
     /// </summary>
     private async Task CheckForUpdatesAsync()
     {
@@ -777,7 +777,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     /// <summary>
     /// Preview of the current template, shown in the command bar's picker.
     ///
-    /// It is the only always-visible reminder that 25 designs exist — the gallery is otherwise
+    /// It is the only always-visible reminder that 25 designs exist: the gallery is otherwise
     /// invisible until opened. Costs one already-cached thumbnail.
     /// </summary>
     [ObservableProperty]
@@ -833,7 +833,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     /// <summary>
     /// Subscribes the nav counts to every list that feeds them, and refreshes once immediately.
     ///
-    /// Must be re-run whenever the collections are replaced rather than mutated — loading a
+    /// Must be re-run whenever the collections are replaced rather than mutated: loading a
     /// résumé does exactly that, so a subscription made only in the constructor would go stale
     /// on the first Open and quietly stop updating.
     /// </summary>
@@ -917,7 +917,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     /// <summary>
     /// Shown when the database is empty, i.e. this is a first run.
     ///
-    /// A blank form is a poor answer to "what is this?" — the product's strongest assets, the
+    /// A blank form is a poor answer to "what is this?": the product's strongest assets, the
     /// template gallery and importing an existing résumé, are invisible until someone goes
     /// looking. This offers all three routes in and then gets out of the way.
     ///
@@ -930,7 +930,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private void DismissFirstRun() => ShowFirstRun = false;
 
-    /// <summary>Start blank — the behaviour the app has always had, now an explicit choice.</summary>
+    /// <summary>Start blank: the behaviour the app has always had, now an explicit choice.</summary>
     [RelayCommand]
     private void StartFromScratch()
     {
@@ -1647,7 +1647,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     /// <summary>
     /// True while Anthropic is the selected provider. Drives the panel: Anthropic has no base URL
     /// to choose and always needs a key, so the endpoint field is hidden rather than shown
-    /// disabled — an input that cannot be used is worse than one that isn't there.
+    /// disabled: an input that cannot be used is worse than one that isn't there.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsOpenAiCompatibleSelected))]
@@ -1699,7 +1699,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     }
 
     /// <summary>
-    /// Anthropic needs no endpoint choice — there is one API — so the only inputs that matter are
+    /// Anthropic needs no endpoint choice (there is one API), so the only inputs that matter are
     /// the key and the model.
     /// </summary>
     private void ApplyAnthropicSettings(AiProviderRouter router)
@@ -1739,7 +1739,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     }
 
     /// <summary>
-    /// Selects Anthropic and fills in its default model. Deliberately does not apply — the user
+    /// Selects Anthropic and fills in its default model. Deliberately does not apply: the user
     /// still has to paste a key, and applying here would only produce an error message.
     /// </summary>
     [RelayCommand]
@@ -2203,7 +2203,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     /// Cloud folders found on this machine, offered as one-click choices.
     ///
     /// The panel used to ask for a folder path, which is a question most people cannot answer
-    /// without going to look — so the feature that puts résumés on Drive read as a technical
+    /// without going to look, so the feature that puts résumés on Drive read as a technical
     /// setting. Detecting what is already mounted turns it into picking a name.
     /// </summary>
     public IReadOnlyList<CloudFolder> DetectedCloudFolders { get; } = CloudFolders.Detect();
@@ -2211,7 +2211,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     public bool HasDetectedCloudFolders => DetectedCloudFolders.Count > 0;
 
     /// <summary>
-    /// Fills in a subfolder of the chosen cloud folder and configures sync in one step — picking
+    /// Fills in a subfolder of the chosen cloud folder and configures sync in one step: picking
     /// "Google Drive" should not then require a second click on Configure.
     /// </summary>
     [RelayCommand]
@@ -2884,7 +2884,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             IsLoading = true;
             var filePath = file.Path.LocalPath;
 
-            // QuestPDF/DOCX rendering is synchronous CPU work — run it off the UI thread so the
+            // QuestPDF/DOCX rendering is synchronous CPU work: run it off the UI thread so the
             // overlay actually shows. Render from a snapshot: the autosave path mutates
             // CurrentResume (SyncLegacyStyling) and must not race the background render.
             var snapshot = JsonSerializer.Deserialize<Resume>(JsonSerializer.Serialize(CurrentResume))!;
@@ -3043,12 +3043,12 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
             // Let the renderer actually paint the overlay before the UI thread gets busy again.
             // A fast parse followed by the (UI-thread) editor population otherwise completes
-            // without a single frame showing the overlay — "nothing happened, then it froze".
+            // without a single frame showing the overlay: "nothing happened, then it froze".
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
 
             await using var stream = await files[0].OpenReadAsync();
             // The importers are CPU-bound (PdfPig, zip, JSON parsing) despite their async
-            // signatures — run them off the UI thread or the overlay never gets a frame.
+            // signatures: run them off the UI thread or the overlay never gets a frame.
             var result = await Task.Run(() => _services.ExportService.ImportAsync(stream, importerName));
 
             if (!result.Success || result.Data == null)

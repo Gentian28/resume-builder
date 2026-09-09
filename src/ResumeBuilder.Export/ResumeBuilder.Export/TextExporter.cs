@@ -5,7 +5,7 @@ namespace ResumeBuilder.Export;
 
 /// <summary>
 /// Plain-text export for applicant tracking systems: no bullet glyphs, box drawing or other
-/// decoration that ATS parsers mangle — just uppercase headings and hyphen-prefixed list items.
+/// decoration that ATS parsers mangle: just uppercase headings and hyphen-prefixed list items.
 /// </summary>
 public class TextExporter : IExporter
 {

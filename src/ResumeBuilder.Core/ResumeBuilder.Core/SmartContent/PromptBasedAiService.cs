@@ -4,9 +4,9 @@ namespace ResumeBuilder.Core.SmartContent;
 /// The résumé-writing half of <see cref="IAiService"/>: every prompt, and the parsing of every
 /// reply. Providers supply only transport.
 ///
-/// This exists so the two providers cannot drift. The prompts here are the product — the wording
+/// This exists so the two providers cannot drift. The prompts here are the product: the wording
 /// that stops summaries reading like "results-driven team player", the bullet format the parsers
-/// depend on — and a user who switches provider is switching where their text goes, not which
+/// depend on, and a user who switches provider is switching where their text goes, not which
 /// features work or how good the output is.
 /// </summary>
 public abstract class PromptBasedAiService : IAiService
@@ -21,7 +21,7 @@ public abstract class PromptBasedAiService : IAiService
 
     /// <summary>
     /// Send one prompt and return the reply text. The only thing a provider has to implement.
-    /// Implementations report failure as <see cref="AiResult{T}.Failed"/> rather than throwing —
+    /// Implementations report failure as <see cref="AiResult{T}.Failed"/> rather than throwing,
     /// AI features degrade, they don't crash the editor.
     /// </summary>
     protected abstract Task<AiResult<string>> SendAsync(string prompt, CancellationToken cancellationToken);
@@ -161,7 +161,7 @@ SUGGESTION: [Your specific suggestion]
 
     /// <summary>
     /// Reads the TYPE/SUGGESTION block format. Carried over unchanged from the OpenAI-compatible
-    /// service so extracting it stays a pure move — an unrecognised TYPE still falls back to
+    /// service so extracting it stays a pure move: an unrecognised TYPE still falls back to
     /// <see cref="SuggestionType.Improvement"/> rather than dropping the suggestion.
     /// </summary>
     protected static List<AiSuggestion> ParseSuggestions(string response)

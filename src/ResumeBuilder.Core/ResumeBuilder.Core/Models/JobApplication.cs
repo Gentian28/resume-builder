@@ -25,7 +25,7 @@ public enum ApplicationStatus
 /// One job application: which résumé went where, when, and what happened.
 ///
 /// The résumés already carry <see cref="Resume.TargetRole"/> and <see cref="Resume.JobDescription"/>
-/// once tailored, so the work of adapting a CV per application is stored — but a list of variants
+/// once tailored, so the work of adapting a CV per application is stored, but a list of variants
 /// with the same role name and no company, date, or outcome cannot answer "which version did this
 /// company read?". That question is the point of this entity: when the interview call comes, the
 /// answer has to be one click away.
@@ -35,7 +35,7 @@ public class JobApplication
     public int Id { get; set; }
 
     /// <summary>
-    /// The résumé that was actually sent — usually a tailored variant. Nullable because someone
+    /// The résumé that was actually sent, usually a tailored variant. Nullable because someone
     /// may track an application before deciding which version to send, and because deleting a
     /// résumé must not delete the record that they applied.
     /// </summary>
@@ -48,13 +48,13 @@ public class JobApplication
     public ApplicationStatus Status { get; set; } = ApplicationStatus.Applied;
 
     /// <summary>
-    /// When it was sent. Null while the status is <see cref="ApplicationStatus.Saved"/> — a job
+    /// When it was sent. Null while the status is <see cref="ApplicationStatus.Saved"/>: a job
     /// you have not applied to has no application date, and inventing one makes "how long have
     /// they had this?" wrong.
     /// </summary>
     public DateTime? AppliedOn { get; set; }
 
-    /// <summary>The posting, so it can be reopened. Not validated — a pasted link is better than
+    /// <summary>The posting, so it can be reopened. Not validated: a pasted link is better than
     /// a rejected one.</summary>
     public string Link { get; set; } = string.Empty;
 
@@ -66,7 +66,7 @@ public class JobApplication
 
     /// <summary>
     /// Whole days since it was sent, or null if it has not been. Drives the "silent for three
-    /// weeks" reading that makes the list worth opening, so it is computed rather than stored —
+    /// weeks" reading that makes the list worth opening, so it is computed rather than stored,
     /// a stored value is wrong the next morning.
     /// </summary>
     public int? DaysSinceApplied => AppliedOn is null

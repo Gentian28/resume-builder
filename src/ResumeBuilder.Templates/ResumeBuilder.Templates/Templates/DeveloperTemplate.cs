@@ -8,7 +8,7 @@ namespace ResumeBuilder.Templates.Templates;
 /// <summary>
 /// A code-editor reading of a resume: monospace type, markdown-style section headings, comment-styled
 /// metadata and skills as inline tags, with the repository and site links promoted to the top of the
-/// contact block. The conceit stops at the point where it would cost legibility — body copy still
+/// contact block. The conceit stops at the point where it would cost legibility: body copy still
 /// wraps and prints normally, and every glyph used is plain ASCII so it survives any monospace face.
 /// </summary>
 public class DeveloperTemplate : BaseTemplate

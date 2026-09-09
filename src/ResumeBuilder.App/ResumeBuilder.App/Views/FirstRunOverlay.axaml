@@ -78,7 +78,7 @@
                 </UniformGrid>
 
                 <!-- What the app does after the form is filled in. Without this the first session
-                     ends at "typed my details, exported a PDF" and the rest is never found —
+                     ends at "typed my details, exported a PDF" and the rest is never found,
                      which is the difference between a form with a PDF button and a tool someone
                      comes back to. Three capabilities, not a feature list. -->
                 <UniformGrid Columns="3" Margin="0,2,0,0">

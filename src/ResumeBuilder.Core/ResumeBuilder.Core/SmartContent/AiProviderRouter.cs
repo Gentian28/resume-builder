@@ -3,7 +3,7 @@ namespace ResumeBuilder.Core.SmartContent;
 /// <summary>Which backend AI requests go to.</summary>
 public enum AiProvider
 {
-    /// <summary>OpenAI itself, or any OpenAI-compatible server — including a local LLM.</summary>
+    /// <summary>OpenAI itself, or any OpenAI-compatible server, including a local LLM.</summary>
     OpenAiCompatible,
 
     /// <summary>Anthropic's Messages API.</summary>

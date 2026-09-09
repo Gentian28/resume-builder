@@ -15,7 +15,7 @@ public enum SectionType
 
 public class SectionOrder
 {
-    /// <summary>Every section in its canonical order — the seed for new resumes and the source for repair.</summary>
+    /// <summary>Every section in its canonical order: the seed for new resumes and the source for repair.</summary>
     public static readonly IReadOnlyList<SectionType> AllSections = new[]
     {
         SectionType.PersonalInfo,

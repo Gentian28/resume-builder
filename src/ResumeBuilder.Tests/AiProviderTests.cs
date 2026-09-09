@@ -5,7 +5,7 @@ namespace ResumeBuilder.Tests;
 
 /// <summary>
 /// Two providers now sit behind one <see cref="IAiService"/>. What matters is that picking one
-/// never leaks into the other — a key typed for Anthropic must not end up on an OpenAI request —
+/// never leaks into the other, a key typed for Anthropic must not end up on an OpenAI request,
 /// and that an unconfigured provider degrades instead of throwing, which is what keeps the rest of
 /// the app working without any AI set up at all.
 /// </summary>
@@ -57,7 +57,7 @@ public class AiProviderTests
     {
         var router = new AiProviderRouter { Active = AiProvider.Anthropic };
 
-        // A configured local endpoint must not make Anthropic look ready — otherwise the panel
+        // A configured local endpoint must not make Anthropic look ready, otherwise the panel
         // would offer features that fail on the first call.
         router.OpenAiCompatible.ConfigureLocal("http://localhost:11434/v1", "llama3");
 

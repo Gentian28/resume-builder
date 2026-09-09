@@ -18,18 +18,20 @@ public static class DatabaseBackup
 
     /// <summary>
     /// Copies the database next to itself as <c>resumes.backup-{timestamp}.db</c>, pruning older
-    /// copies. Returns the backup path, or null when there was nothing to copy.
+    /// copies. The result says which of three things happened: a copy was made, there was nothing
+    /// to copy, or the copy failed and why.
     ///
-    /// Never throws: a failed backup must not stop the app opening. Losing the ability to take a
-    /// backup is worth a silent skip; refusing to start is not.
+    /// Never throws: a failed backup must not stop the app opening. But it must not be silent
+    /// either, because the caller is about to rewrite the file it could not copy; the error travels
+    /// in the result so the app can say so.
     /// </summary>
-    public static string? Create(ResumeDbContext context)
+    public static BackupResult Create(ResumeDbContext context)
     {
         try
         {
             var path = PathOf(context);
             if (path is null || !File.Exists(path))
-                return null;
+                return BackupResult.Skipped;
 
             // The whole reason this class exists. SQLite in WAL mode keeps recent writes in a
             // separate -wal file, so copying only the .db silently captures a database missing
@@ -43,11 +45,11 @@ public static class DatabaseBackup
 
             File.Copy(path, destination, overwrite: true);
             Prune(directory);
-            return destination;
+            return BackupResult.Made(destination);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return null;
+            return BackupResult.Failed(ex.Message);
         }
     }
 
@@ -81,11 +83,25 @@ public static class DatabaseBackup
     /// The file behind the connection. Returns null for in-memory databases, which the tests use
     /// and which have nothing to copy.
     /// </summary>
-    private static string? PathOf(ResumeDbContext context)
+    public static string? PathOf(ResumeDbContext context)
     {
         var source = context.Database.GetDbConnection().DataSource;
         return string.IsNullOrWhiteSpace(source) || source.Contains(":memory:", StringComparison.OrdinalIgnoreCase)
             ? null
             : source;
     }
+}
+
+/// <summary>
+/// What <see cref="DatabaseBackup.Create"/> did. Exactly one of the three is true: a copy exists at
+/// <see cref="Path"/>, there was nothing to copy, or the copy failed for <see cref="Error"/>.
+/// </summary>
+public sealed record BackupResult(string? Path, string? Error)
+{
+    public static readonly BackupResult Skipped = new(null, null);
+    public static BackupResult Made(string path) => new(path, null);
+    public static BackupResult Failed(string error) => new(null, error);
+
+    public bool Succeeded => Path is not null;
+    public bool WasSkipped => Path is null && Error is null;
 }

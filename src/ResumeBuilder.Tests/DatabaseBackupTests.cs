@@ -41,7 +41,7 @@ public class DatabaseBackupTests : IDisposable
             db.Resumes.Add(new Resume { Name = "Irreplaceable", TargetRole = "Senior Engineer" });
             db.SaveChanges();
 
-            DatabaseBackup.Create(db).Should().NotBeNull();
+            DatabaseBackup.Create(db).Succeeded.Should().BeTrue();
         }
 
         var backup = DatabaseBackup.List(_dir).Single();
@@ -62,7 +62,7 @@ public class DatabaseBackupTests : IDisposable
         {
             // Timestamps have one-second resolution, so distinct names are forced by hand rather
             // than by sleeping through the test.
-            var made = DatabaseBackup.Create(db);
+            var made = DatabaseBackup.Create(db).Path;
             if (made != null && File.Exists(made))
             {
                 File.Move(made, Path.Combine(_dir, $"resumes.backup-2020010{i}-000000.db"), overwrite: true);
@@ -80,7 +80,40 @@ public class DatabaseBackupTests : IDisposable
         using var db = new ResumeDbContext(new DbContextOptionsBuilder<ResumeDbContext>()
             .UseSqlite("Data Source=:memory:").Options);
 
-        DatabaseBackup.Create(db).Should().BeNull();
+        DatabaseBackup.Create(db).WasSkipped.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Initialize_ReportsWhereTheBackupWentAndWhetherItWasNeeded()
+    {
+        // A fresh file has nothing pending after EnsureCreated, so no backup is taken and the report
+        // says so plainly rather than leaving the caller to infer it from a null.
+        using var db = Open("resumes.db");
+
+        var report = DatabaseInitializer.Initialize(db);
+
+        report.DatabasePath.Should().Be(Path.Combine(_dir, "resumes.db"));
+        report.BackupNeeded.Should().BeFalse();
+        report.BackupFailed.Should().BeFalse();
+        report.BackupPath.Should().BeNull();
+    }
+
+    [Fact]
+    public void Initialize_OnAFileThatIsNotADatabase_ThrowsATypedErrorNamingTheFile()
+    {
+        // This used to surface as an unhandled SqliteException before any window existed, so the
+        // app simply did not appear. The typed error carries the path and the backups next to it.
+        var path = Path.Combine(_dir, "resumes.db");
+        File.WriteAllText(path, "this is not a database");
+        File.WriteAllText(Path.Combine(_dir, "resumes.backup-20260101-000000.db"), "older copy");
+
+        using var db = Open("resumes.db");
+        var act = () => DatabaseInitializer.Initialize(db);
+
+        var thrown = act.Should().Throw<DatabaseOpenException>().Which;
+        thrown.DatabasePath.Should().Be(path);
+        thrown.Message.Should().Contain(path);
+        thrown.AvailableBackups.Should().ContainSingle().Which.Should().EndWith("resumes.backup-20260101-000000.db");
     }
 
     [Fact]

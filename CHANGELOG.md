@@ -5,6 +5,23 @@ list of commits. This file *is* the GitHub release notes — the release workflo
 section matching the tag and fails the build if there isn't one.
 
 
+## Unreleased
+
+### Fixed
+
+- **An edit typed while a save was writing is no longer marked as saved.** The save cleared the
+  unsaved flag when it finished, even for changes made during the write, so the status line said
+  "All changes saved on this computer" about text that existed only in memory. A save now settles
+  only the edits it started with; anything newer stays marked unsaved until the next autosave.
+- **Closing the window and applying an update both check the cover letter too.** A cover letter
+  with unsaved changes was lost when the window closed while the resume was clean, and an update
+  restarted the app even when the pre-restart save had failed.
+- **A database that cannot be opened now shows a window instead of nothing.** The app used to exit
+  silently on a corrupt or truncated database. It now names the file and lists the backups next to
+  it so you can go back to one.
+- **A pre-upgrade backup that fails is reported.** The upgrade still goes ahead, and the app says
+  so the moment its window opens, with the path to copy while it is still intact.
+
 ## 1.2.3
 
 A polish pass over the editor and the printed page.

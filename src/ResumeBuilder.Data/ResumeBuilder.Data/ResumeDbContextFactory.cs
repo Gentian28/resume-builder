@@ -34,12 +34,18 @@ public class ResumeDbContextFactory : IResumeDbContextFactory
     public ResumeDbContext CreateDbContext() =>
         _options is null ? new ResumeDbContext() : new ResumeDbContext(_options);
 
-    /// <summary>Creates the factory for the app's real database and ensures the schema is current.</summary>
+    /// <summary>What initialization found and did, set by <see cref="CreateInitialized"/>.</summary>
+    public DatabaseInitializationReport? Report { get; private set; }
+
+    /// <summary>
+    /// Creates the factory for the app's real database and ensures the schema is current.
+    /// Throws <see cref="DatabaseOpenException"/> when the file cannot be opened at all.
+    /// </summary>
     public static ResumeDbContextFactory CreateInitialized()
     {
         var factory = new ResumeDbContextFactory();
         using var context = factory.CreateDbContext();
-        DatabaseInitializer.Initialize(context);
+        factory.Report = DatabaseInitializer.Initialize(context);
         return factory;
     }
 }

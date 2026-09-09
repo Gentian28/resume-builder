@@ -55,9 +55,9 @@ what is stored and the three cases where it touches the network.
 - **ATS keyword analysis** — paste a job description to get a match score, matched/missing keywords, and warnings.
 - **AI assistance** — optional; works against OpenAI or any OpenAI-compatible endpoint, including a local LLM (Ollama, LM Studio).
 - **Undo/redo** — across text edits and list operations.
-- **Sync** — two-way sync through a local folder, with conflict detection. The sync panel finds your Google Drive, OneDrive, Dropbox or iCloud folder and offers it as one button; no account, no upload.
-- **Applications** — track which résumé went to which company, when, and what happened; one click reopens the exact version they read. Anything silent for more than a fortnight is marked worth chasing.
-- **Backups before upgrades** — the database is copied before any upgrade that changes its schema, and the last three copies are kept.
+- **Sync**: two-way sync through a local folder, with conflict detection. The sync panel finds your Google Drive, OneDrive, Dropbox or iCloud folder and offers it as one button; no account, no upload.
+- **Applications**: track which résumé went to which company, when, and what happened; one click reopens the exact version they read. Anything silent for more than a fortnight is marked worth chasing.
+- **Backups before upgrades**: the database is copied before any upgrade that changes its schema, and the last three copies are kept.
 
 ## Requirements
 

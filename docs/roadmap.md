@@ -31,7 +31,7 @@ five phases, and an honest risk list. It does not need rewriting. It needs a *de
 
 ---
 
-## 1. Make what exists discoverable — shipped in 1.2.0
+## 1. Make what exists discoverable: shipped in 1.2.0
 
 *Done: the sync panel finds the cloud folder and offers it as a button, the first-run screen says
 what the app does, and the export toast (1.2.2) puts Open and Show in folder where the PDF lands.
@@ -65,7 +65,7 @@ relevant rather than filed under Tools:
 - **The first-run screen never mentions tailoring, ATS scoring, or cover letters.** The three
   routes in are right; the pitch is missing.
 
-## 2. Close the application loop — shipped in 1.2.0 as Applications
+## 2. Close the application loop: shipped in 1.2.0 as Applications
 
 *Done, as written below: company, date applied, status, the exact variant reopened in one click,
 and the header count of what needs attention. The section stays as the record of why.*

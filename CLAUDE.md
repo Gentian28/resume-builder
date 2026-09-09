@@ -18,8 +18,8 @@ Package versions live **only** in `Directory.Packages.props` (Central Package Ma
 
 Layered class libraries under `src/`, each project only depending on the ones above it:
 
-- **Core** — domain models, validation, undo/redo, spell check, keyword analysis/AI (`SmartContent/`), sync, and since 1.2.0 the `JobApplication` model (which résumé went to which company, when, and what happened) plus `Sync/CloudFolders`, which finds a Drive, OneDrive, Dropbox or iCloud folder to offer as the sync target. No UI, no persistence. Server-ready.
-- **Data** — EF Core + SQLite (`%LocalAppData%/ResumeBuilder/resumes.db`); `ResumeRepository` and `JobApplicationRepository`. Depends on Core.
+- **Core**: domain models, validation, undo/redo, spell check, keyword analysis/AI (`SmartContent/`), sync, and since 1.2.0 the `JobApplication` model (which résumé went to which company, when, and what happened) plus `Sync/CloudFolders`, which finds a Drive, OneDrive, Dropbox or iCloud folder to offer as the sync target. No UI, no persistence. Server-ready.
+- **Data**: EF Core + SQLite (`%LocalAppData%/ResumeBuilder/resumes.db`); `ResumeRepository` and `JobApplicationRepository`. Depends on Core.
 - **Templates** — QuestPDF renderers (25 resume + 3 cover-letter templates) and `TemplateRegistry`. Depends on Core.
 - **Export** — exporters (PDF/DOCX/HTML/PNG/TXT/JSON/JSON-Resume) and importers (JSON, LinkedIn zip, PDF). Depends on Core + Templates.
 - **App** — Avalonia 11 desktop UI, MVVM via CommunityToolkit (`[ObservableProperty]`/`[RelayCommand]`). The composition root is `App.axaml.cs`; services are bundled in `Services/AppServices.cs`. Almost everything lives in `ViewModels/MainWindowViewModel.cs` (+ `.CoverLetters.cs` partial) and `Views/MainWindow.axaml` — one window, overlays toggled by booleans, no navigation framework.

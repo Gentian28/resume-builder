@@ -19,8 +19,32 @@ permissions:
   contents: write   # required to create the release and upload assets
 
 jobs:
+  # The tag is what ships, so the tag is what gets tested. CI proves main; a tag can sit on a
+  # commit CI never saw, or one where it was red, and until this job existed nothing stood in the
+  # way of packaging it.
+  test:
+    name: test the tagged commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install Linux native deps
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
+      - name: Build with zero warnings
+        run: dotnet build ResumeBuilder.sln --configuration Release -warnaserror
+
+      - name: Test
+        run: dotnet test ResumeBuilder.sln --configuration Release --no-build
+
   package:
     name: package ${{ matrix.rid }}
+    needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -78,8 +102,11 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libfontconfig1
 
+      # Pinned to the Velopack package version in Directory.Packages.props. An unpinned tool
+      # install takes whatever shipped that morning, and a packer that moved under a release is
+      # not something to discover from a user's failed update.
       - name: Install Velopack CLI
-        run: dotnet tool install -g vpk
+        run: dotnet tool install -g vpk --version 1.2.0
 
       # PublishSingleFile is explicitly OFF here. Velopack's delta updates diff
       # package contents, and a compressed single-file blob defeats that entirely -

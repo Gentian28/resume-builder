@@ -5,10 +5,15 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Advisories are published against packages that have not changed. A weekly scan catches the
+  # ones that land between pushes; only the vulnerable-packages job runs on this trigger.
+  schedule:
+    - cron: "0 6 * * 1"
 
 jobs:
   build:
     name: build & test (${{ matrix.os }})
+    if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
     strategy:
       # Don't cancel the other two the moment one fails — when something breaks on
@@ -34,8 +39,10 @@ jobs:
       - name: Restore
         run: dotnet restore ResumeBuilder.sln
 
+      # The repo rule is zero warnings; the analyzers are on and a warning is a regression. Until
+      # this flag existed the rule was enforced by whoever remembered to read the build log.
       - name: Build
-        run: dotnet build ResumeBuilder.sln --configuration Release --no-restore
+        run: dotnet build ResumeBuilder.sln --configuration Release --no-restore -warnaserror
 
       - name: Test
         run: dotnet test ResumeBuilder.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
@@ -52,6 +59,7 @@ jobs:
 
   publish:
     name: publish ${{ matrix.rid }}
+    if: github.event_name != 'schedule'
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:

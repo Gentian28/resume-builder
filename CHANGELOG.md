@@ -34,6 +34,8 @@ section matching the tag and fails the build if there isn't one.
   client wrote no longer silently replaces the real file. And deleting a résumé on one machine
   stays deleted: the file is parked as `.deleted.json` rather than coming back, and a deletion on
   the other machine is respected here until you edit the résumé again.
+- **The Compact template prints project highlights.** It was the one template that dropped a piece
+  of content; every template is now held to the same content test.
 - **A pre-upgrade backup that fails is reported.** The upgrade still goes ahead, and the app says
   so the moment its window opens, with the path to copy while it is still intact.
 

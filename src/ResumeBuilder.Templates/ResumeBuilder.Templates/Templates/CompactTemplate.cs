@@ -146,6 +146,9 @@ public class CompactTemplate : BaseTemplate
                                 projCol.Item().Text(proj.Description).FontSize(7 * FontSizeScale).LineHeight(LineSpacing);
                             if (proj.Technologies.Any())
                                 projCol.Item().Text(string.Join(", ", proj.Technologies)).FontSize(7 * FontSizeScale).FontColor(Colors.Grey.Darken1);
+                            // Highlights were the one piece of project content this layout dropped.
+                            foreach (var highlight in proj.Highlights)
+                                projCol.Item().Text("- " + highlight).FontSize(7 * FontSizeScale);
                         });
                     }
                 });

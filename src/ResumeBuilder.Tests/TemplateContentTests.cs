@@ -22,17 +22,17 @@ public class TemplateContentTests
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public static TheoryData<string> NewTemplateIds() => new()
+    /// <summary>
+    /// Every registered resume template. These started as the eight newest, which left the
+    /// seventeen older ones free to drop content unnoticed.
+    /// </summary>
+    public static TheoryData<string> NewTemplateIds()
     {
-        "ats-plain",
-        "federal",
-        "europass",
-        "photo-header",
-        "developer",
-        "chronology",
-        "colorblock",
-        "onepage"
-    };
+        var data = new TheoryData<string>();
+        foreach (var template in new TemplateRegistry().GetAllTemplates())
+            data.Add(template.Info.Id);
+        return data;
+    }
 
     [Theory]
     [MemberData(nameof(NewTemplateIds))]

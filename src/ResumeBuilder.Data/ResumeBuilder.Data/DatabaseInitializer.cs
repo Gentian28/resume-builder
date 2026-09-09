@@ -17,6 +17,14 @@ public static class DatabaseInitializer
         "lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)), 2) || " +
         "'-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))";
 
+    /// <summary>
+    /// The columns <see cref="AddedColumns"/> will add to an existing install, per table. Read by
+    /// the schema test so that a property added to a model without an entry here fails a test
+    /// instead of failing on a user's machine.
+    /// </summary>
+    public static IReadOnlyDictionary<string, IReadOnlyList<string>> ColumnsAddedSinceFirstRelease =>
+        AddedColumns.ToDictionary(t => t.Key, t => (IReadOnlyList<string>)t.Value.Select(c => c.Column).ToList());
+
     /// <summary>Columns added after the first release, per table.</summary>
     private static readonly Dictionary<string, (string Column, string Ddl)[]> AddedColumns = new()
     {

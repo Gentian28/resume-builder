@@ -6,7 +6,7 @@ There is no account, no sign-up, no telemetry, no analytics, no crash reporting 
 advertising. Nothing you type is transmitted to the author of this software, and there is no
 server operated by this project that your copy talks to.
 
-Last updated: 2026-07-28.
+Last updated: 2026-09-09.
 
 ## What is stored, and where
 
@@ -14,7 +14,8 @@ Everything stays on your own computer, in your user profile:
 
 | What | Where |
 | --- | --- |
-| Résumés and cover letters | A local SQLite database under your user data directory |
+| Résumés, cover letters and your application records (company, role, dates, status, notes) | A local SQLite database under your user data directory |
+| Database backups | Up to three copies of that database, taken before an upgrade changes its schema, in the same folder |
 | Spell-check dictionaries | Downloaded once on first use, then cached locally |
 | Sync state | A local file, only if you enable folder sync |
 
@@ -39,9 +40,9 @@ file is downloaded and then cached. Your text is not sent — only the dictionar
 
 - **Local model** (Ollama, LM Studio, anything on a loopback address): requests never leave your
   machine.
-- **A cloud provider** (OpenAI or any compatible API): the résumé text relevant to the request is
-  sent to the endpoint *you* configured, and that provider's own privacy policy then applies. The
-  app states plainly which mode it is in before you use it.
+- **A cloud provider** (OpenAI, Anthropic, or any OpenAI-compatible API): the résumé text relevant
+  to the request is sent to the endpoint *you* configured, and that provider's own privacy policy
+  then applies. The app states plainly which mode it is in before you use it.
 
 Keyword analysis and ATS scoring are local computation and never use the network, with or without
 a model configured.

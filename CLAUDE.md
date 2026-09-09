@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 dotnet build ResumeBuilder.sln            # must end with 0 warnings — analyzers are on and warnings are treated as regressions
-dotnet test ResumeBuilder.sln             # full suite (~323 tests, a few seconds)
+dotnet test ResumeBuilder.sln             # full suite (~360 tests, a few seconds)
 dotnet test src/ResumeBuilder.Tests/ResumeBuilder.Tests.csproj --filter "FullyQualifiedName~RepositoryTests"   # one class
 dotnet test ResumeBuilder.sln --filter "FullyQualifiedName~Update_StaleCopy_ThrowsInsteadOfClobbering"         # one test
 dotnet run --project src/ResumeBuilder.App/ResumeBuilder.App   # launch the desktop app
@@ -18,8 +18,8 @@ Package versions live **only** in `Directory.Packages.props` (Central Package Ma
 
 Layered class libraries under `src/`, each project only depending on the ones above it:
 
-- **Core** — domain models, validation, undo/redo, spell check, keyword analysis/AI (`SmartContent/`), sync. No UI, no persistence. Server-ready.
-- **Data** — EF Core + SQLite (`%LocalAppData%/ResumeBuilder/resumes.db`). Depends on Core.
+- **Core** — domain models, validation, undo/redo, spell check, keyword analysis/AI (`SmartContent/`), sync, and since 1.2.0 the `JobApplication` model (which résumé went to which company, when, and what happened) plus `Sync/CloudFolders`, which finds a Drive, OneDrive, Dropbox or iCloud folder to offer as the sync target. No UI, no persistence. Server-ready.
+- **Data** — EF Core + SQLite (`%LocalAppData%/ResumeBuilder/resumes.db`); `ResumeRepository` and `JobApplicationRepository`. Depends on Core.
 - **Templates** — QuestPDF renderers (25 resume + 3 cover-letter templates) and `TemplateRegistry`. Depends on Core.
 - **Export** — exporters (PDF/DOCX/HTML/PNG/TXT/JSON/JSON-Resume) and importers (JSON, LinkedIn zip, PDF). Depends on Core + Templates.
 - **App** — Avalonia 11 desktop UI, MVVM via CommunityToolkit (`[ObservableProperty]`/`[RelayCommand]`). The composition root is `App.axaml.cs`; services are bundled in `Services/AppServices.cs`. Almost everything lives in `ViewModels/MainWindowViewModel.cs` (+ `.CoverLetters.cs` partial) and `Views/MainWindow.axaml` — one window, overlays toggled by booleans, no navigation framework.
@@ -68,4 +68,4 @@ Styling has two persisted sources kept in step: legacy `Resume.AccentColor`/`Fon
   it must never be made public. Push to `public`.
 
 - **Never commit real résumé data.** `samples/sample-resume.json` (synthetic — Jane Doe / example.com) is the fixture for tests and examples. A root-level `gentian_shkembi_resume.json` holding the owner's real name/phone/address was purged from the working tree and from every commit on 2026-07-27, ahead of open-sourcing; `.gitignore` now blocks `/*_resume.json` at the root so it cannot come back by accident.
-- Tests live in `src/ResumeBuilder.Tests` (xUnit + FluentAssertions). The App project is intentionally not referenced by the test project (Avalonia WinExe); logic that needs testing belongs in Core (e.g. `AchievementLines` was extracted for exactly that reason).
+- Tests live in `src/ResumeBuilder.Tests` (xUnit + AwesomeAssertions, the Apache-2.0 fork of FluentAssertions; see `Directory.Packages.props`). The App project is intentionally not referenced by the test project (Avalonia WinExe); logic that needs testing belongs in Core (e.g. `AchievementLines` was extracted for exactly that reason).

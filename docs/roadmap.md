@@ -3,7 +3,8 @@
 What this is: an opinionated order of work, with the reasoning. Not a backlog — things are listed
 because they follow from what already exists, or because leaving them out would be a mistake.
 
-Written 2026-07-29, against v1.1.1.
+Written 2026-07-29, against v1.1.1. Revised 2026-09-09 against v1.2.3: sections 1 and 2 shipped
+in 1.2.0 and are kept below as the reasoning, not as open work.
 
 ---
 
@@ -30,7 +31,11 @@ five phases, and an honest risk list. It does not need rewriting. It needs a *de
 
 ---
 
-## 1. Make what exists discoverable — next
+## 1. Make what exists discoverable — shipped in 1.2.0
+
+*Done: the sync panel finds the cloud folder and offers it as a button, the first-run screen says
+what the app does, and the export toast (1.2.2) puts Open and Show in folder where the PDF lands.
+The reasoning stays because it explains why those three and not others.*
 
 **The problem, concretely.** The menu has 30+ items, and the most valuable thing the app does is
 three levels down:
@@ -60,7 +65,10 @@ relevant rather than filed under Tools:
 - **The first-run screen never mentions tailoring, ATS scoring, or cover letters.** The three
   routes in are right; the pitch is missing.
 
-## 2. Close the application loop — the highest-value new feature
+## 2. Close the application loop — shipped in 1.2.0 as Applications
+
+*Done, as written below: company, date applied, status, the exact variant reopened in one click,
+and the header count of what needs attention. The section stays as the record of why.*
 
 **Where you end up today** after applying to ten jobs the intended way:
 

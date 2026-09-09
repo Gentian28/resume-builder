@@ -33,8 +33,20 @@ public partial class App : Application
         {
             DisableAvaloniaDataAnnotationValidation();
 
-            // Initialize services
-            var contextFactory = ResumeDbContextFactory.CreateInitialized();
+            // Initialize services. A database SQLite cannot open used to surface as an unhandled
+            // exception before any window existed: the app simply did not appear. Now it opens a
+            // window that says which file, and where the backups next to it are.
+            ResumeDbContextFactory contextFactory;
+            try
+            {
+                contextFactory = ResumeDbContextFactory.CreateInitialized();
+            }
+            catch (DatabaseOpenException ex)
+            {
+                desktop.MainWindow = StartupErrorWindow.For(ex);
+                base.OnFrameworkInitializationCompleted();
+                return;
+            }
 
             var repository = new ResumeRepository(contextFactory);
             var coverLetterRepository = new CoverLetterRepository(contextFactory);
@@ -78,10 +90,18 @@ public partial class App : Application
             // Initialize spell checker in background
             _ = spellChecker.InitializeAsync();
 
+            var viewModel = new MainWindowViewModel(Services);
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(Services),
+                DataContext = viewModel,
             };
+
+            // The pre-upgrade backup failing used to be swallowed. The upgrade still went ahead, so
+            // the user is told the moment there is a window to tell them in.
+            if (contextFactory.Report is { BackupFailed: true } report)
+            {
+                desktop.MainWindow.Opened += async (_, _) => await viewModel.ReportFailedBackupAsync(report);
+            }
         }
 
         base.OnFrameworkInitializationCompleted();

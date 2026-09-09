@@ -83,11 +83,11 @@ public partial class MainWindow : Window
     /// </summary>
     protected override async void OnClosing(WindowClosingEventArgs e)
     {
-        if (!_closeConfirmed && DataContext is MainWindowViewModel vm && vm.IsDirty)
+        if (!_closeConfirmed && DataContext is MainWindowViewModel vm && vm.HasUnsavedWork)
         {
             e.Cancel = true;
 
-            if (await vm.ConfirmDiscardChangesAsync())
+            if (await vm.ConfirmDiscardAllChangesAsync())
             {
                 _closeConfirmed = true;
                 Close();

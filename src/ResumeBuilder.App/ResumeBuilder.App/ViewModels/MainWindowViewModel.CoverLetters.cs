@@ -41,6 +41,8 @@ public partial class MainWindowViewModel
     [ObservableProperty]
     private bool _isLetterDirty;
 
+    private readonly ResumeBuilder.Core.Editing.DirtyTracker _letterEdits = new();
+
     [ObservableProperty]
     private bool _isDraftingLetter;
 
@@ -165,6 +167,7 @@ public partial class MainWindowViewModel
     {
         if (_isLoadingLetter) return;
 
+        _letterEdits.MarkDirty();
         IsLetterDirty = true;
         LetterSaveStateText = "Unsaved changes";
     }
@@ -267,6 +270,7 @@ public partial class MainWindowViewModel
 
         LoadLetterIntoEditor(letter);
 
+        _letterEdits.MarkDirty();
         IsLetterDirty = true;
         LetterSaveStateText = "Unsaved changes";
         ShowCoverLetterList = false;
@@ -328,6 +332,7 @@ public partial class MainWindowViewModel
 
             LoadLetterIntoEditor(loaded);
 
+            _letterEdits.Reset();
             IsLetterDirty = false;
             LetterSaveStateText = "No changes";
             ShowCoverLetterList = false;
@@ -345,6 +350,7 @@ public partial class MainWindowViewModel
     {
         try
         {
+            var token = _letterEdits.BeginSave();
             SyncLetterEditorToModel();
 
             LetterSaveStateText = "Saving...";
@@ -358,8 +364,9 @@ public partial class MainWindowViewModel
                 await _services.CoverLetterRepository.UpdateAsync(CurrentLetter);
             }
 
-            IsLetterDirty = false;
-            LetterSaveStateText = $"Saved at {DateTime.Now:HH:mm:ss}";
+            // Same rule as the resume: an edit typed during the write stays unsaved until the next save.
+            IsLetterDirty = !_letterEdits.CompleteSave(token);
+            LetterSaveStateText = IsLetterDirty ? "Unsaved changes" : $"Saved at {DateTime.Now:HH:mm:ss}";
             StatusMessage = $"Saved: {CurrentLetter.Name}";
 
             await LoadCoverLettersAsync();

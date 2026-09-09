@@ -100,6 +100,9 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [ObservableProperty]
     private bool _isDirty;
 
+    // IsDirty is what the UI binds to; this decides whether a finished save may clear it.
+    private readonly ResumeBuilder.Core.Editing.DirtyTracker _edits = new();
+
     [ObservableProperty]
     private bool _isSaving;
 
@@ -441,8 +444,17 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         if (!IsUpdateAvailable)
             return;
 
-        if (IsDirty)
-            await SaveCurrentResumeAsync();
+        // ApplyAndRestart exits the process, so a save that failed has to stop the restart: the
+        // user keeps the error dialog and the app they were in, not a fresh one missing their work.
+        if (IsDirty && !await SaveAsync(isAutoSave: false))
+            return;
+
+        if (IsLetterDirty)
+        {
+            await SaveCoverLetterAsync();
+            if (IsLetterDirty)
+                return;
+        }
 
         _services.UpdateService.ApplyAndRestart();
     }
@@ -985,6 +997,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         _services.UndoRedoManager.Clear();
         CurrentResume = resume;
         LoadResumeIntoEditor(resume);
+        _edits.Reset();
         IsDirty = false;
         _lastSavedAt = null;
         UpdateSaveState();
@@ -1206,6 +1219,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     {
         if (_isLoadingEditor) return;
 
+        _edits.MarkDirty();
         IsDirty = true;
         UpdateSaveState();
     }
@@ -2576,6 +2590,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
         try
         {
+            var token = _edits.BeginSave();
             SyncEditorToResume();
 
             IsSaving = true;
@@ -2590,7 +2605,10 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
                 await _services.Repository.UpdateAsync(CurrentResume);
             }
 
-            IsDirty = false;
+            // An edit that landed while the write was awaited is not in the file. Leaving the flag
+            // set is what makes the next autosave carry it; clearing it would say "all changes saved"
+            // about a change that exists only in memory.
+            IsDirty = !_edits.CompleteSave(token);
             _lastSavedAt = DateTime.Now;
 
             await LoadSavedResumesAsync();
@@ -2647,7 +2665,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             CurrentResume = copy;
             LoadResumeIntoEditor(copy);
 
-            IsDirty = false;
+            _edits.Reset();
+        IsDirty = false;
             _lastSavedAt = DateTime.Now;
             UpdateSaveState();
 
@@ -2674,6 +2693,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         _services.UndoRedoManager.Clear();
         CurrentResume = reloaded;
         LoadResumeIntoEditor(reloaded);
+        _edits.Reset();
         IsDirty = false;
         _lastSavedAt = DateTime.Now;
         UpdateSaveState();
@@ -2695,6 +2715,26 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             UnsavedChangesChoice.Discard => true,
             _ => false
         };
+    }
+
+    /// <summary>Everything the window holds: the resume and, when its editor is open, the cover letter.</summary>
+    public bool HasUnsavedWork => IsDirty || IsLetterDirty;
+
+    /// <summary>The close-window check. Both prompts run; backing out of either keeps the window open.</summary>
+    public async Task<bool> ConfirmDiscardAllChangesAsync()
+        => await ConfirmDiscardChangesAsync() && await ConfirmDiscardLetterChangesAsync();
+
+    /// <summary>
+    /// Shown once the window is open when the pre-upgrade backup could not be made. The upgrade
+    /// went ahead regardless (refusing to start would help nobody), so the honest thing is to say so
+    /// and point at the file while it is still intact.
+    /// </summary>
+    public async Task ReportFailedBackupAsync(ResumeBuilder.Data.DatabaseInitializationReport report)
+    {
+        await DialogService.ShowErrorAsync(
+            "Backup before upgrade failed",
+            $"The database could not be copied before this version upgraded it: {report.BackupError}\n\n" +
+            $"The upgrade went ahead. Copy {report.DatabasePath} somewhere safe now, before relying on it.");
     }
 
     [RelayCommand]
@@ -2736,7 +2776,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             _services.UndoRedoManager.Clear();
             CurrentResume = loaded;
             LoadResumeIntoEditor(loaded);
-            IsDirty = false;
+            _edits.Reset();
+        IsDirty = false;
             _lastSavedAt = null;
             UpdateSaveState();
             UpdatePreviewDebounced();
@@ -3067,6 +3108,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         CurrentResume = imported;
         LoadResumeIntoEditor(imported);
 
+        _edits.MarkDirty();
         IsDirty = true;
         _lastSavedAt = null;
         UpdateSaveState();

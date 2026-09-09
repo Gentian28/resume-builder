@@ -6,7 +6,7 @@ namespace ResumeBuilder.Tests;
 /// <summary>
 /// A tailored edit addresses an achievement by its index in the model, and the editor writes it back
 /// by counting lines in a text box. If those two disagree by even one, an accepted AI rewrite lands
-/// on the wrong bullet — so the round-trip is pinned here.
+/// on the wrong bullet, so the round-trip is pinned here.
 /// </summary>
 public class AchievementLinesTests
 {

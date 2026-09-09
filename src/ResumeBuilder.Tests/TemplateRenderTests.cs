@@ -136,7 +136,7 @@ public class TemplateRenderTests
 
 internal static class TestResumes
 {
-    /// <summary>A 2x2 PNG — enough for a template to have a real image to lay out.</summary>
+    /// <summary>A 2x2 PNG, enough for a template to have a real image to lay out.</summary>
     public static byte[] SamplePhoto() => Convert.FromBase64String(
         "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGP8z8DAwMDAwMQAAgAOEwEB1eiJUAAAAABJRU5ErkJggg==");
 

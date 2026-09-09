@@ -8,7 +8,7 @@ namespace ResumeBuilder.Tests;
 
 /// <summary>
 /// The upgrade path for an install that predates a new table. This is the case with no CI
-/// coverage by nature — it only happens on someone else's machine, with their data.
+/// coverage by nature: it only happens on someone else's machine, with their data.
 /// </summary>
 public class SchemaUpgradeTests : IDisposable
 {

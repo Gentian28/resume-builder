@@ -90,11 +90,16 @@ public class LocalFolderSyncService : ISyncService
 
             var uploaded = 0;
             var downloaded = 0;
+            var removed = 0;
             var errors = new List<string>();
+            var warnings = new List<string>(remotes.Warnings);
             var conflicts = new List<SyncConflict>();
 
+            // The state store is the third party to the union: a resume it knows that is now
+            // missing on one side was deleted there, which is not the same as never having existed.
             var syncIds = locals.Select(r => r.SyncId)
-                .Union(remotes.Keys)
+                .Union(remotes.Files.Keys)
+                .Union(_state.KnownIds)
                 .ToList();
 
             foreach (var syncId in syncIds)
@@ -102,13 +107,18 @@ public class LocalFolderSyncService : ISyncService
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var local = locals.FirstOrDefault(r => r.SyncId == syncId);
-                remotes.TryGetValue(syncId, out var remote);
+                remotes.Files.TryGetValue(syncId, out var remote);
 
                 try
                 {
                     var outcome = await SyncOneAsync(local, remote, cancellationToken);
                     uploaded += outcome.Uploaded;
                     downloaded += outcome.Downloaded;
+                    removed += outcome.Removed;
+                    if (outcome.Warning != null)
+                    {
+                        warnings.Add(outcome.Warning);
+                    }
                     if (outcome.Conflict != null)
                     {
                         conflicts.Add(outcome.Conflict);
@@ -130,9 +140,11 @@ public class LocalFolderSyncService : ISyncService
                     : SyncStatus.Success,
                 UploadedCount = uploaded,
                 DownloadedCount = downloaded,
+                RemovedCount = removed,
                 Errors = errors,
+                Warnings = warnings,
                 Conflicts = conflicts,
-                Message = BuildMessage(uploaded, downloaded, conflicts.Count, errors.Count)
+                Message = BuildMessage(uploaded, downloaded, removed, conflicts.Count, errors.Count)
             };
 
             SetStatus(result.Status);
@@ -170,8 +182,10 @@ public class LocalFolderSyncService : ISyncService
             }
 
             var remotes = await ReadRemoteResumesAsync(cancellationToken);
-            remotes.TryGetValue(local.SyncId, out var remote);
+            remotes.Files.TryGetValue(local.SyncId, out var remote);
 
+            // An explicit "sync this one" is the user overriding a remote deletion on purpose.
+            _state.Remove(local.SyncId);
             var outcome = await SyncOneAsync(local, remote, cancellationToken);
             await _state.SaveAsync();
 
@@ -181,8 +195,9 @@ public class LocalFolderSyncService : ISyncService
                 Status = outcome.Conflict != null ? SyncStatus.Conflict : SyncStatus.Success,
                 UploadedCount = outcome.Uploaded,
                 DownloadedCount = outcome.Downloaded,
+                Warnings = remotes.Warnings.ToList(),
                 Conflicts = outcome.Conflict != null ? new List<SyncConflict> { outcome.Conflict } : new List<SyncConflict>(),
-                Message = BuildMessage(outcome.Uploaded, outcome.Downloaded, outcome.Conflict != null ? 1 : 0, 0)
+                Message = BuildMessage(outcome.Uploaded, outcome.Downloaded, 0, outcome.Conflict != null ? 1 : 0, 0)
             };
 
             SetStatus(result.Status);
@@ -195,19 +210,50 @@ public class LocalFolderSyncService : ISyncService
         }
     }
 
-    private readonly record struct SyncOutcome(int Uploaded, int Downloaded, SyncConflict? Conflict);
+    private readonly record struct SyncOutcome(int Uploaded, int Downloaded, int Removed, SyncConflict? Conflict, string? Warning)
+    {
+        public SyncOutcome(int uploaded, int downloaded, SyncConflict? conflict) : this(uploaded, downloaded, 0, conflict, null) { }
+    }
 
     private async Task<SyncOutcome> SyncOneAsync(Resume? local, RemoteResume? remote, CancellationToken cancellationToken)
     {
-        // Only on one side: copy it to the other.
+        var known = local != null ? _state.Get(local.SyncId) : remote != null ? _state.Get(remote.Resume.SyncId) : null;
+
+        // Only on one side. Whether that means "new" or "deleted" depends on whether this machine
+        // has synced it before; without the state, a deletion on either side came straight back.
         if (local != null && remote == null)
         {
+            if (known?.DeletedAt is { } deletedAt)
+            {
+                if (local.UpdatedAt <= deletedAt)
+                    return new SyncOutcome(0, 0, null);
+
+                // Edited after the other machine removed it: the edit wins and the file returns.
+                await WriteRemoteAsync(local, cancellationToken);
+                return new SyncOutcome(1, 0, null);
+            }
+
+            if (known?.LastSyncedAt != null)
+            {
+                _state.MarkRemoteDeleted(local.SyncId, DateTime.UtcNow);
+                return new SyncOutcome(0, 0, 0, null,
+                    $"\"{local.Name}\" was removed from the sync folder on another machine. It is kept here and not sent again unless you edit it.");
+            }
+
             await WriteRemoteAsync(local, cancellationToken);
             return new SyncOutcome(1, 0, null);
         }
 
         if (local == null && remote != null)
         {
+            if (known?.LastSyncedAt != null)
+            {
+                // Deleted on this machine after a sync: park the file rather than bringing it back.
+                ParkDeleted(remote);
+                _state.Remove(remote.Resume.SyncId);
+                return new SyncOutcome(0, 0, 1, null, null);
+            }
+
             await SaveDownloadedAsync(remote.Resume, existingLocalId: null);
             RecordSynced(remote.Resume.SyncId, remote.Checksum);
             return new SyncOutcome(0, 1, null);
@@ -215,6 +261,11 @@ public class LocalFolderSyncService : ISyncService
 
         if (local == null || remote == null)
         {
+            // Gone on both sides: nothing left to remember.
+            if (known != null)
+            {
+                _state.Remove(Guid.Parse(known.SyncId!));
+            }
             return new SyncOutcome(0, 0, null);
         }
 
@@ -303,7 +354,7 @@ public class LocalFolderSyncService : ISyncService
     {
         var json = JsonSerializer.Serialize(resume, SerializerOptions);
         var path = RemotePathFor(resume.SyncId);
-        await File.WriteAllTextAsync(path, json, cancellationToken);
+        await AtomicFile.WriteAllTextAsync(path, json, cancellationToken);
         RecordSynced(resume.SyncId, ComputeChecksum(path));
     }
 
@@ -311,30 +362,48 @@ public class LocalFolderSyncService : ISyncService
     {
         var json = JsonSerializer.Serialize(remote.Resume, SerializerOptions);
         var path = Path.Combine(_syncFolder!, $"{remote.Resume.SyncId:D}.remote.conflict.json");
-        await File.WriteAllTextAsync(path, json, cancellationToken);
+        await AtomicFile.WriteAllTextAsync(path, json, cancellationToken);
     }
 
     private async Task BackupConflictLocalAsync(Resume local, CancellationToken cancellationToken)
     {
         var json = JsonSerializer.Serialize(local, SerializerOptions);
         var path = Path.Combine(_syncFolder!, $"{local.SyncId:D}.local.conflict.json");
-        await File.WriteAllTextAsync(path, json, cancellationToken);
+        await AtomicFile.WriteAllTextAsync(path, json, cancellationToken);
+    }
+
+    /// <summary>
+    /// A resume deleted on this machine is not deleted from the folder; its file is renamed so the
+    /// other machine stops seeing it and nothing is destroyed. Cloud folders are shared with a
+    /// person who may not have meant it.
+    /// </summary>
+    private void ParkDeleted(RemoteResume remote)
+    {
+        var parked = Path.Combine(_syncFolder!, $"{remote.Resume.SyncId:D}.deleted.json");
+        File.Move(remote.Path, parked, overwrite: true);
     }
 
     private string RemotePathFor(Guid syncId) => Path.Combine(_syncFolder!, $"{syncId:D}.json");
 
+    private static bool IsCanonicalPath(string path, Guid syncId) =>
+        string.Equals(Path.GetFileName(path), $"{syncId:D}.json", StringComparison.OrdinalIgnoreCase);
+
     private sealed record RemoteResume(Resume Resume, string Path, string? Checksum);
 
-    private Task<Dictionary<Guid, RemoteResume>> ReadRemoteResumesAsync(CancellationToken cancellationToken)
+    private sealed record RemoteFolder(Dictionary<Guid, RemoteResume> Files, List<string> Warnings);
+
+    private async Task<RemoteFolder> ReadRemoteResumesAsync(CancellationToken cancellationToken)
     {
         var map = new Dictionary<Guid, RemoteResume>();
+        var warnings = new List<string>();
 
         foreach (var file in Directory.GetFiles(_syncFolder!, "*.json"))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Conflict backups are archives, not sync participants.
-            if (file.EndsWith(".conflict.json", StringComparison.OrdinalIgnoreCase))
+            // Conflict backups and parked deletions are archives, not sync participants.
+            if (file.EndsWith(".conflict.json", StringComparison.OrdinalIgnoreCase)
+                || file.EndsWith(".deleted.json", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             try
@@ -344,16 +413,38 @@ public class LocalFolderSyncService : ISyncService
                 if (resume == null)
                     continue;
 
+                var path = file;
                 if (resume.SyncId == Guid.Empty)
                 {
                     // A resume exported before sync ids existed. Adopt the filename if it is a guid,
-                    // otherwise mint one so it can be tracked from now on.
+                    // otherwise mint one. Either way the file is rewritten under that id, because an
+                    // id that lives only in memory is minted again next time and the resume imports
+                    // again as a new record on every sync.
                     resume.SyncId = Guid.TryParse(Path.GetFileNameWithoutExtension(file), out var fromName)
                         ? fromName
                         : Guid.NewGuid();
+                    path = RemotePathFor(resume.SyncId);
+                    await AtomicFile.WriteAllTextAsync(path, JsonSerializer.Serialize(resume, SerializerOptions), cancellationToken);
+                    if (!string.Equals(path, file, StringComparison.OrdinalIgnoreCase))
+                    {
+                        File.Delete(file);
+                    }
                 }
 
-                map[resume.SyncId] = new RemoteResume(resume, file, ComputeChecksum(file));
+                // Cloud clients write "name (conflicted copy).json" next to the real file when both
+                // machines changed it. Both parse, both carry the same id, and whichever the
+                // directory listing returned last used to win. The file named after the id is the
+                // one the sync wrote; the other is left for the person to look at.
+                if (map.TryGetValue(resume.SyncId, out var existing))
+                {
+                    var keep = IsCanonicalPath(path, resume.SyncId) ? path : existing.Path;
+                    var ignore = ReferenceEquals(keep, path) ? existing.Path : path;
+                    warnings.Add($"\"{Path.GetFileName(ignore)}\" carries the same id as \"{Path.GetFileName(keep)}\" and was ignored. Compare them by hand if it holds work you want.");
+                    if (!ReferenceEquals(keep, path))
+                        continue;
+                }
+
+                map[resume.SyncId] = new RemoteResume(resume, path, ComputeChecksum(path));
             }
             catch (Exception ex) when (ex is IOException or JsonException)
             {
@@ -361,14 +452,15 @@ public class LocalFolderSyncService : ISyncService
             }
         }
 
-        return Task.FromResult(map);
+        return new RemoteFolder(map, warnings);
     }
 
-    private static string BuildMessage(int uploaded, int downloaded, int conflicts, int errors)
+    private static string BuildMessage(int uploaded, int downloaded, int removed, int conflicts, int errors)
     {
         var parts = new List<string>();
         if (uploaded > 0) parts.Add($"{uploaded} uploaded");
         if (downloaded > 0) parts.Add($"{downloaded} downloaded");
+        if (removed > 0) parts.Add($"{removed} removed");
         if (conflicts > 0) parts.Add($"{conflicts} conflict{(conflicts == 1 ? "" : "s")} resolved");
         if (errors > 0) parts.Add($"{errors} failed");
         return parts.Count == 0 ? "Already up to date" : string.Join(", ", parts);

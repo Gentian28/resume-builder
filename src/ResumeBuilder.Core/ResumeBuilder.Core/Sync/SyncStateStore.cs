@@ -35,6 +35,18 @@ public class SyncStateStore
 
     public void Remove(Guid syncId) => _entries.Remove(syncId);
 
+    /// <summary>Every resume this machine has synced at least once, tombstoned or not.</summary>
+    public IReadOnlyCollection<Guid> KnownIds => _entries.Keys.ToList();
+
+    /// <summary>Records that the remote file was gone; see <see cref="SyncMetadata.DeletedAt"/>.</summary>
+    public void MarkRemoteDeleted(Guid syncId, DateTime deletedAt)
+    {
+        if (_entries.TryGetValue(syncId, out var metadata) && metadata.DeletedAt is null)
+        {
+            metadata.DeletedAt = deletedAt;
+        }
+    }
+
     public async Task LoadAsync()
     {
         try
@@ -66,7 +78,7 @@ public class SyncStateStore
             }
 
             var json = JsonSerializer.Serialize(_entries, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(_statePath, json);
+            await AtomicFile.WriteAllTextAsync(_statePath, json);
         }
         catch (IOException)
         {

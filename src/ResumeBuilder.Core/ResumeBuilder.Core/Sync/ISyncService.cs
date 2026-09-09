@@ -23,7 +23,13 @@ public class SyncResult
     public string? Message { get; init; }
     public int UploadedCount { get; init; }
     public int DownloadedCount { get; init; }
+
+    /// <summary>Remote files parked because the resume was deleted on this machine.</summary>
+    public int RemovedCount { get; init; }
     public List<string> Errors { get; init; } = new();
+
+    /// <summary>Things the sync noticed and worked around; the sync still succeeded.</summary>
+    public List<string> Warnings { get; init; } = new();
     public List<SyncConflict> Conflicts { get; init; } = new();
 
     public static SyncResult Succeeded(int uploaded = 0, int downloaded = 0)
@@ -56,6 +62,13 @@ public class SyncMetadata
     public DateTime? LastSyncedAt { get; set; }
     public int Version { get; set; } = 1;
     public string? RemoteChecksum { get; set; }
+
+    /// <summary>
+    /// Set when the file disappeared from the sync folder after it had been synced: the other
+    /// machine deleted it. The local copy is kept and not re-uploaded unless it is edited after
+    /// this moment, so a deletion does not come back as a resurrection.
+    /// </summary>
+    public DateTime? DeletedAt { get; set; }
 }
 
 /// <summary>

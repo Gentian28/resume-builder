@@ -28,6 +28,12 @@ section matching the tag and fails the build if there isn't one.
   expects and keeps the ongoing flag under `meta.resumeBuilder`, alongside any custom section the
   schema has no field for, so a file this app wrote imports without losing them. Year-only and
   year-month dates from other tools now import instead of being dropped.
+- **Folder sync can be trusted with a shared folder.** Files are written whole and then swapped
+  in, so a cloud client never uploads a half-written résumé. A file exported before sync ids
+  existed is adopted once instead of imported again on every sync. A "conflicted copy" the cloud
+  client wrote no longer silently replaces the real file. And deleting a résumé on one machine
+  stays deleted: the file is parked as `.deleted.json` rather than coming back, and a deletion on
+  the other machine is respected here until you edit the résumé again.
 - **A pre-upgrade backup that fails is reported.** The upgrade still goes ahead, and the app says
   so the moment its window opens, with the path to copy while it is still intact.
 

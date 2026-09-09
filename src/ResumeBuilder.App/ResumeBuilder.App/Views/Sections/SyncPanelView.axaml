@@ -16,7 +16,7 @@
                                             Command="{Binding ToggleSyncPanelCommand}"><PathIcon Data="{StaticResource IconClose}"/></Button>
                                 </Grid>
 
-                                <TextBlock Text="Keep your résumés in a folder that syncs itself — Google Drive, OneDrive, Dropbox — and they follow you to every machine. Changes are copied both ways; the newer one wins."
+                                <TextBlock Text="Keep your résumés in a folder that syncs itself (Google Drive, OneDrive, Dropbox) and they follow you to every machine. Changes are copied both ways; the newer one wins."
                                            FontSize="11" Opacity="0.7" TextWrapping="Wrap"/>
 
                                 <!-- One click per cloud folder actually present on this machine.

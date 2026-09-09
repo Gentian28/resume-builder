@@ -16,7 +16,7 @@ public class AtsPlainTemplate : BaseTemplate
     {
         Id = "ats-plain",
         Name = "ATS Plain",
-        Description = "Single column, no graphics, no columns — built to survive naive applicant tracking systems",
+        Description = "Single column, no graphics, no columns, built to survive naive applicant tracking systems",
         Category = TemplateCategory.Professional,
         Layout = TemplateLayout.SingleColumn,
         Tags = new[] { "ats", "plain", "parseable", "no-graphics", "safe" },

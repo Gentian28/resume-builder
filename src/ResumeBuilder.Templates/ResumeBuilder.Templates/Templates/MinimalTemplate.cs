@@ -204,7 +204,7 @@ public class MinimalTemplate : BaseTemplate
                 {
                     foreach (var achievement in exp.Achievements)
                     {
-                        achieveCol.Item().PaddingBottom(2).Text($"— {achievement}").FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
+                        achieveCol.Item().PaddingBottom(2).Text($"- {achievement}").FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
                     }
                 });
             }
@@ -263,7 +263,7 @@ public class MinimalTemplate : BaseTemplate
                 {
                     foreach (var highlight in project.Highlights)
                     {
-                        highlightCol.Item().PaddingBottom(2).Text($"— {highlight}").FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
+                        highlightCol.Item().PaddingBottom(2).Text($"- {highlight}").FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
                     }
                 });
             }

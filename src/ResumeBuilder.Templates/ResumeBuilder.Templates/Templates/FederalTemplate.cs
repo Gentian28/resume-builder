@@ -295,7 +295,7 @@ public class FederalTemplate : BaseTemplate
                 groupCol.Item().Text(group.Key).SemiBold().FontSize(10 * FontSizeScale);
                 foreach (var skill in group.OrderBy(s => s.Order))
                 {
-                    groupCol.Item().Text($"    {skill.Name} — {GetSkillLevelText(skill.Level)}")
+                    groupCol.Item().Text($"    {skill.Name} ({GetSkillLevelText(skill.Level)})")
                         .FontSize(10 * FontSizeScale)
                         .FontColor(Colors.Grey.Darken3);
                 }
@@ -306,7 +306,7 @@ public class FederalTemplate : BaseTemplate
 
         foreach (var skill in uncategorised)
         {
-            column.Item().Text($"{skill.Name} — {GetSkillLevelText(skill.Level)}")
+            column.Item().Text($"{skill.Name} ({GetSkillLevelText(skill.Level)})")
                 .FontSize(10 * FontSizeScale)
                 .FontColor(Colors.Grey.Darken3);
         }

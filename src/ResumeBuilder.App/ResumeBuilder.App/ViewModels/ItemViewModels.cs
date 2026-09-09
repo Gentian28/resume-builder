@@ -124,8 +124,8 @@ public partial class ExperienceViewModel : ItemViewModelBase
             var dates = (StartYear, EndYear, IsCurrentRole) switch
             {
                 (null, _, _) => "",
-                ({ } start, _, true) => $"{start} – present",
-                ({ } start, { } end, _) => start == end ? $"{start}" : $"{start} – {end}",
+                ({ } start, _, true) => $"{start} - present",
+                ({ } start, { } end, _) => start == end ? $"{start}" : $"{start} - {end}",
                 ({ } start, null, _) => $"{start}"
             };
 

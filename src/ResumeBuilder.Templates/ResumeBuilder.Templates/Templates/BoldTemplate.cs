@@ -88,7 +88,7 @@ public class BoldTemplate : BaseTemplate
                                     row.AutoItem().PaddingRight(20).Text(text =>
                                     {
                                         text.Span(lang.Name).Bold().FontSize(10 * FontSizeScale);
-                                        text.Span($" — {GetLanguageProficiencyText(lang.Proficiency)}")
+                                        text.Span($" ({GetLanguageProficiencyText(lang.Proficiency)})")
                                             .FontSize(9 * FontSizeScale).FontColor(Colors.Grey.Darken1);
                                     });
                                 }
@@ -106,7 +106,7 @@ public class BoldTemplate : BaseTemplate
                                 {
                                     text.Span(cert.Name).Bold().FontSize(10 * FontSizeScale);
                                     if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
-                                        text.Span($" — {cert.IssuingOrganization}").FontSize(9 * FontSizeScale);
+                                        text.Span($", {cert.IssuingOrganization}").FontSize(9 * FontSizeScale);
                                     if (cert.IssueDate.HasValue)
                                         text.Span($" ({ResumeDateFormat.MonthYear(cert.IssueDate)})")
                                             .FontSize(9 * FontSizeScale).FontColor(Colors.Grey.Darken1);

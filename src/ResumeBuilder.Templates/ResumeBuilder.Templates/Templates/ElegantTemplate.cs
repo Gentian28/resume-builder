@@ -158,7 +158,7 @@ public class ElegantTemplate : BaseTemplate
         {
             foreach (var lang in resume.Languages.OrderBy(l => l.Order))
             {
-                ct.Item().Text(FormatLanguage(lang, " — ")).FontSize(9 * FontSizeScale);
+                ct.Item().Text(FormatLanguage(lang, ": ")).FontSize(9 * FontSizeScale);
             }
         });
     }

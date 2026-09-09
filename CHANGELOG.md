@@ -1,7 +1,7 @@
 # Changelog
 
 Every released version and what changed in it, written for the person reading it rather than as a
-list of commits. This file *is* the GitHub release notes — the release workflow extracts the
+list of commits. This file *is* the GitHub release notes: the release workflow extracts the
 section matching the tag and fails the build if there isn't one.
 
 
@@ -42,7 +42,7 @@ A polish pass over the editor and the printed page.
   characters that rendered differently row to row.
 - **Section headers can't be orphaned in the PDF anymore.** A section title now brings the
   start of its content with it or moves to the next page whole, and an entry title always
-  keeps a couple of lines attached — no more "Projects" alone at the bottom of a page.
+  keeps a couple of lines attached, so "Projects" is never alone at the bottom of a page.
 - **Appearance and Section order are open by default** instead of hiding behind a "..." button.
 - **Navigating closes tool panels.** Opening a section from the left nav dismisses the AI
   Assistant / Tailor / Sync panel instead of stacking your section underneath it.
@@ -50,7 +50,7 @@ A polish pass over the editor and the printed page.
 ### Fixed
 
 - **Importing shows its progress.** The loading overlay now reliably appears the moment an
-  import starts and stays until the résumé is fully loaded into the editor — previously a
+  import starts and stays until the résumé is fully loaded into the editor. Previously a
   quick parse followed by the editor filling in could freeze the window with no feedback.
 - The first-run screen's privacy note wraps inside its card instead of running off the edge.
 
@@ -60,16 +60,16 @@ Always knowing where your work is.
 
 ### Added
 
-- **After every export, a toast offers Open and Show in folder** — producing a PDF and finding
+- **After every export, a toast offers Open and Show in folder.** Producing a PDF and finding
   it are now one flow, browser-download style. Works for cover letters too.
 - **"Export as PDF..." sits directly in the File menu** with Ctrl+E, since producing a PDF is
   the point of the app.
 
 ### Changed
 
-- **The save indicator says "All changes saved on this computer"** instead of a timestamp — it
+- **The save indicator says "All changes saved on this computer"** instead of a timestamp. It
   answers "did it save, and where?" at a glance.
-- **"Save As..." is now "Duplicate..."** — it makes a copy inside the app, and has never asked
+- **"Save As..." is now "Duplicate...".** It makes a copy inside the app, and has never asked
   for a file location, so the Word phrase promised the wrong thing. Files come from Export.
 - **The first-run screen states the storage model in one breath:** résumés save automatically
   inside the app, export a PDF when you need a file to send, turn on sync to have them on your
@@ -82,13 +82,13 @@ The rough edges a real import session showed up.
 ### Fixed
 
 - **Importing and exporting now show progress.** The work used to run on the UI thread, so the
-  loading overlay never appeared — a slow PDF import just froze the window with no sign anything
+  loading overlay never appeared: a slow PDF import just froze the window with no sign anything
   was happening. The overlay now shows, animates, and says what it is doing ("Importing PDF...",
   "Exporting DOCX...").
-- **The Skills editor no longer draws each row's name and category on top of each other** — a
+- **The Skills editor no longer draws each row's name and category on top of each other.** A
   layout bug that made every imported skill list look corrupted.
 - **Spell check knows industry vocabulary.** Kubernetes, SaaS, microservices, DevOps, "agentic",
-  "architecting" and some 180 other terms a résumé routinely contains are no longer flagged — and
+  "architecting" and some 180 other terms a résumé routinely contains are no longer flagged, and
   no longer "corrected" to the nearest dictionary word (Kubernetes → "Rubbernecks").
 
 ### Changed
@@ -110,13 +110,13 @@ Keeping track of where your résumés actually went.
 - **Applications.** Track which résumé you sent to which company, when, and what happened. The
   point is the moment weeks later when they call: one click opens the exact version they read,
   with the bullets you rewrote for them. Anything waiting on a reply for more than a fortnight is
-  marked *worth chasing*, and the header tells you what needs attention — "14 tracked · 3 waiting ·
+  marked *worth chasing*, and the header tells you what needs attention: "14 tracked · 3 waiting ·
   2 silent 2+ weeks".
 - **One-click cloud sync.** The sync panel now finds your Google Drive, OneDrive, Dropbox or
   iCloud folder and offers it as a button, instead of asking you to type a path. Your résumés live
   in the cloud folder you already have; no account, no upload to us.
-- **The first-run screen says what the app does** — tailoring, ATS keyword checking, cover letters
-  — rather than only how to start a document.
+- **The first-run screen says what the app does** (tailoring, ATS keyword checking, cover letters)
+  rather than only how to start a document.
 
 ### Changed
 
@@ -135,7 +135,7 @@ Keeping track of where your résumés actually went.
 ### Fixed
 
 - **The app has its own icon.** Every install so far showed the default Avalonia template logo in
-  the Start menu, the taskbar, the title bar, and next to the uninstaller — it was never replaced
+  the Start menu, the taskbar, the title bar, and next to the uninstaller. It was never replaced
   when the project was created.
 
 ### Added
@@ -150,8 +150,8 @@ The editor redesign, plus a second AI provider.
 ### Added
 
 - **First-run screen.** A new install used to open on an empty form. It now offers the three ways
-  in — start from one of the 25 templates, import a LinkedIn export / PDF / JSON Resume, or start
-  blank — and says once, in the place where it matters, that everything stays on your computer.
+  in (start from one of the 25 templates, import a LinkedIn export / PDF / JSON Resume, or start
+  blank) and says once, in the place where it matters, that everything stays on your computer.
 - **Anthropic as an AI provider,** alongside OpenAI and any OpenAI-compatible server including a
   local LLM. Each provider keeps its own key and model, so switching between them doesn't make you
   re-enter settings, and one provider's key is never sent to another.
@@ -160,14 +160,14 @@ The editor redesign, plus a second AI provider.
 
 ### Changed
 
-- **Three-zone editor layout** — navigation, editor, and live preview — replacing the fixed rail.
+- **Three-zone editor layout**: navigation, editor, and live preview, replacing the fixed rail.
   A command bar carries the actions you reach for most.
 - **Every field has a visible label,** not just placeholder text that vanishes once you type. All
   fields also carry accessible names for screen readers.
 - **Achievements are edited one bullet at a time,** with reorder and remove per bullet, instead of
   one text box holding all of them.
-- **The AI panel says which of three states it is in** — running locally, using a cloud provider,
-  or not configured — rather than leaving you to infer it from a base URL. Only a local endpoint
+- **The AI panel says which of three states it is in** (running locally, using a cloud provider,
+  or not configured) rather than leaving you to infer it from a base URL. Only a local endpoint
   claims "nothing leaves your machine", because only there is it true.
 
 ### Fixed

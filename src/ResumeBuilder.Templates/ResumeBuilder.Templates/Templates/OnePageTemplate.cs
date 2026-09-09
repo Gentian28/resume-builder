@@ -195,7 +195,7 @@ public class OnePageTemplate : BaseTemplate
                             col.Item().Text(text =>
                             {
                                 text.Span(lang.Name).SemiBold().FontSize(Size(8));
-                                text.Span($" — {GetLanguageProficiencyText(lang.Proficiency)}")
+                                text.Span($" ({GetLanguageProficiencyText(lang.Proficiency)})")
                                     .FontSize(Size(8)).FontColor(Colors.Grey.Darken1);
                             });
                         }
@@ -211,7 +211,7 @@ public class OnePageTemplate : BaseTemplate
                             {
                                 text.Span(cert.Name).SemiBold().FontSize(Size(8));
                                 if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
-                                    text.Span($" — {cert.IssuingOrganization}").FontSize(Size(7.5f));
+                                    text.Span($", {cert.IssuingOrganization}").FontSize(Size(7.5f));
                                 if (cert.IssueDate.HasValue)
                                     text.Span($" ({ResumeDateFormat.Year(cert.IssueDate)})")
                                         .FontSize(Size(7.5f)).FontColor(Colors.Grey.Darken1);

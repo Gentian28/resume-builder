@@ -114,7 +114,7 @@ public class ExecutiveTemplate : BaseTemplate
                             col.Item().Element(c => ComposeSectionTitle(c, "LANGUAGES"));
                             col.Item().Height(8);
                             col.Item().Text(string.Join("   ◆   ", resume.Languages.OrderBy(l => l.Order)
-                                .Select(l => FormatLanguage(l, " — ")))).FontSize(9 * FontSizeScale);
+                                .Select(l => FormatLanguage(l, ": ")))).FontSize(9 * FontSizeScale);
                         });
                         break;
 

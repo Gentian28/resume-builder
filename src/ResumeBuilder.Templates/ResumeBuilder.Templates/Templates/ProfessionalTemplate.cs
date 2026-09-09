@@ -165,7 +165,7 @@ public class ProfessionalTemplate : BaseTemplate
             skillRow.RelativeItem().PaddingLeft(5).Text(text =>
             {
                 text.Span(skill.Name).FontSize(9 * FontSizeScale);
-                text.Span($" — {GetSkillLevelText(skill.Level)}")
+                text.Span($" ({GetSkillLevelText(skill.Level)})")
                     .FontSize(8 * FontSizeScale).FontColor(Colors.Grey.Darken1);
             });
         });

@@ -30,7 +30,7 @@
                            HorizontalAlignment="Center"/>
                 <TextBlock TextWrapping="Wrap" TextAlignment="Center" FontSize="12.5"
                            Foreground="{DynamicResource RbText2}"
-                           Text="Track an application and this remembers which résumé you sent, when, and what happened — so when they call weeks later you know exactly what they read."/>
+                           Text="Track an application and this remembers which résumé you sent, when, and what happened, so when they call weeks later you know exactly what they read."/>
                 <Button Content="Track the résumé I have open" HorizontalAlignment="Center"
                         Classes="accent" Margin="0,6,0,0"
                         Command="{Binding TrackCurrentResumeCommand}"/>
@@ -97,7 +97,7 @@
                                         </Border>
                                     </Grid>
 
-                                    <TextBox Text="{Binding Notes}" Watermark="Notes — who you spoke to, what they asked"
+                                    <TextBox Text="{Binding Notes}" Watermark="Notes: who you spoke to, what they asked"
                                              AcceptsReturn="True" TextWrapping="Wrap" MinHeight="42"
                                              FontSize="12" AutomationProperties.Name="Notes"/>
                                 </StackPanel>

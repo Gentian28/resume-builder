@@ -298,9 +298,9 @@ public class PdfImporter : IImporter
             if (string.IsNullOrWhiteSpace(text)) continue;
 
             // Detect date patterns
-            var dateMatch = Regex.Match(text, @"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)[\s,]*\d{4}\s*[-–—to]+\s*(Present|Current|Now|(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)[\s,]*\d{4}|\d{4})", RegexOptions.IgnoreCase);
+            var dateMatch = Regex.Match(text, @"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)[\s,]*\d{4}\s*[-\u2013\u2014to]+\s*(Present|Current|Now|(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)[\s,]*\d{4}|\d{4})", RegexOptions.IgnoreCase);
 
-            var yearRangeMatch = Regex.Match(text, @"\b(19|20)\d{2}\s*[-–—to]+\s*(Present|Current|Now|(19|20)\d{2})\b", RegexOptions.IgnoreCase);
+            var yearRangeMatch = Regex.Match(text, @"\b(19|20)\d{2}\s*[-\u2013\u2014to]+\s*(Present|Current|Now|(19|20)\d{2})\b", RegexOptions.IgnoreCase);
 
             if (dateMatch.Success || yearRangeMatch.Success)
             {
@@ -317,7 +317,7 @@ public class PdfImporter : IImporter
 
                 // Parse dates
                 var dateText = match.Value;
-                var dateParts = Regex.Split(dateText, @"\s*[-–—to]+\s*", RegexOptions.IgnoreCase);
+                var dateParts = Regex.Split(dateText, @"\s*[-\u2013\u2014to]+\s*", RegexOptions.IgnoreCase);
                 if (dateParts.Length >= 1)
                     current.StartDate = ParseDate(dateParts[0]);
                 if (dateParts.Length >= 2)
@@ -329,7 +329,7 @@ public class PdfImporter : IImporter
                 }
 
                 // Extract job title and company from the rest of the line
-                var remainingText = text.Replace(match.Value, "").Trim(' ', '-', '–', '—', '|', ',');
+                var remainingText = text.Replace(match.Value, "").Trim(' ', '-', '\u2013', '\u2014', '|', ',');
                 if (!string.IsNullOrEmpty(remainingText))
                 {
                     var parts = Regex.Split(remainingText, @"\s*[|,@at]\s*", RegexOptions.IgnoreCase);
@@ -401,7 +401,7 @@ public class PdfImporter : IImporter
                 {
                     var degreeText = text;
                     // Try to extract field of study
-                    var inMatch = Regex.Match(text, @"in\s+(.+?)(?:\s*[-–|,]|$)", RegexOptions.IgnoreCase);
+                    var inMatch = Regex.Match(text, @"in\s+(.+?)(?:\s*[-\u2013|,]|$)", RegexOptions.IgnoreCase);
                     if (inMatch.Success)
                     {
                         current.FieldOfStudy = inMatch.Groups[1].Value.Trim();
@@ -494,7 +494,7 @@ public class PdfImporter : IImporter
                 current = new Certification
                 {
                     Order = certifications.Count,
-                    Name = Regex.Replace(text, @"\b(19|20)\d{2}\b", "").Trim(' ', '-', '–', '|', ',')
+                    Name = Regex.Replace(text, @"\b(19|20)\d{2}\b", "").Trim(' ', '-', '\u2013', '|', ',')
                 };
 
                 if (yearMatch.Success)
@@ -581,7 +581,7 @@ public class PdfImporter : IImporter
 
         foreach (var line in lines)
         {
-            var parts = Regex.Split(line, @"[-–—:]+");
+            var parts = Regex.Split(line, @"[-\u2013\u2014:]+");
             if (parts.Length >= 1)
             {
                 var langName = parts[0].Trim();

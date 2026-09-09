@@ -1777,7 +1777,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             {
                 AiStatusHeadline = "No model configured";
                 AiPrivacyNotice =
-                    "Keyword analysis and ATS scoring still work — they run on this machine and need no model. " +
+                    "Keyword analysis and ATS scoring still work: they run on this machine and need no model. " +
                     "Choose a provider below and add a key to enable summaries, skill suggestions and rewrites.";
                 return;
             }
@@ -1798,7 +1798,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         {
             AiStatusHeadline = "No model configured";
             AiPrivacyNotice =
-                "Keyword analysis and ATS scoring still work — they run on this machine and need no model. " +
+                "Keyword analysis and ATS scoring still work: they run on this machine and need no model. " +
                 "Choose a provider below and add a key to enable summaries, skill suggestions and rewrites.";
             return;
         }

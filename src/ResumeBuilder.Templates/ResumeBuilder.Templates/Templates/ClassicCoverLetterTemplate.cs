@@ -16,7 +16,7 @@ public class ClassicCoverLetterTemplate : BaseCoverLetterTemplate
     {
         Id = "letter-classic",
         Name = "Classic Letter",
-        Description = "Traditional block business letter in serif type — conservative and unadorned",
+        Description = "Traditional block business letter in serif type, conservative and unadorned",
         Category = TemplateCategory.Classic,
         Layout = TemplateLayout.SingleColumn,
         Tags = new[] { "letter", "classic", "serif", "formal", "conservative" },

@@ -183,7 +183,7 @@ public class PhotoHeaderTemplate : BaseTemplate
                                 {
                                     text.Span(cert.Name).SemiBold().FontSize(10 * FontSizeScale);
                                     if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
-                                        text.Span($" — {cert.IssuingOrganization}").FontSize(9 * FontSizeScale);
+                                        text.Span($", {cert.IssuingOrganization}").FontSize(9 * FontSizeScale);
                                 });
 
                                 if (cert.IssueDate.HasValue)

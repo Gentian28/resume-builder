@@ -159,7 +159,7 @@ public class ColorBlockTemplate : BaseTemplate
                             {
                                 text.Span(lang.Name).FontSize(8.5f * FontSizeScale)
                                     .SemiBold().FontColor(Colors.White);
-                                text.Span($" — {GetLanguageProficiencyText(lang.Proficiency)}")
+                                text.Span($" ({GetLanguageProficiencyText(lang.Proficiency)})")
                                     .FontSize(8 * FontSizeScale)
                                     .FontColor(Colors.White.WithAlpha(0.8f));
                             });
@@ -251,7 +251,7 @@ public class ColorBlockTemplate : BaseTemplate
                                 {
                                     text.Span(cert.Name).SemiBold().FontSize(10 * FontSizeScale);
                                     if (!string.IsNullOrWhiteSpace(cert.IssuingOrganization))
-                                        text.Span($" — {cert.IssuingOrganization}").FontSize(9 * FontSizeScale);
+                                        text.Span($", {cert.IssuingOrganization}").FontSize(9 * FontSizeScale);
                                 });
 
                                 if (cert.IssueDate.HasValue)

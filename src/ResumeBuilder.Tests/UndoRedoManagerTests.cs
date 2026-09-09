@@ -1,6 +1,6 @@
+using System.Collections.ObjectModel;
 using AwesomeAssertions;
 using ResumeBuilder.Core.UndoRedo;
-using System.Collections.ObjectModel;
 
 namespace ResumeBuilder.Tests;
 

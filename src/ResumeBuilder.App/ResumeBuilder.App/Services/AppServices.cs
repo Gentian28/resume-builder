@@ -3,8 +3,8 @@ using ResumeBuilder.Core.SpellCheck;
 using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Core.UndoRedo;
 using ResumeBuilder.Data;
-using ResumeBuilder.Templates;
 using ResumeBuilder.Export;
+using ResumeBuilder.Templates;
 
 namespace ResumeBuilder.App.Services;
 

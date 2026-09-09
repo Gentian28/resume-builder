@@ -121,15 +121,18 @@ public class JobApplicationTests : IDisposable
     {
         await _repository.CreateAsync(new JobApplication
         {
-            Company = "Old", AppliedOn = DateTime.UtcNow.AddDays(-30)
+            Company = "Old",
+            AppliedOn = DateTime.UtcNow.AddDays(-30)
         });
         await _repository.CreateAsync(new JobApplication
         {
-            Company = "Recent", AppliedOn = DateTime.UtcNow.AddDays(-1)
+            Company = "Recent",
+            AppliedOn = DateTime.UtcNow.AddDays(-1)
         });
         await _repository.CreateAsync(new JobApplication
         {
-            Company = "NotSentYet", Status = ApplicationStatus.Saved
+            Company = "NotSentYet",
+            Status = ApplicationStatus.Saved
         });
 
         var all = await _repository.GetAllAsync();

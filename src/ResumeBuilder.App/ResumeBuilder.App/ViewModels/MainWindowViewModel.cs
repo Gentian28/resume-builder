@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
 using ResumeBuilder.App.Services;
 using ResumeBuilder.Core.Models;
 using ResumeBuilder.Core.SmartContent;
@@ -18,11 +23,6 @@ using ResumeBuilder.Core.UndoRedo;
 using ResumeBuilder.Core.Validation;
 using ResumeBuilder.Data;
 using ResumeBuilder.Templates;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
-using System.IO;
-using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 
 namespace ResumeBuilder.App.ViewModels;
 
@@ -2666,7 +2666,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             LoadResumeIntoEditor(copy);
 
             _edits.Reset();
-        IsDirty = false;
+            IsDirty = false;
             _lastSavedAt = DateTime.Now;
             UpdateSaveState();
 
@@ -2777,7 +2777,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             CurrentResume = loaded;
             LoadResumeIntoEditor(loaded);
             _edits.Reset();
-        IsDirty = false;
+            IsDirty = false;
             _lastSavedAt = null;
             UpdateSaveState();
             UpdatePreviewDebounced();

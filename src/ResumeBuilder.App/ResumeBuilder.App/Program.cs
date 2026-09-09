@@ -1,5 +1,5 @@
-using Avalonia;
 using System;
+using Avalonia;
 using Velopack;
 
 namespace ResumeBuilder.App;

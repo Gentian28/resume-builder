@@ -1,6 +1,6 @@
 using AwesomeAssertions;
-using Xunit;
 using ResumeBuilder.Core.SmartContent;
+using Xunit;
 
 namespace ResumeBuilder.Tests;
 

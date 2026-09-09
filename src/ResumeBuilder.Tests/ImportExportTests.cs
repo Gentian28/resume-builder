@@ -1,11 +1,11 @@
+using System.Text;
+using System.Text.Json;
 using AwesomeAssertions;
 using ResumeBuilder.Core.Models;
 using ResumeBuilder.Export;
-using ResumeBuilder.Export.Importers;
 using ResumeBuilder.Export.Exporters;
+using ResumeBuilder.Export.Importers;
 using ResumeBuilder.Templates;
-using System.Text;
-using System.Text.Json;
 
 namespace ResumeBuilder.Tests;
 

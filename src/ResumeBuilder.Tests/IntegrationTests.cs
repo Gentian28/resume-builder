@@ -1,11 +1,11 @@
 using AwesomeAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 using ResumeBuilder.Core.Models;
 using ResumeBuilder.Data;
-using ResumeBuilder.Templates;
 using ResumeBuilder.Export;
-using QuestPDF.Infrastructure;
+using ResumeBuilder.Templates;
 
 namespace ResumeBuilder.Tests;
 

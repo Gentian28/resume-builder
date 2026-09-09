@@ -1,0 +1,11 @@
+# Line endings are LF in the repository and in every checkout, on every platform.
+# .editorconfig says the same, so dotnet format agrees with git and with CI.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.pdf binary
+*.dic binary
+*.aff binary

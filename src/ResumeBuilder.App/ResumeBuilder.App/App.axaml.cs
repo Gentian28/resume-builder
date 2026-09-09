@@ -1,20 +1,20 @@
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
-using Avalonia.Styling;
-using System.Linq;
 using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
+using ResumeBuilder.App.Services;
 using ResumeBuilder.App.ViewModels;
 using ResumeBuilder.App.Views;
-using ResumeBuilder.App.Services;
 using ResumeBuilder.Core.SmartContent;
 using ResumeBuilder.Core.SpellCheck;
 using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Core.UndoRedo;
 using ResumeBuilder.Data;
-using ResumeBuilder.Templates;
 using ResumeBuilder.Export;
+using ResumeBuilder.Templates;
 
 namespace ResumeBuilder.App;
 

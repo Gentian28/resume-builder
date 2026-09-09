@@ -174,7 +174,8 @@ public abstract class BaseTemplate : IResumeTemplate
     protected void ComposePhotoOrInitials(IContainer container, Resume resume, float size, Color backgroundColor, Color initialsColor)
     {
         var photo = resume.PersonalInfo.Photo;
-        if (photo != null && photo.Length > 0)
+        // Undecodable bytes fall back to initials rather than failing the whole document.
+        if (PhotoBytes.IsRenderable(photo))
         {
             container
                 .Width(size)

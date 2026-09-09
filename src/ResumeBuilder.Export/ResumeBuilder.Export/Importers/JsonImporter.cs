@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Templates;
 
 namespace ResumeBuilder.Export.Importers;
 
@@ -41,9 +42,26 @@ public class JsonImporter : IImporter
 
         buffer.Position = 0;
 
-        return isJsonResume
+        var result = isJsonResume
             ? await _jsonResume.ImportAsync(buffer)
             : await _native.ImportAsync(buffer);
+
+        return DropUnrenderablePhoto(result);
+    }
+
+    /// <summary>
+    /// A photo the renderer cannot decode used to import fine and then fail every render of the
+    /// resume, preview included. It is left out here, where the import summary can say so.
+    /// </summary>
+    private static ImportResult<Resume> DropUnrenderablePhoto(ImportResult<Resume> result)
+    {
+        if (result.Success && result.Data?.PersonalInfo.Photo is { Length: > 0 } photo && !PhotoBytes.IsRenderable(photo))
+        {
+            result.Data.PersonalInfo.Photo = null;
+            result.Warnings.Add("The photo in the file is not an image that can be rendered, so it was left out.");
+        }
+
+        return result;
     }
 
     public async Task<ImportResult<Resume>> ImportFromFileAsync(string filePath)

@@ -170,7 +170,7 @@ public class EuropassTemplate : BaseTemplate
 
                 // The photo is a first-class part of a Europass; when there is none the header simply
                 // reflows to the full width rather than leaving a gap.
-                if (info.Photo is { Length: > 0 })
+                if (PhotoBytes.IsRenderable(info.Photo))
                 {
                     row.ConstantItem(PhotoSize + 12).AlignRight().Element(c => c
                         .Width(PhotoSize)

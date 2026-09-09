@@ -8,6 +8,18 @@ namespace ResumeBuilder.Export;
 
 public class CoverLetterDocxExporter : ICoverLetterExporter
 {
+
+    /// <summary>
+    /// Every text node goes through here so nothing XML 1.0 forbids reaches the file. See
+    /// <see cref="XmlText"/>.
+    /// </summary>
+    private static Text SafeText(string? text, bool preserve = false)
+    {
+        var node = new Text(XmlText.Clean(text));
+        if (preserve)
+            node.Space = SpaceProcessingModeValues.Preserve;
+        return node;
+    }
     public string Format => "DOCX";
     public string FileExtension => ".docx";
     public string MimeType => "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -114,7 +126,7 @@ public class CoverLetterDocxExporter : ICoverLetterExporter
                 new ParagraphProperties(new SpacingBetweenLines { After = "0" }),
                 new Run(
                     new RunProperties(new Bold(), new FontSize { Val = "36" }, new WColor { Val = accentColor }),
-                    new Text(info.FullName)
+                    SafeText(info.FullName)
                 )
             ));
         }
@@ -134,7 +146,7 @@ public class CoverLetterDocxExporter : ICoverLetterExporter
                 new ParagraphProperties(new SpacingBetweenLines { After = "200" }),
                 new Run(
                     new RunProperties(new FontSize { Val = "18" }, new WColor { Val = "666666" }),
-                    new Text(string.Join("  |  ", contacts))
+                    SafeText(string.Join("  |  ", contacts))
                 )
             ));
         }
@@ -160,7 +172,7 @@ public class CoverLetterDocxExporter : ICoverLetterExporter
         if (spacingBefore != null)
             spacing.Before = spacingBefore;
 
-        var run = new Run(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
+        var run = new Run(SafeText(text, preserve: true));
         if (bold)
             run.PrependChild(new RunProperties(new Bold()));
 

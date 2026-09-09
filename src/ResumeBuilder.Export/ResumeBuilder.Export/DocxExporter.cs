@@ -13,6 +13,18 @@ namespace ResumeBuilder.Export;
 
 public class DocxExporter : IExporter
 {
+
+    /// <summary>
+    /// Every text node goes through here so nothing XML 1.0 forbids reaches the file. See
+    /// <see cref="XmlText"/>.
+    /// </summary>
+    private static Text SafeText(string? text, bool preserve = false)
+    {
+        var node = new Text(XmlText.Clean(text));
+        if (preserve)
+            node.Space = SpaceProcessingModeValues.Preserve;
+        return node;
+    }
     private readonly TemplateRegistry _templateRegistry;
 
     public string Format => "DOCX";
@@ -147,7 +159,7 @@ public class DocxExporter : IExporter
                     new FontSize { Val = "48" },
                     new WColor { Val = accentColor }
                 ),
-                new Text(info.FullName)
+                SafeText(info.FullName)
             )
         );
         body.AppendChild(namePara);
@@ -162,7 +174,7 @@ public class DocxExporter : IExporter
                 ),
                 new Run(
                     new RunProperties(new FontSize { Val = "24" }),
-                    new Text(info.JobTitle)
+                    SafeText(info.JobTitle)
                 )
             );
             body.AppendChild(titlePara);
@@ -186,7 +198,7 @@ public class DocxExporter : IExporter
                 ),
                 new Run(
                     new RunProperties(new FontSize { Val = "20" }),
-                    new Text(string.Join("  |  ", contacts))
+                    SafeText(string.Join("  |  ", contacts))
                 )
             );
             body.AppendChild(contactPara);
@@ -275,7 +287,7 @@ public class DocxExporter : IExporter
                     new FontSize { Val = "24" },
                     new WColor { Val = accentColor }
                 ),
-                new Text(title.ToUpper())
+                SafeText(title.ToUpper())
             )
         );
         body.AppendChild(para);
@@ -283,7 +295,7 @@ public class DocxExporter : IExporter
 
     private static void AddParagraph(Body body, string text, bool isBold = false)
     {
-        var run = new Run(new Text(text));
+        var run = new Run(SafeText(text));
         if (isBold) run.PrependChild(new RunProperties(new Bold()));
 
         var para = new Paragraph(
@@ -300,7 +312,7 @@ public class DocxExporter : IExporter
                 new Indentation { Left = "360" },
                 new SpacingBetweenLines { After = "50" }
             ),
-            new Run(new Text($"• {text}"))
+            new Run(SafeText($"• {text}"))
         ));
     }
 
@@ -310,12 +322,12 @@ public class DocxExporter : IExporter
             new ParagraphProperties(new SpacingBetweenLines { After = "0" }),
             new Run(
                 new RunProperties(new Bold(), new FontSize { Val = "22" }),
-                new Text(exp.JobTitle)
+                SafeText(exp.JobTitle)
             ),
-            new Run(new Text("  |  ")),
+            new Run(SafeText("  |  ")),
             new Run(
                 new RunProperties(new Italic()),
-                new Text(exp.DateRange)
+                SafeText(exp.DateRange)
             )
         );
         body.AppendChild(titlePara);
@@ -324,7 +336,7 @@ public class DocxExporter : IExporter
             new ParagraphProperties(new SpacingBetweenLines { After = "50" }),
             new Run(
                 new RunProperties(new WColor { Val = "666666" }),
-                new Text(exp.Company + (string.IsNullOrWhiteSpace(exp.Location) ? "" : $", {exp.Location}"))
+                SafeText(exp.Company + (string.IsNullOrWhiteSpace(exp.Location) ? "" : $", {exp.Location}"))
             )
         );
         body.AppendChild(companyPara);
@@ -348,12 +360,12 @@ public class DocxExporter : IExporter
             new ParagraphProperties(new SpacingBetweenLines { After = "0" }),
             new Run(
                 new RunProperties(new Bold(), new FontSize { Val = "22" }),
-                new Text(edu.DegreeWithField)
+                SafeText(edu.DegreeWithField)
             ),
-            new Run(new Text("  |  ")),
+            new Run(SafeText("  |  ")),
             new Run(
                 new RunProperties(new Italic()),
-                new Text(edu.DateRange)
+                SafeText(edu.DateRange)
             )
         );
         body.AppendChild(titlePara);
@@ -362,7 +374,7 @@ public class DocxExporter : IExporter
             new ParagraphProperties(new SpacingBetweenLines { After = "100" }),
             new Run(
                 new RunProperties(new WColor { Val = "666666" }),
-                new Text(edu.Institution + (string.IsNullOrWhiteSpace(edu.Location) ? "" : $", {edu.Location}"))
+                SafeText(edu.Institution + (string.IsNullOrWhiteSpace(edu.Location) ? "" : $", {edu.Location}"))
             )
         );
         body.AppendChild(instPara);
@@ -395,8 +407,8 @@ public class DocxExporter : IExporter
 
             body.AppendChild(new Paragraph(
                 new ParagraphProperties(new SpacingBetweenLines { After = "100" }),
-                new Run(new RunProperties(new Bold()), new Text($"{group.Key}: ") { Space = SpaceProcessingModeValues.Preserve }),
-                new Run(new Text(text))
+                new Run(new RunProperties(new Bold()), SafeText($"{group.Key}: ", preserve: true)),
+                new Run(SafeText(text))
             ));
         }
     }
@@ -428,7 +440,7 @@ public class DocxExporter : IExporter
                 ),
                 new Run(
                     new RunProperties(new WColor { Val = "666666" }),
-                    new Text(string.Join("  |  ", details))
+                    SafeText(string.Join("  |  ", details))
                 )
             ));
         }
@@ -440,15 +452,15 @@ public class DocxExporter : IExporter
             new ParagraphProperties(new SpacingBetweenLines { After = "50" }),
             new Run(
                 new RunProperties(new Bold()),
-                new Text(proj.Name)
+                SafeText(proj.Name)
             )
         );
 
         var dateRange = FormatDateRange(proj.StartDate, proj.EndDate, proj.IsOngoing);
         if (!string.IsNullOrEmpty(dateRange))
         {
-            titlePara.AppendChild(new Run(new Text("  |  ")));
-            titlePara.AppendChild(new Run(new RunProperties(new Italic()), new Text(dateRange)));
+            titlePara.AppendChild(new Run(SafeText("  |  ")));
+            titlePara.AppendChild(new Run(new RunProperties(new Italic()), SafeText(dateRange)));
         }
 
         body.AppendChild(titlePara);
@@ -459,7 +471,7 @@ public class DocxExporter : IExporter
                 new ParagraphProperties(new SpacingBetweenLines { After = "50" }),
                 new Run(
                     new RunProperties(new WColor { Val = "666666" }),
-                    new Text(proj.Url)
+                    SafeText(proj.Url)
                 )
             ));
         }
@@ -486,15 +498,15 @@ public class DocxExporter : IExporter
             new ParagraphProperties(new SpacingBetweenLines { After = "0" }),
             new Run(
                 new RunProperties(new Bold(), new FontSize { Val = "22" }),
-                new Text(item.Title)
+                SafeText(item.Title)
             )
         );
 
         var dateRange = SectionLayout.CustomItemDateRange(item);
         if (!string.IsNullOrEmpty(dateRange))
         {
-            titlePara.AppendChild(new Run(new Text("  |  ")));
-            titlePara.AppendChild(new Run(new RunProperties(new Italic()), new Text(dateRange)));
+            titlePara.AppendChild(new Run(SafeText("  |  ")));
+            titlePara.AppendChild(new Run(new RunProperties(new Italic()), SafeText(dateRange)));
         }
 
         body.AppendChild(titlePara);
@@ -505,7 +517,7 @@ public class DocxExporter : IExporter
                 new ParagraphProperties(new SpacingBetweenLines { After = "50" }),
                 new Run(
                     new RunProperties(new WColor { Val = "666666" }),
-                    new Text(item.Subtitle)
+                    SafeText(item.Subtitle)
                 )
             ));
         }

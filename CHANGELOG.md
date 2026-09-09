@@ -19,6 +19,10 @@ section matching the tag and fails the build if there isn't one.
 - **A database that cannot be opened now shows a window instead of nothing.** The app used to exit
   silently on a corrupt or truncated database. It now names the file and lists the backups next to
   it so you can go back to one.
+- **A photo that is not an image no longer breaks every render.** A JSON import could carry bytes
+  that were not a picture; the templates now fall back to initials, and the import says the photo
+  was left out. DOCX export also strips the control characters a paste from a PDF can carry, which
+  used to produce a file Word refused to open.
 - **A pre-upgrade backup that fails is reported.** The upgrade still goes ahead, and the app says
   so the moment its window opens, with the path to copy while it is still intact.
 

@@ -324,4 +324,55 @@ public class JsonResumeMeta
 
     [JsonPropertyName("lastModified")]
     public string? LastModified { get; set; }
+
+    /// <summary>
+    /// What the schema has no field for, kept where the schema allows extra keys so a file this
+    /// app wrote reads back whole while every other consumer still sees a valid JSON Resume.
+    /// </summary>
+    [JsonPropertyName("resumeBuilder")]
+    public JsonResumeBuilderExtension? ResumeBuilder { get; set; }
+}
+
+public class JsonResumeBuilderExtension
+{
+    /// <summary>Indexes into work[] that are still running. The schema marks that by omitting endDate, which is also what missing data looks like.</summary>
+    [JsonPropertyName("ongoingWork")]
+    public List<int>? OngoingWork { get; set; }
+
+    [JsonPropertyName("ongoingEducation")]
+    public List<int>? OngoingEducation { get; set; }
+
+    [JsonPropertyName("ongoingProjects")]
+    public List<int>? OngoingProjects { get; set; }
+
+    /// <summary>The user's own sections, other than the three the schema has fields for.</summary>
+    [JsonPropertyName("customSections")]
+    public List<JsonResumeCustomSection>? CustomSections { get; set; }
+}
+
+public class JsonResumeCustomSection
+{
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+
+    [JsonPropertyName("items")]
+    public List<JsonResumeCustomSectionItem>? Items { get; set; }
+}
+
+public class JsonResumeCustomSectionItem
+{
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+
+    [JsonPropertyName("subtitle")]
+    public string? Subtitle { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("startDate")]
+    public string? StartDate { get; set; }
+
+    [JsonPropertyName("endDate")]
+    public string? EndDate { get; set; }
 }

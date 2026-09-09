@@ -23,6 +23,11 @@ section matching the tag and fails the build if there isn't one.
   that were not a picture; the templates now fall back to initials, and the import says the photo
   was left out. DOCX export also strips the control characters a paste from a PDF can carry, which
   used to produce a file Word refused to open.
+- **JSON Resume files validate and read back whole.** An ongoing role used to export as
+  `"endDate": "Present"`, which the schema rejects; it now omits the end date the way the schema
+  expects and keeps the ongoing flag under `meta.resumeBuilder`, alongside any custom section the
+  schema has no field for, so a file this app wrote imports without losing them. Year-only and
+  year-month dates from other tools now import instead of being dropped.
 - **A pre-upgrade backup that fails is reported.** The upgrade still goes ahead, and the app says
   so the moment its window opens, with the path to copy while it is still intact.
 

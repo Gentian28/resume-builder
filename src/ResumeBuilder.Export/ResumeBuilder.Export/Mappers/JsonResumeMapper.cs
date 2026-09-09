@@ -41,7 +41,10 @@ public static class JsonResumeMapper
                 Position = e.JobTitle,
                 Location = e.Location,
                 StartDate = FormatDate(e.StartDate),
-                EndDate = e.IsCurrentRole ? "Present" : FormatDate(e.EndDate),
+                // The schema has no word for "still here": an ongoing entry simply has no endDate.
+                // Writing "Present" made every file fail schema validation. The flag itself travels in
+                // meta.resumeBuilder so a round trip through this app keeps it.
+                EndDate = e.IsCurrentRole ? null : FormatDate(e.EndDate),
                 Summary = e.Description,
                 Highlights = e.Achievements.Any() ? e.Achievements : null
             }).ToList(),
@@ -51,7 +54,7 @@ public static class JsonResumeMapper
                 StudyType = e.Degree,
                 Area = e.FieldOfStudy,
                 StartDate = FormatDate(e.StartDate),
-                EndDate = e.IsCurrentlyStudying ? "Present" : FormatDate(e.EndDate),
+                EndDate = e.IsCurrentlyStudying ? null : FormatDate(e.EndDate),
                 Score = e.Grade
             }).ToList(),
             Skills = GroupSkillsByCategory(resume.Skills),
@@ -73,7 +76,7 @@ public static class JsonResumeMapper
                 Description = p.Description,
                 Url = p.Url,
                 StartDate = FormatDate(p.StartDate),
-                EndDate = p.IsOngoing ? "Present" : FormatDate(p.EndDate),
+                EndDate = p.IsOngoing ? null : FormatDate(p.EndDate),
                 Keywords = p.Technologies.Any() ? p.Technologies : null,
                 Highlights = p.Highlights.Any() ? p.Highlights : null
             }).ToList(),
@@ -83,14 +86,71 @@ public static class JsonResumeMapper
             Meta = new JsonResumeMeta
             {
                 Version = "v1.0.0",
-                LastModified = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", ResumeDateFormat.Culture)
+                LastModified = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", ResumeDateFormat.Culture),
+                ResumeBuilder = ToExtension(resume)
             }
         };
     }
 
+    private static JsonResumeBuilderExtension? ToExtension(Resume resume)
+    {
+        static List<int>? Indexes<T>(IEnumerable<T> items, Func<T, bool> ongoing)
+        {
+            var found = items.Select((item, i) => (item, i)).Where(x => ongoing(x.item)).Select(x => x.i).ToList();
+            return found.Count > 0 ? found : null;
+        }
+
+        var extension = new JsonResumeBuilderExtension
+        {
+            OngoingWork = Indexes(resume.Experiences.OrderBy(e => e.Order), e => e.IsCurrentRole),
+            OngoingEducation = Indexes(resume.EducationList.OrderBy(e => e.Order), e => e.IsCurrentlyStudying),
+            OngoingProjects = Indexes(resume.Projects.OrderBy(p => p.Order), p => p.IsOngoing),
+            CustomSections = ToOtherCustomSections(resume)
+        };
+
+        var empty = extension.OngoingWork is null && extension.OngoingEducation is null
+            && extension.OngoingProjects is null && extension.CustomSections is null;
+        return empty ? null : extension;
+    }
+
+    /// <summary>
+    /// Every custom section except the three that map to schema fields. These used to vanish on
+    /// export, because the schema has nowhere to put a "Speaking" or "Certifications" section.
+    /// </summary>
+    private static List<JsonResumeCustomSection>? ToOtherCustomSections(Resume resume)
+    {
+        var others = resume.CustomSections
+            .Where(s => !IsSchemaMappedSection(s.Title) && s.Items.Any())
+            .OrderBy(s => s.Order)
+            .Select(s => new JsonResumeCustomSection
+            {
+                Title = s.Title,
+                Items = s.Items.OrderBy(i => i.Order).Select(i => new JsonResumeCustomSectionItem
+                {
+                    Title = i.Title,
+                    Subtitle = i.Subtitle,
+                    Description = i.Description,
+                    StartDate = FormatDate(i.StartDate),
+                    EndDate = FormatDate(i.EndDate)
+                }).ToList()
+            })
+            .ToList();
+
+        return others.Count > 0 ? others : null;
+    }
+
+    private static bool IsSchemaMappedSection(string title) =>
+        title.Equals(AwardsSection, StringComparison.OrdinalIgnoreCase)
+        || title.Equals(PublicationsSection, StringComparison.OrdinalIgnoreCase)
+        || title.Equals(VolunteerSection, StringComparison.OrdinalIgnoreCase);
+
     public static Resume FromJsonResume(JsonResumeSchema jsonResume)
     {
         var nameParts = ParseName(jsonResume.Basics?.Name ?? "");
+        var extension = jsonResume.Meta?.ResumeBuilder;
+        var ongoingWork = extension?.OngoingWork ?? new List<int>();
+        var ongoingEducation = extension?.OngoingEducation ?? new List<int>();
+        var ongoingProjects = extension?.OngoingProjects ?? new List<int>();
 
         var resume = new Resume
         {
@@ -135,7 +195,7 @@ public static class JsonResumeMapper
                 Location = w.Location ?? "",
                 StartDate = ParseDate(w.StartDate),
                 EndDate = ParseDate(w.EndDate),
-                IsCurrentRole = IsOngoingMarker(w.EndDate),
+                IsCurrentRole = IsOngoingMarker(w.EndDate) || ongoingWork.Contains(i),
                 Description = w.Summary ?? "",
                 Achievements = w.Highlights ?? new List<string>()
             }).ToList();
@@ -152,7 +212,7 @@ public static class JsonResumeMapper
                 FieldOfStudy = e.Area ?? "",
                 StartDate = ParseDate(e.StartDate),
                 EndDate = ParseDate(e.EndDate),
-                IsCurrentlyStudying = IsOngoingMarker(e.EndDate),
+                IsCurrentlyStudying = IsOngoingMarker(e.EndDate) || ongoingEducation.Contains(i),
                 Grade = e.Score ?? ""
             }).ToList();
         }
@@ -223,15 +283,41 @@ public static class JsonResumeMapper
                 Url = p.Url ?? "",
                 StartDate = ParseDate(p.StartDate),
                 EndDate = ParseDate(p.EndDate),
-                IsOngoing = IsOngoingMarker(p.EndDate),
+                IsOngoing = IsOngoingMarker(p.EndDate) || ongoingProjects.Contains(i),
                 Technologies = p.Keywords ?? new List<string>(),
                 Highlights = p.Highlights ?? new List<string>()
             }).ToList();
         }
 
         AddCustomSections(resume, jsonResume);
+        AddOtherCustomSections(resume, extension);
 
         return resume;
+    }
+
+    private static void AddOtherCustomSections(Resume resume, JsonResumeBuilderExtension? extension)
+    {
+        if (extension?.CustomSections is not { Count: > 0 } sections)
+            return;
+
+        var order = resume.CustomSections.Count;
+        foreach (var section in sections)
+        {
+            resume.CustomSections.Add(new CustomSection
+            {
+                Order = order++,
+                Title = section.Title ?? "",
+                Items = (section.Items ?? new List<JsonResumeCustomSectionItem>()).Select((item, i) => new CustomSectionItem
+                {
+                    Order = i,
+                    Title = item.Title ?? "",
+                    Subtitle = item.Subtitle ?? "",
+                    Description = item.Description ?? "",
+                    StartDate = ParseDate(item.StartDate),
+                    EndDate = ParseDate(item.EndDate)
+                }).ToList()
+            });
+        }
     }
 
     private static void AddCustomSections(Resume resume, JsonResumeSchema jsonResume)
@@ -475,10 +561,26 @@ public static class JsonResumeMapper
 
     private static string? FormatDate(DateTime? date) => date?.ToString("yyyy-MM-dd", ResumeDateFormat.Culture);
 
+    private static readonly Regex YearOnly = new(@"^(?<y>\d{4})$", RegexOptions.Compiled);
+    private static readonly Regex YearMonth = new(@"^(?<y>\d{4})-(?<m>\d{2})$", RegexOptions.Compiled);
+
     private static DateTime? ParseDate(string? dateStr)
     {
         if (string.IsNullOrWhiteSpace(dateStr) || IsOngoingMarker(dateStr))
             return null;
+
+        // The schema allows YYYY and YYYY-MM as well as full dates, and other tools write them.
+        // DateTime.TryParse does not read a bare year, so "2019" used to import as no date at all.
+        var trimmed = dateStr.Trim();
+        if (YearOnly.Match(trimmed) is { Success: true } year)
+            return new DateTime(int.Parse(year.Groups["y"].Value, ResumeDateFormat.Culture), 1, 1);
+
+        if (YearMonth.Match(trimmed) is { Success: true } yearMonth)
+        {
+            var month = int.Parse(yearMonth.Groups["m"].Value, ResumeDateFormat.Culture);
+            if (month is >= 1 and <= 12)
+                return new DateTime(int.Parse(yearMonth.Groups["y"].Value, ResumeDateFormat.Culture), month, 1);
+        }
 
         if (DateTime.TryParse(dateStr, ResumeDateFormat.Culture, System.Globalization.DateTimeStyles.None, out var date))
             return date;

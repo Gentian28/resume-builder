@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Screen — Cover letters</title>
+<title>Screen: Cover letters</title>
 <style>
   :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
   body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
@@ -81,8 +81,8 @@
          background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
 </style>
 
-<h1>Screen — Cover letters</h1>
-<p class="sub">The parallel surface to the résumé editor — same three-zone layout, same command bar,
+<h1>Screen: Cover letters</h1>
+<p class="sub">The parallel surface to the résumé editor, same three-zone layout, same command bar,
 a different document type. Today it lives at <code>File ▸ New Cover Letter</code> /
 <code>Cover Letters…</code> with no visible relationship to the résumé it accompanies.</p>
 
@@ -97,9 +97,9 @@ a different document type. Today it lives at <code>File ▸ New Cover Letter</co
   </div>
   <div class="zones">
     <div class="nav"><div class="nvh">Cover letters</div>
-      <div class="lt2 on"><div class="ln">Northwind — Data Eng</div><div class="lm">Edited 2 min ago</div>
+      <div class="lt2 on"><div class="ln">Northwind: Data Eng</div><div class="lm">Edited 2 min ago</div>
         <div class="lnk">↳ Jane Doe's Résumé</div></div>
-      <div class="lt2"><div class="ln">Contoso — Platform</div><div class="lm">14 Jul</div>
+      <div class="lt2"><div class="ln">Contoso: Platform</div><div class="lm">14 Jul</div>
         <div class="lnk">↳ Jane Doe's Résumé</div></div>
       <div class="lt2"><div class="ln">Untitled letter</div><div class="lm">2 Jul</div></div>
     </div>
@@ -140,9 +140,9 @@ a different document type. Today it lives at <code>File ▸ New Cover Letter</co
   </div>
   <div class="zones">
     <div class="nav"><div class="nvh">Cover letters</div>
-      <div class="lt2 on"><div class="ln">Northwind — Data Eng</div><div class="lm">Edited 2 min ago</div>
+      <div class="lt2 on"><div class="ln">Northwind: Data Eng</div><div class="lm">Edited 2 min ago</div>
         <div class="lnk">↳ Jane Doe's Résumé</div></div>
-      <div class="lt2"><div class="ln">Contoso — Platform</div><div class="lm">14 Jul</div>
+      <div class="lt2"><div class="ln">Contoso: Platform</div><div class="lm">14 Jul</div>
         <div class="lnk">↳ Jane Doe's Résumé</div></div>
       <div class="lt2"><div class="ln">Untitled letter</div><div class="lm">2 Jul</div></div>
     </div>
@@ -176,15 +176,15 @@ a different document type. Today it lives at <code>File ▸ New Cover Letter</co
   <h4>Notes</h4>
   <p><strong>The letter list shows which résumé each letter accompanies.</strong> That relationship
   exists in the data and is invisible in the UI today. It is also the thing that makes "draft from
-  résumé + job ad" comprehensible — the user can see what it will draft from.</p>
+  résumé + job ad" comprehensible, the user can see what it will draft from.</p>
   <p><strong>Only 3 cover-letter templates, so the picker stays a plain dropdown</strong> with a
-  thumbnail — no gallery modal. Below roughly a dozen items a grid is overkill; the 25-template
+  thumbnail, no gallery modal. Below roughly a dozen items a grid is overkill; the 25-template
   résumé gallery earns its modal, this does not.</p>
   <p><strong>Drafting is labelled as working without a model.</strong> Cover-letter drafting has a
   structured fallback when no AI endpoint is configured; the hint says so rather than leaving the
   user to discover it by clicking a button that looks disabled.</p>
   <p><strong>Export goes through <code>CoverLetterExportService</code>, not the résumé registry.</strong>
   <code>IExporter</code> is typed to <code>Resume</code>, so the two export registries are separate.
-  The command bar looks identical here but is bound to a different service — worth stating because
+  The command bar looks identical here but is bound to a different service, worth stating because
   the visual sameness invites wiring it to the wrong one.</p>
 </div>

@@ -54,7 +54,7 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <!-- The MIT-community fork of FluentAssertions, under Apache-2.0. FluentAssertions 8.x moved
          to the Xceed Community License, which is not OSI-approved and permits Non-Commercial Use
-         only — so anyone forking this MIT project for commercial work could not legally run its
+         only, so anyone forking this MIT project for commercial work could not legally run its
          tests, and SignPath's OSS programme requires OSI licensing without commercial
          dual-licensing for all components. -->
     <PackageVersion Include="AwesomeAssertions" Version="9.5.0" />

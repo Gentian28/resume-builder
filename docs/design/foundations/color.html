@@ -44,7 +44,7 @@
 </style>
 
 <h1>Color tokens</h1>
-<p class="sub">Light and dark are <strong>peers</strong> — the app follows the OS setting and neither
+<p class="sub">Light and dark are <strong>peers</strong>, the app follows the OS setting and neither
 is "the" theme. Every ratio below was computed, not eyeballed; two tokens from the first draft
 failed WCAG and have been replaced. These override Semi.Avalonia's ramps rather than replacing them.</p>
 
@@ -106,7 +106,7 @@ failed WCAG and have been replaced. These override Semi.Avalonia's ramps rather 
   </div>
 </div>
 
-<h2>Verified contrast — worst-case surface for each pairing</h2>
+<h2>Verified contrast: worst-case surface for each pairing</h2>
 <table>
   <tr><th>Pairing</th><th>Light</th><th></th><th>Dark</th><th></th><th>Needs</th></tr>
   <tr><td class="t">text-1</td><td class="n">16.15</td><td class="ok">PASS</td><td class="n">13.53</td><td class="ok">PASS</td><td>4.5</td></tr>
@@ -119,20 +119,20 @@ failed WCAG and have been replaced. These override Semi.Avalonia's ramps rather 
 
 <div class="note warn">
   <h4>Why the accent is indigo, and why the dark button label is black</h4>
-  <p><strong>The first draft's <code>text-3</code> failed in both themes</strong> — 3.57 dark,
+  <p><strong>The first draft's <code>text-3</code> failed in both themes</strong>, 3.57 dark,
   2.98 light against <code>surface-2</code>. It carries captions, the autosave stamp and result
   counts, which is real text. Revised to <code>#868D9B</code> / <code>#656C7A</code>.</p>
   <p><strong>Borders needed splitting.</strong> Decorative card borders can be low-contrast, but an
-  input's border <em>is</em> the affordance telling you it's editable — that needs 3:1.
-  <code>border</code> managed 1.31–1.40. Hence a separate <code>border-input</code> token.</p>
+  input's border <em>is</em> the affordance telling you it's editable, that needs 3:1.
+  <code>border</code> managed 1.31 to 1.40. Hence a separate <code>border-input</code> token.</p>
   <p><strong>A dark-theme filled button cannot have a white label.</strong> This is algebra, not
   taste: white-on-accent ≥ 4.5 requires accent luminance ≤ 0.183, while accent-on-dark-panel ≥ 4.5
   requires ≥ 0.229. No colour satisfies both. So dark theme uses a <em>light</em> accent with a
   near-black label (<code>on-accent: #0F1115</code>), and light theme the reverse. Semi.Avalonia
-  handles this correctly already — the point is that our overrides must not break it.</p>
+  handles this correctly already, the point is that our overrides must not break it.</p>
   <p><strong>Indigo beat blue on the one thing that mattered.</strong> Teal and cyan fail as light
   fills (white-on-<code>#0D9488</code> is 3.74). Every blue accessible enough to be a light-theme
-  fill sits within 1.19 contrast of the document default <code>#2563EB</code> — visually the same
+  fill sits within 1.19 contrast of the document default <code>#2563EB</code>, visually the same
   colour. Indigo passes everything and sits 1.88 away, the largest separation among accessible
   candidates.</p>
 </div>
@@ -141,7 +141,7 @@ failed WCAG and have been replaced. These override Semi.Avalonia's ramps rather 
   <h4>The rule this all serves: UI accent is not document accent</h4>
   <p><code>Resume.AccentColor</code> is <strong>user data</strong>; it drives the rendered PDF and
   defaults to <code>#2563EB</code>. <code>ui-accent</code> is <strong>fixed chrome</strong>. They
-  must never be bound to one another — otherwise picking a magenta résumé restyles every focus
+  must never be bound to one another, otherwise picking a magenta résumé restyles every focus
   ring, selection highlight and primary button in the app.</p>
   <p>Document accent may appear in exactly two places: inside the preview page, and in the
   swatch/hex control that edits it. Nowhere else.</p>

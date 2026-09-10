@@ -18,7 +18,7 @@
   .pane.dk .cap { color: #868d9b; }
   .pane.lt .cap { color: #656c7a; }
 
-  /* card — dark */
+  /* card: dark */
   .dk .card { width: 164px; background: #1d2027; border: 1px solid #2f333c; border-radius: 10px;
               padding: 9px; text-align: left; position: relative; }
   .dk .card.hover { border-color: #697080; box-shadow: 0 2px 8px rgba(0,0,0,.28);
@@ -27,7 +27,7 @@
   .dk .tick { background: #8b93f8; color: #0f1115; }
   .dk .nm { color: #e8eaed; }
   .dk .tag { color: #868d9b; }
-  /* card — light */
+  /* card: light */
   .lt .card { width: 164px; background: #ffffff; border: 1px solid #dde1e6; border-radius: 10px;
               padding: 9px; text-align: left; position: relative; }
   .lt .card.hover { border-color: #818a99; box-shadow: 0 2px 8px rgba(16,20,30,.10);
@@ -68,7 +68,7 @@
 
 <h1>Template card</h1>
 <p class="sub">The highest-impact component in the redesign. Today all 25 templates are text-only
-cards — a name and a two-line description — so users pick a visual design without seeing one.
+cards, a name and a two-line description, so users pick a visual design without seeing one.
 The thumbnail <em>is</em> the product.</p>
 
 <div class="pane lt">
@@ -86,13 +86,13 @@ The thumbnail <em>is</em> the product.</p>
         <div class="h" style="width:68%"></div><div class="hs"></div><div class="sh"></div>
         <div class="l" style="width:90%"></div><div class="l" style="width:76%"></div></div></div>
         <div class="nm">Dark Sidebar</div><div class="tag">Creative</div></div>
-      <div class="cap">hover — lifts, border darkens</div></div>
+      <div class="cap">hover: lifts, border darkens</div></div>
     <div class="state">
       <div class="card sel"><div class="tick">✓</div><div class="thumb"><div class="band"></div>
         <div class="m" style="margin-top:46px"><div class="sh"></div>
         <div class="l" style="width:92%"></div><div class="l" style="width:80%"></div></div></div>
         <div class="nm">Color Block</div><div class="tag">Modern</div></div>
-      <div class="cap">selected — indigo ring, white tick</div></div>
+      <div class="cap">selected: indigo ring, white tick</div></div>
   </div>
 </div>
 
@@ -111,18 +111,18 @@ The thumbnail <em>is</em> the product.</p>
         <div class="h" style="width:68%"></div><div class="hs"></div><div class="sh"></div>
         <div class="l" style="width:90%"></div><div class="l" style="width:76%"></div></div></div>
         <div class="nm">Dark Sidebar</div><div class="tag">Creative</div></div>
-      <div class="cap">hover — lifts, border brightens</div></div>
+      <div class="cap">hover: lifts, border brightens</div></div>
     <div class="state">
       <div class="card sel"><div class="tick">✓</div><div class="thumb"><div class="band"></div>
         <div class="m" style="margin-top:46px"><div class="sh"></div>
         <div class="l" style="width:92%"></div><div class="l" style="width:80%"></div></div></div>
         <div class="nm">Color Block</div><div class="tag">Modern</div></div>
-      <div class="cap">selected — indigo ring, <em>near-black</em> tick</div></div>
+      <div class="cap">selected: indigo ring, <em>near-black</em> tick</div></div>
   </div>
 </div>
 
 <div class="note warn">
-  <h4>The thumbnail stays white in both themes — deliberately</h4>
+  <h4>The thumbnail stays white in both themes: deliberately</h4>
   <p>A résumé is printed on white paper. Tinting the thumbnail to match a dark UI would
   misrepresent the output, and the user is choosing a <em>document</em>, not a UI skin. The card
   chrome changes with the theme; the page inside never does.</p>
@@ -132,17 +132,17 @@ The thumbnail <em>is</em> the product.</p>
 </div>
 
 <div class="note">
-  <h4>Where the thumbnails come from — no new rendering code</h4>
+  <h4>Where the thumbnails come from: no new rendering code</h4>
   <p><code>ResumeBuilder.Export/PngExporter.cs</code> already renders any template to PNG. Render
   each against <code>samples/sample-resume.json</code> and cache to
   <code>%LocalAppData%/ResumeBuilder/thumbnails/&lt;templateId&gt;.png</code>, keyed on template id
   + app version.</p>
-  <p>Generate <strong>lazily on first gallery open</strong>, not at startup or build time — 25
+  <p>Generate <strong>lazily on first gallery open</strong>, not at startup or build time, 25
   renders at once would stall the UI thread, and <code>TemplateRegistry</code> changes between
   releases so build-time assets would go stale.</p>
   <p><strong>Aspect ratio fixed at 210:297 (A4), never cropped or letterboxed.</strong> A template's
   whole value proposition is how it uses the page; a cropped thumbnail lies about it.</p>
   <p>Render with the template's <em>own</em> default accent, not the user's current
-  <code>Resume.AccentColor</code> — the card advertises the template, it does not preview the
+  <code>Resume.AccentColor</code>, the card advertises the template, it does not preview the
   user's document.</p>
 </div>

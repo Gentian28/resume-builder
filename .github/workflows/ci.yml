@@ -16,7 +16,7 @@ jobs:
     if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
     strategy:
-      # Don't cancel the other two the moment one fails — when something breaks on
+      # Don't cancel the other two the moment one fails: when something breaks on
       # exactly one OS, the passing legs are the useful half of the signal.
       fail-fast: false
       matrix:

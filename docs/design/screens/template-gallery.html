@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Screen — Template gallery</title>
+<title>Screen: Template gallery</title>
 <style>
   :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
   body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
@@ -8,7 +8,7 @@
   h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
        color: #868d9b; margin: 26px 0 10px; }
 
-  /* theme scopes — identical markup, different token values */
+  /* theme scopes: identical markup, different token values */
   .t { --radius: 14px; border-radius: var(--radius); overflow: hidden; }
   .t.lt { --s1:#fff; --s2:#f0f2f5; --bd:#dde1e6; --bdi:#818a99; --t1:#14161a; --t2:#5b6270;
           --t3:#656c7a; --acc:#4f46e5; --on:#fff; --shadow:0 12px 32px rgba(16,20,30,.16); }
@@ -71,10 +71,10 @@
          background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
 </style>
 
-<h1>Screen — Template gallery</h1>
+<h1>Screen: Template gallery</h1>
 <p class="sub">Replaces the text-card wall in <code>ui-baseline/03-template-gallery.png</code>, which
 also ran ~60% empty space below the cards. Six columns of thumbnails fit all 25 templates in
-roughly the same footprint. Markup is identical across themes — only token values differ.</p>
+roughly the same footprint. Markup is identical across themes, only token values differ.</p>
 
 <h2>Light</h2>
 <div class="t lt"><div class="modal">
@@ -129,14 +129,14 @@ roughly the same footprint. Markup is identical across themes — only token val
 <div class="note">
   <h4>Decisions worth arguing with</h4>
   <p><strong>Thumbnails stay white in both themes.</strong> The grid of white pages against dark
-  chrome is intentional — those are documents, not UI. It also means the two renderings above share
+  chrome is intentional, those are documents, not UI. It also means the two renderings above share
   every pixel inside the thumbnails, which is the point.</p>
   <p><strong>Category filter as chips, not a dropdown.</strong> The categories already exist in
   <code>TemplateInfo.Category</code>. Chips expose the taxonomy without a click, and "All 25"
-  doubles as a count — a selling point the current UI never states anywhere.</p>
+  doubles as a count, a selling point the current UI never states anywhere.</p>
   <p><strong>Search included because 25 is past the scanning threshold.</strong> Under ~12 items a
   grid alone is enough; at 25 and growing, typing "ats" or "academic" beats scanning.</p>
-  <p><strong>The primary button names the template</strong> ("Use Modern", not "OK") — the click
+  <p><strong>The primary button names the template</strong> ("Use Modern", not "OK"), the click
   that restyles the whole document should say what it will do.</p>
   <p><strong>Still open:</strong> should selecting a card apply immediately with live preview behind
   the modal, or only on confirm? Immediate suits the app's live-preview character, but re-rendering

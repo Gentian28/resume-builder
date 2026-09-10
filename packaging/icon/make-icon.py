@@ -7,7 +7,7 @@ reproducible from source.
     python packaging/icon/make-icon.py
 
 Design notes: the mark has to survive 16x16 in the Start menu and the taskbar, which is where most
-people actually see it. That rules out fine detail — hence a solid indigo tile with a high-contrast
+people actually see it. That rules out fine detail, hence a solid indigo tile with a high-contrast
 white page and only three rules on it. Anything more turns to mush at small sizes.
 """
 
@@ -30,7 +30,7 @@ ICO_SIZES = [256, 128, 64, 48, 32, 16]
 
 
 def draw(size: int) -> Image.Image:
-    """Render at 8x then downsample — cheap supersampling, keeps the corners smooth."""
+    """Render at 8x then downsample: cheap supersampling, keeps the corners smooth."""
     s = size * 8
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)

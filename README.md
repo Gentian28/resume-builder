@@ -6,7 +6,7 @@ A cross-platform desktop resume builder: edit a resume in a live editor, see a r
 
 ## Download
 
-On Windows, the quickest route is winget — it also skips the SmartScreen prompt, since winget
+On Windows, the quickest route is winget, which also skips the SmartScreen prompt, since winget
 installs through its own trusted client:
 
 ```
@@ -18,23 +18,23 @@ Or grab the latest build from the [releases page](https://github.com/Gentian28/r
 | Platform | Download | Notes |
 | --- | --- | --- |
 | Windows | `ResumeBuilder-win-Setup.exe` | Installer, updates itself. `win-Portable.zip` if you'd rather not install. |
-| Linux | `ResumeBuilder.AppImage` | `chmod +x` and run. Needs `libfontconfig1` — present on most desktops. |
-| macOS — Apple silicon | `ResumeBuilder-osx-Setup.pkg` | M1 and later. See the Gatekeeper note below. |
-| macOS — Intel | `ResumeBuilder-osx-x64-Setup.pkg` | 2019 and earlier. An Apple silicon build will not run on Intel. |
+| Linux | `ResumeBuilder.AppImage` | `chmod +x` and run. Needs `libfontconfig1`, present on most desktops. |
+| macOS, Apple silicon | `ResumeBuilder-osx-Setup.pkg` | M1 and later. See the Gatekeeper note below. |
+| macOS, Intel | `ResumeBuilder-osx-x64-Setup.pkg` | 2019 and earlier. An Apple silicon build will not run on Intel. |
 
 Not sure which Mac you have? Apple menu → About This Mac.
 
-No .NET runtime needed — every build is self-contained.
+No .NET runtime needed: every build is self-contained.
 
 `SHA256SUMS-*.txt` is published with every release so you can verify what you downloaded.
 
 ### Code signing
 
 Windows builds are not yet code-signed. An application to the [SignPath
-Foundation](https://signpath.org/) free-signing programme was declined in July 2026 — the
-programme wants public adoption signals a brand-new project doesn't have yet — and will be
+Foundation](https://signpath.org/) free-signing programme was declined in July 2026 (the
+programme wants public adoption signals a brand-new project doesn't have yet) and will be
 resubmitted once the project has them. Until then, the direct download triggers SmartScreen's
-"unknown publisher" warning — choose **More info → Run anyway** — while installing via winget
+"unknown publisher" warning (choose **More info → Run anyway**), while installing via winget
 avoids it entirely. macOS Gatekeeper likewise refuses the package until you allow it under
 **System Settings → Privacy & Security**; that needs Apple notarisation, which is separate from
 code signing and not yet in place.
@@ -46,15 +46,15 @@ what is stored and the three cases where it touches the network.
 
 ## Features
 
-- **Live preview** — the editor renders the selected template to a paged PDF preview as you type.
-- **25 resume templates** — Modern, Classic, Minimal, Creative, Executive, Technical, Academic, Two Column, Compact, Elegant, Professional, Starter, Simple, Timeline, Bold, Dark Sidebar, Infographic, ATS Plain, Chronology, Color Block, Developer, Europass, Federal, One Page, Photo Header — plus 3 cover-letter templates.
-- **Section ordering and visibility** — reorder or hide any section, including custom sections.
-- **Export** — PDF, DOCX, HTML, PNG, plain text (ATS-friendly), native JSON, and [JSON Resume](https://jsonresume.org/).
-- **Import** — JSON Resume, native JSON, LinkedIn data export (.zip), and PDF text extraction.
-- **Spell check** — Hunspell, with a personal dictionary.
-- **ATS keyword analysis** — paste a job description to get a match score, matched/missing keywords, and warnings.
-- **AI assistance** — optional; works against OpenAI or any OpenAI-compatible endpoint, including a local LLM (Ollama, LM Studio).
-- **Undo/redo** — across text edits and list operations.
+- **Live preview**: the editor renders the selected template to a paged PDF preview as you type.
+- **25 resume templates**: Modern, Classic, Minimal, Creative, Executive, Technical, Academic, Two Column, Compact, Elegant, Professional, Starter, Simple, Timeline, Bold, Dark Sidebar, Infographic, ATS Plain, Chronology, Color Block, Developer, Europass, Federal, One Page, Photo Header, plus 3 cover-letter templates.
+- **Section ordering and visibility**: reorder or hide any section, including custom sections.
+- **Export**: PDF, DOCX, HTML, PNG, plain text (ATS-friendly), native JSON, and [JSON Resume](https://jsonresume.org/).
+- **Import**: JSON Resume, native JSON, LinkedIn data export (.zip), and PDF text extraction.
+- **Spell check**: Hunspell, with a personal dictionary.
+- **ATS keyword analysis**: paste a job description to get a match score, matched/missing keywords, and warnings.
+- **AI assistance**: optional; works against OpenAI or any OpenAI-compatible endpoint, including a local LLM (Ollama, LM Studio).
+- **Undo/redo**: across text edits and list operations.
 - **Sync**: two-way sync through a local folder, with conflict detection. The sync panel finds your Google Drive, OneDrive, Dropbox or iCloud folder and offers it as one button; no account, no upload.
 - **Applications**: track which résumé went to which company, when, and what happened; one click reopens the exact version they read. Anything silent for more than a fortnight is marked worth chasing.
 - **Backups before upgrades**: the database is copied before any upgrade that changes its schema, and the last three copies are kept.
@@ -122,7 +122,7 @@ The AI features are off until configured. They target any OpenAI-compatible `/ch
 
 ## License
 
-[MIT](LICENSE) — © 2026 Gentian Shkembi.
+[MIT](LICENSE), © 2026 Gentian Shkembi.
 
 Every dependency is OSI-licensed. One is worth knowing about if you fork this for commercial
 work: **QuestPDF**, which renders every template, is MIT for open-source projects, non-profits
@@ -130,6 +130,6 @@ and companies under $1M USD annual revenue, and requires a paid licence above th
 affect using, forking or redistributing this project.
 
 (The test suite used to depend on FluentAssertions 8.x, which moved to the non-OSI Xceed
-Community License permitting non-commercial use only — meaning a commercial fork could not
+Community License permitting non-commercial use only, meaning a commercial fork could not
 legally run the tests. It now uses [AwesomeAssertions](https://github.com/AwesomeAssertions/AwesomeAssertions),
 the Apache-2.0 community fork.)

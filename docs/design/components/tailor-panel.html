@@ -78,14 +78,14 @@
 <p class="sub">Currently at <code>Tools ▸ Tailor to Job ▸ …</code>. It does two separable things:
 ATS keyword analysis, which is pure local computation and always works, and AI rewrites, which need
 a model. The panel shows the analysis unconditionally and treats rewrites as an optional layer on
-top — the "degrade, not gate" rule applied to the feature that most needs it.</p>
+top, the "degrade, not gate" rule applied to the feature that most needs it.</p>
 
 <div class="cols">
 <div class="t lt"><div class="panel">
   <div class="ph"><p class="pt">Tailor to Job</p>
     <p class="pd">Paste a job ad. Matching runs offline; rewrites use whatever model you have configured.</p></div>
   <div class="sec"><span class="lb">Job description</span>
-    <div class="ta">Senior Data Engineer — you will own ingestion pipelines, schema governance and
+    <div class="ta">Senior Data Engineer, you will own ingestion pipelines, schema governance and
       partner integrations. Python, Airflow, dbt, AWS…</div></div>
   <div class="sec"><div class="score">
     <div class="ring"><span>68</span></div>
@@ -111,7 +111,7 @@ top — the "degrade, not gate" rule applied to the feature that most needs it.<
   <div class="ph"><p class="pt">Tailor to Job</p>
     <p class="pd">Paste a job ad. Matching runs offline; rewrites use whatever model you have configured.</p></div>
   <div class="sec"><span class="lb">Job description</span>
-    <div class="ta">Senior Data Engineer — you will own ingestion pipelines, schema governance and
+    <div class="ta">Senior Data Engineer, you will own ingestion pipelines, schema governance and
       partner integrations. Python, Airflow, dbt, AWS…</div></div>
   <div class="sec"><div class="score">
     <div class="ring"><span>68</span></div>
@@ -137,7 +137,7 @@ top — the "degrade, not gate" rule applied to the feature that most needs it.<
 <div class="note">
   <h4>Rules</h4>
   <p><strong>The match score renders with no model configured.</strong>
-  <code>KeywordAnalyzer</code> is local computation — score, matched terms, missing terms and
+  <code>KeywordAnalyzer</code> is local computation, score, matched terms, missing terms and
   warnings all work offline. Only the "Suggested rewrites" section depends on a model, and it is
   the only part that disappears without one.</p>
   <p><strong>Every rewrite is shown as a before/after diff on a named target.</strong> The header

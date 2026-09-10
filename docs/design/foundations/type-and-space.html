@@ -45,11 +45,11 @@
 </style>
 
 <h1>Type scale &amp; spacing</h1>
-<p class="sub">Inter is already loaded via <code>.WithInterFont()</code> — no new font dependency.
+<p class="sub">Inter is already loaded via <code>.WithInterFont()</code>, no new font dependency.
 Sizes and spacing are identical across themes; only the colour each token resolves to changes.
 Both renderings are shown because a scale that reads well on dark can go muddy on light.</p>
 
-<h2>Type — same metrics, both themes</h2>
+<h2>Type: same metrics, both themes</h2>
 <div class="split">
   <div class="pane lt">
     <h3>Light</h3>
@@ -92,7 +92,7 @@ Both renderings are shown because a scale that reads well on dark can go muddy o
   </div>
 </div>
 
-<h2>Spacing — 4px base, theme-independent</h2>
+<h2>Spacing: 4px base, theme-independent</h2>
 <table>
   <tr><th>Token</th><th>Value</th><th>Used for</th><th>Scale</th></tr>
   <tr><td class="tok">space-1</td><td class="val">4px</td><td class="use">Icon ↔ label, chip padding</td><td><span class="bar" style="width:4px"></span></td></tr>
@@ -119,7 +119,7 @@ Both renderings are shown because a scale that reads well on dark can go muddy o
 <div class="note">
   <h4>Three rules this scale exists to enforce</h4>
   <p><strong>Labels are never placeholders.</strong> Today a filled field shows "Jane" with nothing
-  indicating it is the first-name box — the placeholder was the label and it vanished on input
+  indicating it is the first-name box, the placeholder was the label and it vanished on input
   (compare <code>ui-baseline/01-empty-state.png</code> with <code>02-populated.png</code>). Every
   field gets a persistent <code>label</code> above it. It is also what makes the form usable with a
   screen reader, which starts mattering once the repo is public.</p>
@@ -127,6 +127,6 @@ Both renderings are shown because a scale that reads well on dark can go muddy o
   weight, so the editor reads as one undifferentiated column. <code>section</code> at 13/600 against
   <code>label</code> at 11.5/550 is the least separation that reads as hierarchy without shouting.</p>
   <p><strong>Shadow opacity is not shared between themes.</strong> A shadow tuned for dark
-  (.28/.42) turns into grey mud on light; light uses .10/.16. Radius and offset stay identical —
+  (.28/.42) turns into grey mud on light; light uses .10/.16. Radius and offset stay identical,
   only alpha changes.</p>
 </div>

@@ -74,7 +74,7 @@
 
 <h1>Entry editor</h1>
 <p class="sub">The repeatable-entry pattern behind Experience, Education, Projects and
-Certifications — one expanded entry, the rest collapsed to a summary row. This card also settles
+Certifications, one expanded entry, the rest collapsed to a summary row. This card also settles
 open question 2 from the proposal: short fields keep the two-column grid, anything multi-line spans
 the full width.</p>
 
@@ -85,7 +85,7 @@ the full width.</p>
 
   <div class="entry"><div class="erow"><span class="grip">⠿</span>
     <div><div class="etitle">Senior Software Engineer</div>
-      <div class="emeta">Northwind Systems · Mar 2022 – Present</div></div>
+      <div class="emeta">Northwind Systems · Mar 2022 - Present</div></div>
     <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌃</span></div>
 
     <div class="body"><div class="fgrid">
@@ -94,7 +94,7 @@ the full width.</p>
       <div class="f"><span class="lb">Location</span><div class="in">Springfield, IL</div></div>
       <div class="f"><span class="lb">Dates</span><div class="dates">
         <div class="f"><div class="in">Mar 2022</div></div>
-        <div class="f"><div class="in" style="opacity:.5">—</div></div>
+        <div class="f"><div class="in" style="opacity:.5">-</div></div>
         <span class="chkl"><span class="chk on">✓</span>Current</span></div></div>
       <div class="f wide"><span class="lb">Description</span>
         <div class="in">Data platform team, ingesting and normalizing feeds from 150+ partners daily.</div></div>
@@ -113,12 +113,12 @@ the full width.</p>
 
   <div class="entry"><div class="erow"><span class="grip">⠿</span>
     <div><div class="etitle">Software Engineer</div>
-      <div class="emeta">Contoso Digital · Jan 2019 – Feb 2022 · 3 achievements</div></div>
+      <div class="emeta">Contoso Digital · Jan 2019 - Feb 2022 · 3 achievements</div></div>
     <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌄</span></div></div>
 
   <div class="entry"><div class="erow"><span class="grip">⠿</span>
     <div><div class="etitle">Junior Developer</div>
-      <div class="emeta">Initech · Jun 2017 – Dec 2018 · 2 achievements</div></div>
+      <div class="emeta">Initech · Jun 2017 - Dec 2018 · 2 achievements</div></div>
     <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌄</span></div></div>
 </div></div>
 
@@ -129,7 +129,7 @@ the full width.</p>
 
   <div class="entry"><div class="erow"><span class="grip">⠿</span>
     <div><div class="etitle">Senior Software Engineer</div>
-      <div class="emeta">Northwind Systems · Mar 2022 – Present</div></div>
+      <div class="emeta">Northwind Systems · Mar 2022 - Present</div></div>
     <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌃</span></div>
 
     <div class="body"><div class="fgrid">
@@ -138,7 +138,7 @@ the full width.</p>
       <div class="f"><span class="lb">Location</span><div class="in">Springfield, IL</div></div>
       <div class="f"><span class="lb">Dates</span><div class="dates">
         <div class="f"><div class="in">Mar 2022</div></div>
-        <div class="f"><div class="in" style="opacity:.5">—</div></div>
+        <div class="f"><div class="in" style="opacity:.5">-</div></div>
         <span class="chkl"><span class="chk on">✓</span>Current</span></div></div>
       <div class="f wide"><span class="lb">Description</span>
         <div class="in">Data platform team, ingesting and normalizing feeds from 150+ partners daily.</div></div>
@@ -157,24 +157,24 @@ the full width.</p>
 
   <div class="entry"><div class="erow"><span class="grip">⠿</span>
     <div><div class="etitle">Software Engineer</div>
-      <div class="emeta">Contoso Digital · Jan 2019 – Feb 2022 · 3 achievements</div></div>
+      <div class="emeta">Contoso Digital · Jan 2019 - Feb 2022 · 3 achievements</div></div>
     <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌄</span></div></div>
 
   <div class="entry"><div class="erow"><span class="grip">⠿</span>
     <div><div class="etitle">Junior Developer</div>
-      <div class="emeta">Initech · Jun 2017 – Dec 2018 · 2 achievements</div></div>
+      <div class="emeta">Initech · Jun 2017 - Dec 2018 · 2 achievements</div></div>
     <span class="grow"></span><span class="ico">⧉</span><span class="ico">🗑</span><span class="ico">⌄</span></div></div>
 </div></div>
 
 <div class="note warn">
-  <h4>Achievements must stay one control per bullet — this is a correctness constraint, not a style choice</h4>
+  <h4>Achievements must stay one control per bullet: this is a correctness constraint, not a style choice</h4>
   <p>CLAUDE.md: achievement ↔ editor-text conversion lives only in
   <code>Core/Models/AchievementLines</code>, and <code>JobTailoringService</code> addresses
   achievements <strong>by index</strong> through it. A single multi-line textarea would make the
   index depend on how the user happened to wrap their text, and accepted AI rewrites would land on
   the wrong bullet.</p>
   <p>So each bullet is its own bound control with a stable index. That is also what makes the
-  per-bullet <em>Rewrite</em> affordance possible — the AI acts on one addressable line rather than
+  per-bullet <em>Rewrite</em> affordance possible, the AI acts on one addressable line rather than
   reflowing the block. Anything that reintroduces free-text splitting in the UI layer breaks
   tailoring silently.</p>
 </div>
@@ -187,7 +187,7 @@ the full width.</p>
   into half-width boxes.</p>
   <p><strong>Only one entry is expanded at a time.</strong> Three roles with three achievements each
   is ~30 controls; collapsed summary rows keep the section navigable and make drag-reordering
-  practical. The summary line carries what identifies the entry — title, company, dates, and an
+  practical. The summary line carries what identifies the entry, title, company, dates, and an
   achievement count so nothing feels hidden.</p>
   <p><strong>"Current" is a checkbox that disables the end date, not a magic empty value.</strong>
   Dates render through <code>ResumeDateFormat</code>/<code>DateRange</code> under invariant culture;

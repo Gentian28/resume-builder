@@ -19,7 +19,7 @@ Everything stays on your own computer, in your user profile:
 | Spell-check dictionaries | Downloaded once on first use, then cached locally |
 | Sync state | A local file, only if you enable folder sync |
 
-The exact location follows the platform convention — `%LocalAppData%\ResumeBuilder` on Windows,
+The exact location follows the platform convention: `%LocalAppData%\ResumeBuilder` on Windows,
 `~/.local/share/ResumeBuilder` on Linux, `~/Library/Application Support/ResumeBuilder` on macOS.
 
 Uninstalling does not delete this data; remove that folder if you want it gone.
@@ -34,7 +34,7 @@ receives the request as it would any download. No information about you or your 
 included. This only happens in builds installed from the installer; portable builds never check.
 
 **2. Spell-check dictionaries.** The first time spell check runs for a language, the dictionary
-file is downloaded and then cached. Your text is not sent — only the dictionary comes down.
+file is downloaded and then cached. Your text is not sent. Only the dictionary comes down.
 
 **3. AI features, only if you configure them.** These are off until you provide an endpoint:
 

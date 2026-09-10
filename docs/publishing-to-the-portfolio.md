@@ -1,6 +1,6 @@
 # Making it downloadable from gentianshkembi.com
 
-> Written 2026-07-28. Verified against the portfolio repo as it stands — `frontend/src/data/lab.ts`,
+> Written 2026-07-28. Verified against the portfolio repo as it stands: `frontend/src/data/lab.ts`,
 > `frontend/src/pages/LabPage.tsx`, `backend/src/Portfolio.Domain/Entities/Tool.cs` and
 > `admin/src/pages/ToolsPage.tsx`.
 
@@ -27,7 +27,7 @@ resolves to the visitor's platform, all four builds reachable, checksums and uns
 warnings explained. It uses the portfolio's own design language (warm near-black, `#f6851b`,
 Montserrat / JetBrains Mono).
 
-It is a **design reference, not a drop-in** — the portfolio frontend is React 19 + Vite +
+It is a **design reference, not a drop-in**: the portfolio frontend is React 19 + Vite +
 React Router + Tailwind 4, so the markup needs porting.
 
 1. **Add the page.** Create `frontend/src/pages/ResumeBuilderPage.tsx`, porting the markup to
@@ -65,7 +65,7 @@ Proven: these URLs were published against v1.0.0 and now serve v1.0.1 with no ch
 | macOS (Apple silicon) | `ResumeBuilder-osx-Setup.pkg` · `ResumeBuilder-osx-Portable.zip` |
 | macOS (Intel) | `ResumeBuilder-osx-x64-Setup.pkg` · `ResumeBuilder-osx-x64-Portable.zip` |
 
-Never use the `/releases/tag/v1.0.1/...` form — that pins the site to one version forever.
+Never use the `/releases/tag/v1.0.1/...` form: that pins the site to one version forever.
 
 ## Interim: something live today, no code
 
@@ -81,7 +81,7 @@ If you want it downloadable before the page exists, publish a tool in the admin 
 | Version | `1.0.1` |
 | Platform | `Windows · macOS · Linux` |
 
-`ExternalLink` sends visitors to the releases page, where every platform is listed — so the card
+`ExternalLink` sends visitors to the releases page, where every platform is listed, so the card
 is honest about being cross-platform. The trade is that they land on a list of ~20 files and have
 to pick, which is exactly the problem the download page solves.
 
@@ -90,13 +90,13 @@ to them, use Kind `WindowsDownload` with Download URL
 `.../releases/latest/download/ResumeBuilder-win-Setup.exe` instead. That is the version this doc
 originally recommended, and it undersells the product.
 
-Either way, tick **Published**. The card flips from *bench* to *live* by itself — `LabPage.tsx`
+Either way, tick **Published**. The card flips from *bench* to *live* by itself: `LabPage.tsx`
 takes status from the dashboard, not the code.
 
 ## Two gotchas in the current code
 
 - **The admin form's placeholder is stale.** It shows
-  `https://github.com/Gentian28/resumebuilder/releases/latest/download/...` — the old *private*
+  `https://github.com/Gentian28/resumebuilder/releases/latest/download/...`, the old *private*
   repo, a dead URL. Worth correcting in `admin/src/pages/ToolsPage.tsx`; following the hint
   produces a broken download.
 - **The Description you type will not appear** on the Résumé Builder card. `LabPage.tsx` keeps the
@@ -107,4 +107,4 @@ takes status from the dashboard, not the code.
 
 `BUILD_LOG` in `lab.ts` still reads `['2026-06', 'resume-builder', '126 tests green, win-x64
 publish']`. It is now 323 tests and a four-build release, so
-`['2026-07', 'resume-builder', 'v1.0.1 — installers for win/linux/macos']` would be accurate.
+`['2026-07', 'resume-builder', 'v1.0.1, installers for win/linux/macos']` would be accurate.

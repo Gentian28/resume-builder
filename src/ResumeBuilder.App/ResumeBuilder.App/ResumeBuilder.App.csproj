@@ -18,7 +18,7 @@
 
   <!-- Only when a RID is actually selected (`dotnet publish -r win-x64`). Setting SelfContained
        or PublishSingleFile unconditionally makes the plain `dotnet build ResumeBuilder.sln`
-       fail with NETSDK1031 — both require a RuntimeIdentifier. -->
+       fail with NETSDK1031: both require a RuntimeIdentifier. -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>

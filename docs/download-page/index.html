@@ -1,8 +1,8 @@
 <meta charset="utf-8">
-<title>Resume Builder — download</title>
+<title>Resume Builder: download</title>
 <style>
   /* Portfolio design language, taken from gentianshkembi.com styles.css. This is a page on
-     Gentian's site, not part of the app — the app has its own (indigo/Inter) system. */
+     Gentian's site, not part of the app. The app has its own (indigo/Inter) system. */
   :root{
     --ink:#080706; --panel:#14100c; --panel-2:#1c160f; --paper:#f4efe6;
     --muted:#a49b8f; --faint:#6b6358;
@@ -97,7 +97,7 @@
   <p class="eyebrow">Free · Open source · MIT</p>
   <h1>Resume Builder</h1>
   <p class="lede">A desktop résumé builder with 25 templates, live PDF preview and ATS keyword
-    analysis. <strong>Your résumé never leaves your machine</strong> — no account, no upload, and
+    analysis. <strong>Your résumé never leaves your machine</strong>: no account, no upload, and
     the AI features can run against a model on your own computer.</p>
   <!-- Primary CTA resolves to the visitor's own OS. Everything stays reachable below, because
        detection is a guess: people browse from work machines, spoof agents, and download on one
@@ -110,7 +110,7 @@
   <div class="badges">
     <span class="badge on">No account</span>
     <span class="badge on">Works offline</span>
-    <span class="badge on">Free export — always</span>
+    <span class="badge on">Free export, always</span>
     <span class="badge">Windows · macOS · Linux</span>
     <span class="badge">No .NET runtime needed</span>
   </div>
@@ -125,20 +125,20 @@
       <p>Installer that keeps itself up to date. Windows 10 or later.</p>
       <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-win-Setup.exe">Download Setup.exe</a>
       <a class="btn ghost" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-win-Portable.zip">Portable .zip</a>
-      <p class="meta">or <code>winget install Gentian28.ResumeBuilder</code> — no SmartScreen prompt this way</p>
+      <p class="meta">or <code>winget install Gentian28.ResumeBuilder</code>, no SmartScreen prompt this way</p>
       <p class="meta">~69 MB · self-contained</p>
     </div>
     <div class="card" data-os="linux" data-label="Linux"
          data-primary="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder.AppImage">
       <div class="os"><h3>Linux</h3><span class="tag">x64</span></div>
-      <p>Single AppImage — <code>chmod +x</code> and run. No root, no package manager.</p>
+      <p>Single AppImage: <code>chmod +x</code> and run. No root, no package manager.</p>
       <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder.AppImage">Download AppImage</a>
       <p class="meta">~59 MB · needs libfontconfig1</p>
     </div>
     <div class="card" data-os="mac" data-label="macOS"
          data-primary="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-osx-Setup.pkg">
       <div class="os"><h3>macOS</h3><span class="tag">Universal</span></div>
-      <p>Two builds — Apple silicon for M-series, Intel for 2019 and earlier. Gatekeeper needs
+      <p>Two builds: Apple silicon for M-series, Intel for 2019 and earlier. Gatekeeper needs
         allowing once; see the note below.</p>
       <a class="btn" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-osx-Setup.pkg">Apple silicon .pkg</a>
       <a class="btn ghost" href="https://github.com/Gentian28/resume-builder/releases/latest/download/ResumeBuilder-osx-x64-Setup.pkg">Intel .pkg</a>
@@ -177,7 +177,7 @@
     </div>
   </div>
   <p class="meta" style="text-align:center;margin-top:12px">
-    Replace with a real screenshot once the UI redesign ships — see docs/ui-redesign-proposal.md
+    Replace with a real screenshot once the UI redesign ships. See docs/ui-redesign-proposal.md
   </p>
 </div></section>
 
@@ -201,18 +201,18 @@
         This one does not.</p></div>
     <div class="f"><h3><span>◆</span> Your data stays yours</h3>
       <p>Local SQLite, no account, no telemetry. Optional two-way sync through a folder you
-        choose — Dropbox, OneDrive, or nothing at all.</p></div>
+        choose: Dropbox, OneDrive, or nothing at all.</p></div>
   </div>
 </div></section>
 
 <section style="padding-top:0"><div class="wrap">
   <div class="note">
     <h3>These builds are not code-signed yet</h3>
-    <p><strong>Windows</strong> shows an "unknown publisher" SmartScreen warning — choose
+    <p><strong>Windows</strong> shows an "unknown publisher" SmartScreen warning: choose
       <em>More info → Run anyway</em>. <strong>macOS</strong> Gatekeeper refuses the package until
       you allow it under <em>System Settings → Privacy &amp; Security</em>.</p>
     <p>Every release publishes <code>SHA256SUMS-*.txt</code> so you can verify what you downloaded.</p>
-    <p><strong>Code signing.</strong> Not yet — a free-certificate application was declined
+    <p><strong>Code signing.</strong> Not yet: a free-certificate application was declined
       while the project is new and unproven, and will be resubmitted as it grows. Installing
       through <code>winget</code> avoids the SmartScreen prompt in the meantime. macOS
       notarisation is separate and needs a paid Apple account.</p>
@@ -230,7 +230,7 @@
 <script>
 // Point the hero button at the visitor's own platform and flag the matching card.
 // Progressive enhancement only: with JS off, the button still goes to the releases page and
-// all three cards remain equally usable. Detection is a hint, never a gate — people browse on
+// all three cards remain equally usable. Detection is a hint, never a gate, and people browse on
 // a work laptop and install at home, and user agents lie.
 (function () {
   var ua = navigator.userAgent || '';
@@ -256,8 +256,8 @@
   cta.href = card.getAttribute('data-primary');
   cta.textContent = 'Download for ' + card.getAttribute('data-label');
 
-  // Apple silicon vs Intel is not reliably detectable — Safari reports "MacIntel" on M-series
-  // too — so say which one the button is, rather than guessing silently.
+  // Apple silicon vs Intel is not reliably detectable (Safari reports "MacIntel" on M-series
+  // too), so say which one the button is, rather than guessing silently.
   sub.textContent = os === 'mac'
     ? 'Apple silicon build · Intel and other platforms below'
     : 'Other platforms below';

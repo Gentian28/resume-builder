@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Screen — Main editor</title>
+<title>Screen: Main editor</title>
 <style>
   :root { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
   body { margin: 0; padding: 26px 30px; background: #16181d; color: #e8eaed; }
@@ -81,9 +81,9 @@
          background: #24272f; padding: 1px 5px; border-radius: 4px; color: #c9ccd2; }
 </style>
 
-<h1>Screen — Main editor</h1>
+<h1>Screen: Main editor</h1>
 <p class="sub">The layout fix. Today the editor rail is pinned at ~320&nbsp;px and the page at
-~600&nbsp;px, leaving ~530&nbsp;px of dead grey between them on a wide window — widening the window
+~600&nbsp;px, leaving ~530&nbsp;px of dead grey between them on a wide window, widening the window
 only adds grey (<code>ui-baseline/02-populated.png</code>). Here the section list is fixed and both
 the editor and the preview flex, so extra width becomes more room to work.</p>
 
@@ -194,7 +194,7 @@ the editor and the preview flex, so extra width becomes more room to work.</p>
 <div class="note">
   <h4>Layout rules</h4>
   <p><strong>Only the section list is fixed width</strong> (168&nbsp;px). Editor and preview are
-  <code>minmax(0,1fr)</code> and <code>minmax(0,1.15fr)</code> — the preview gets slightly more
+  <code>minmax(0,1fr)</code> and <code>minmax(0,1.15fr)</code>, the preview gets slightly more
   because a page has a fixed aspect ratio and benefits more from width. Extra window width is
   divided between them instead of pooling as grey.</p>
   <p><strong>The preview page caps at a readable size rather than growing forever.</strong> Past a
@@ -202,10 +202,10 @@ the editor and the preview flex, so extra width becomes more room to work.</p>
   deliberate framing rather than the current lopsided void.</p>
   <p><strong>The section list is navigation, not a reorder widget.</strong> It replaces scrolling a
   single long column and gives each section a home. Reordering moves into "Section order" under
-  Document — a different task that does not belong in the primary navigation.</p>
+  Document, a different task that does not belong in the primary navigation.</p>
   <p><strong>Item counts sit in the nav</strong> (Experience 3, Skills 3). Cheap to compute, and it
   tells the user where the content is without opening each section.</p>
-  <p><strong>Every field has a visible label</strong>, including filled ones — the placeholder-as-label
+  <p><strong>Every field has a visible label</strong>, including filled ones, the placeholder-as-label
   problem from the baseline. The two-column grid works because labels are above inputs rather than
   beside them, so nothing depends on a fixed label column.</p>
   <p><strong>Still open:</strong> the editor is a two-column grid here, which suits short fields but

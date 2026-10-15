@@ -21,6 +21,7 @@ section matching the tag and fails the build if there isn't one.
 - Changing an application status keeps the active dropdown stable instead of crashing during selection.
 - Word import retains names, complete job titles and October dates. Export review displays readable lines, and GitHub usernames no longer produce a false warning.
 - A fresh Linux profile stores its workspace in the configured data folder even when that folder has not been created yet.
+- Windows workspaces move safely outside the installer folder, preserving committed database writes and settings. Uninstalling and reinstalling no longer removes saved work.
 
 ### Added
 

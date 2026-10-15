@@ -114,9 +114,9 @@ Dependency direction: `App → {Core, Data, Templates, Export}`, `Export → {Co
 
 ### Where things live
 
-- **Data storage**: `%LocalAppData%/ResumeBuilder/resumes.db` (SQLite). Created on first run; schema upgrades are applied automatically by `DatabaseInitializer`.
+- **Data storage**: `%LocalAppData%/ResumeBuilderData/resumes.db` on Windows (SQLite), outside the installer folder so uninstalling preserves work. The older Windows workspace is copied safely on first launch without replacing an existing destination. macOS uses `~/Library/Application Support/ResumeBuilder`; Linux uses `$XDG_DATA_HOME/ResumeBuilder` or `~/.local/share/ResumeBuilder`. Schema upgrades keep a safety backup.
 - **Preferences**: `preferences.json` beside the database stores non-secret settings. Theme selection remains in `settings.json`.
-- **Dictionaries**: `%LocalAppData%/ResumeBuilder/Dictionaries/` (downloaded on first spell check).
+- **Dictionaries**: `Dictionaries/` inside the data folder (downloaded on first spell check).
 - **Sync history**: destination-specific state files beside the database keep separate deletion and conflict histories for each sync folder.
 
 ## Adding a template

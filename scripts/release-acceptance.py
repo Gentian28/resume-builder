@@ -198,8 +198,8 @@ def main():
         # app check below deliberately uses a missing base as a regression.
         database.parent.parent.mkdir(parents=True, exist_ok=True)
     if sys.platform == "win32":
-        install = root / "installed"
-        run(old / name, "--silent", "--installto", install, "--log", evidence / "install.log")
+        install = Path(os.environ["LOCALAPPDATA"]) / "ResumeBuilder"
+        run(old / name, "--silent", "--log", evidence / "install.log")
         executable = install / "current/ResumeBuilder.App.exe"
         updater = install / "Update.exe"
     elif sys.platform == "darwin":
@@ -240,8 +240,14 @@ def main():
     else:
         version = manifest_version(install / "current" if sys.platform == "win32" else install)
     assert version == args.version, (version, args.version)
+    legacy_database = database
+    if sys.platform == "win32":
+        database = Path(os.environ["LOCALAPPDATA"]) / "ResumeBuilderData/resumes.db"
+        assert not database.exists(), "Migration destination was not empty"
     start_and_stop(executable, evidence / "updated-startup.log", env, database)
     verify_data(database, snapshot, True)
+    if sys.platform == "win32":
+        verify_data(legacy_database, snapshot, False)
     backups = list(database.parent.glob("resumes.backup-*.db"))
     assert backups, "Upgrade did not create a safety database backup"
     verify_data(max(backups, key=lambda p: p.stat().st_mtime), snapshot, False)
@@ -250,10 +256,15 @@ def main():
     verify_data(database, snapshot, True)
     # Exercise the new installer too, separately from the update package.
     if sys.platform == "win32":
-        fresh = root / "fresh-install"
-        run(artifacts / name, "--silent", "--installto", fresh, "--log", evidence / "fresh-install.log")
-        fresh_executable = fresh / "current/ResumeBuilder.App.exe"
-        assert manifest_version(fresh / "current") == args.version
+        run(updater, "--silent", "--rootDir", install, "--log", evidence / "uninstall.log", "uninstall")
+        time.sleep(5)  # The uninstaller schedules deletion of its own executable.
+        verify_data(database, snapshot, True)
+        assert all(p.exists() for p in backups), "Uninstall removed workspace backups"
+        run(artifacts / name, "--silent", "--log", evidence / "fresh-install.log")
+        fresh_executable = install / "current/ResumeBuilder.App.exe"
+        assert manifest_version(install / "current") == args.version
+        start_and_stop(fresh_executable, evidence / "reinstall-startup.log", env, database)
+        verify_data(database, snapshot, True)
     elif sys.platform == "darwin":
         run("sudo", "installer", "-pkg", artifacts / name, "-target", "/")
         fresh_executable = app_bundle() / "Contents/MacOS/ResumeBuilder.App"
@@ -284,6 +295,7 @@ def main():
               "installed_version": version, "old_schema_created_by_previous_app": True,
               "preserved_tables": list(snapshot), "safety_backup_verified": True,
               "native_startup_and_restart": True, "new_installer_startup": True, "unsigned": True,
+              "windows_default_install_migration_and_uninstall_preservation": sys.platform == "win32",
               "scope": "Installer/AppImage and real updater; not Gatekeeper, SmartScreen or physical DPI acceptance"}
     (evidence / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2), flush=True)

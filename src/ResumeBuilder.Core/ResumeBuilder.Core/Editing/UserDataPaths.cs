@@ -6,5 +6,5 @@ public static class UserDataPaths
     public static string Directory => Environment.GetEnvironmentVariable("RESUMEBUILDER_DATA_DIRECTORY") is { Length: > 0 } path
         ? Path.GetFullPath(path)
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData,
-            Environment.SpecialFolderOption.DoNotVerify), "ResumeBuilder");
+            Environment.SpecialFolderOption.DoNotVerify), OperatingSystem.IsWindows() ? "ResumeBuilderData" : "ResumeBuilder");
 }

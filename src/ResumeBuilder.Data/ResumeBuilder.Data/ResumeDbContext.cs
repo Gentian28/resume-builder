@@ -32,6 +32,18 @@ public class ResumeDbContext : DbContext
     {
         var appDataPath = ResumeBuilder.Core.Editing.UserDataPaths.Directory;
 
+        if (OperatingSystem.IsWindows() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RESUMEBUILDER_DATA_DIRECTORY")))
+        {
+            var legacyDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData,
+                Environment.SpecialFolderOption.DoNotVerify), "ResumeBuilder");
+            try { LegacyWorkspaceMigration.CopyIfNeeded(legacyDirectory, appDataPath); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
+            {
+                // A failed migration must show recovery rather than opening an empty workspace.
+                throw new DatabaseOpenException(Path.Combine(legacyDirectory, "resumes.db"), ex);
+            }
+        }
+
         Directory.CreateDirectory(appDataPath);
         return Path.Combine(appDataPath, "resumes.db");
     }

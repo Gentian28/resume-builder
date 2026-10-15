@@ -31,7 +31,7 @@ The solution and CI target .NET 10; self-contained packages pin runtime 10.0.13 
 ## Validation
 
 - Release solution build with warnings treated as errors: zero warnings and errors.
-- **555 passed, three live-provider tests skipped**: 515 library, 24 App workflow and 16 headless UI tests. Coverage was collected for all three test assemblies.
+- **564 passed, three live-provider tests skipped**: 522 library, 24 App workflow and 18 headless UI tests after native acceptance corrections. Coverage was collected for all three test assemblies in the initial pass.
 - NuGet direct and transitive advisory scan: no known vulnerable packages reported.
 - Windows x64, Linux x64, macOS ARM64 and macOS x64 single-file publish checks are retained in CI, with native unsigned installer packaging added. Local Windows installer and portable packaging succeeded with the pinned Velopack CLI.
 - Windows clean-profile process launch: stayed running for 20 seconds and created its temporary database, with no stderr output.
@@ -67,4 +67,20 @@ Workspace archives include the new application context and captured artifacts. U
 
 Parallel Windows rendering also exposed corrupted extractable PDF text in the previous QuestPDF dependency. The app now uses 2026.7.2, whose fix is documented in [QuestPDF issue 1447](https://github.com/QuestPDF/QuestPDF/issues/1447). A parallel 24-document extraction regression verifies the app's exports without hiding the failure through serialized tests.
 
-The [session kit](../usability-session-kit.md) is ready for consenting volunteers. Recruitment, observed sessions, signing/notarisation and owner-controlled credentials are external activities, not claims made by this implementation. No outreach, payment, telemetry or public release was performed. Native computer-use access to the app was rejected by automatic approval review; headless layout, bindings and keyboard checks passed instead. The explicitly deferred web rewrite, account system, cloud OAuth, paid features, UI localization and right-to-left expansion were outside the review's recommended implementation scope.
+The [session kit](../usability-session-kit.md) is ready for consenting volunteers. Recruitment, observed sessions, signing/notarisation and owner-controlled credentials are external activities, not claims made by this implementation. No outreach, payment, telemetry or public release was performed. Native computer-use access was initially rejected; the user subsequently approved the app and the additional Windows pass below became possible. The explicitly deferred web rewrite, account system, cloud OAuth, paid features, UI localization and right-to-left expansion were outside the review's recommended implementation scope.
+
+## Windows native acceptance follow-up
+
+The approved computer-use pass used a new temporary profile and synthetic data. It verified first launch, the embedded example, field editing/autosave, undo, saved content after restarting, export review and Escape, native PDF and Word save dialogs, Word reimport, offline cover-letter drafting, active-letter save/export shortcuts, application draft creation and editing, linked letters, Saved-to-Applied capture, and native export of the captured letter PDF. The exported artifact exactly matches the stored PDF bytes. The normal profile was not opened or upgraded.
+
+This pass found and repaired additional defects:
+
+| Finding | Correction and evidence |
+| --- | --- |
+| Application status selection crashed the process | Row-list refresh was synchronously destroying the active dropdown during Avalonia's selection event. Membership-preserving edits retain containers; membership changes notify after the event finishes. A headless test protects container identity and filtered-out selection. The formerly crashing native transition now succeeds and captures both PDFs. |
+| GitHub usernames produced a false readiness error | Validation accepts usernames as well as HTTP/HTTPS URLs, consistent with the editor and exports. Unsafe URL schemes still fail regression tests. |
+| Word import was missing from the toolbar and duplicated in File | Both menus now contain one working Word action. Headless menu binding coverage and a native Word import verify it. |
+| Export review wasted vertical space and joined unrelated text | Its read-only field stretches below the heading, aligns text to the top, and uses content-order extraction with detected word/line spacing. Layout and extracted-text regressions pass; the native review was rechecked. |
+| Word import omitted the name and damaged experience fields | Word paragraph font size/bold hints now reach the parser. Date and title separators match complete delimiters rather than letters within words. Open-ended ranges retain their roles without inventing current employment. Tests cover names, complete titles, October dates and missing end dates; the native roundtrip now retains all three sample roles. Deleted revision text is excluded from paragraph content and hints. |
+
+Narrow layouts remain covered by headless tests at 800 by 500; the native session used the current desktop size/scaling. Installer installation/upgrades, other physical scaling values, native macOS/Linux acceptance, signing and notarisation were not performed in this pass. A build attempted while the development executable was open encountered a Windows DLL lock; the final build ran successfully after isolating the executable copy.

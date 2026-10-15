@@ -84,11 +84,22 @@ public class ProductivityTests
     {
         var registry = new TemplateRegistry();
         var resume = new Resume { PersonalInfo = new() { FirstName = "Jane", LastName = "Doe", Email = "jane@example.com" }, Summary = "Synthetic summary" };
+        resume.Experiences = [
+            new() { JobTitle = "Software Architect", Company = "Example Company", StartDate = new DateTime(2022, 10, 1), Order = 0 },
+            new() { JobTitle = "Data Scientist", Company = "Previous Company", StartDate = new DateTime(2020, 10, 1), EndDate = new DateTime(2022, 9, 1), Order = 1 }
+        ];
         var bytes = await new DocxExporter(registry).ExportAsync(resume, "modern");
         using var input = new MemoryStream(bytes);
         var result = await new DocxImporter().ImportAsync(input);
         result.Success.Should().BeTrue();
         result.Data!.PersonalInfo.Email.Should().Be("jane@example.com");
+        result.Data.PersonalInfo.FullName.Should().Be("Jane Doe");
+        result.Data.Experiences.Select(e => e.JobTitle).Should().Equal("Software Architect", "Data Scientist");
+        result.Data.Experiences[0].StartDate.Should().Be(new DateTime(2022, 10, 1));
+        result.Data.Experiences[0].EndDate.Should().BeNull();
+        result.Data.Experiences[0].IsCurrentRole.Should().BeFalse();
+        result.Data.Experiences[1].StartDate.Should().Be(new DateTime(2020, 10, 1));
+        result.Data.Experiences[1].EndDate.Should().Be(new DateTime(2022, 9, 1));
         result.Data.Summary.Should().Contain("Synthetic summary");
         string.Join(" ", result.Data.CustomSections.Single().Items.Select(i => i.Description)).Should().Contain("Jane Doe").And.Contain("Synthetic summary");
         result.Warnings.Should().NotBeEmpty();

@@ -204,7 +204,10 @@ public class ResumeValidator
 
         if (!string.IsNullOrWhiteSpace(info.GitHub))
         {
-            var gitHubResult = new UrlRule().Validate(info.GitHub);
+            var value = info.GitHub;
+            // The editor and exporters support a username as well as a URL.
+            var isUsername = value.All(c => char.IsAsciiLetterOrDigit(c) || c == '-');
+            var gitHubResult = new UrlRule().Validate(isUsername ? $"https://github.com/{value}" : value);
             if (!gitHubResult.IsValid)
             {
                 result.AddError("GitHub", gitHubResult.ErrorMessage!);

@@ -8,6 +8,27 @@ public class ValidationTests
 {
     private readonly ResumeValidator _validator = new();
 
+    [Theory]
+    [InlineData("janedoe")]
+    [InlineData("jane-doe123")]
+    [InlineData("https://github.com/janedoe")]
+    [InlineData("github.com/janedoe")]
+    public void GitHub_AcceptsUsernameOrUrl(string value)
+    {
+        var resume = new Resume { PersonalInfo = new() { FirstName = "Jane", GitHub = value } };
+        _validator.Validate(resume).Errors.Should().NotContain(e => e.FieldName == "GitHub");
+    }
+
+    [Theory]
+    [InlineData("jane doe")]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("ftp://github.com/janedoe")]
+    public void GitHub_StillRejectsInvalidOrUnsafeValues(string value)
+    {
+        var resume = new Resume { PersonalInfo = new() { FirstName = "Jane", GitHub = value } };
+        _validator.Validate(resume).Errors.Should().Contain(e => e.FieldName == "GitHub");
+    }
+
     [Fact]
     public void Validate_EmptyResume_ReturnsErrors()
     {

@@ -68,7 +68,8 @@ public class PdfImporter : IImporter
         return await ImportAsync(stream);
     }
 
-    public ImportResult<Resume> ImportText(IEnumerable<string> lines) => ParseTextBlocks(lines.Select((text, index) => new TextBlock { Text = text, Y = -index, FontSize = 12 }).ToList(), new Resume(), new List<string>());
+    internal ImportResult<Resume> ImportText(IEnumerable<(string Text, double FontSize, bool IsBold)> lines) =>
+        ParseTextBlocks(lines.Select((line, index) => new TextBlock { Text = line.Text, Y = -index, FontSize = line.FontSize, IsBold = line.IsBold }).ToList(), new Resume(), new List<string>());
 
     private ImportResult<Resume> ParseTextBlocks(List<TextBlock> textBlocks, Resume resume, List<string> warnings)
     {
@@ -303,10 +304,11 @@ public class PdfImporter : IImporter
             var text = line.Text.Trim();
             if (string.IsNullOrWhiteSpace(text)) continue;
 
-            // Detect date patterns
-            var dateMatch = Regex.Match(text, @"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)[\s,]*\d{4}\s*[-\u2013\u2014to]+\s*(Present|Current|Now|(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)[\s,]*\d{4}|\d{4})", RegexOptions.IgnoreCase);
-
-            var yearRangeMatch = Regex.Match(text, @"\b(19|20)\d{2}\s*[-\u2013\u2014to]+\s*(Present|Current|Now|(19|20)\d{2})\b", RegexOptions.IgnoreCase);
+            // Match whole separators: the letters in "to" must not split Oct or job titles.
+            const string month = @"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
+            const string separator = @"(?:[-\u2013\u2014]|\bto\b)";
+            var dateMatch = Regex.Match(text, $@"{month}[\s,]*\d{{4}}\s*{separator}\s*(?:Present|Current|Now|{month}[\s,]*\d{{4}}|\d{{4}}|(?=$))", RegexOptions.IgnoreCase);
+            var yearRangeMatch = Regex.Match(text, $@"\b(?:19|20)\d{{2}}\s*{separator}\s*(?:Present|Current|Now|(?:19|20)\d{{2}}\b|(?=$))", RegexOptions.IgnoreCase);
 
             if (dateMatch.Success || yearRangeMatch.Success)
             {
@@ -323,7 +325,7 @@ public class PdfImporter : IImporter
 
                 // Parse dates
                 var dateText = match.Value;
-                var dateParts = Regex.Split(dateText, @"\s*[-\u2013\u2014to]+\s*", RegexOptions.IgnoreCase);
+                var dateParts = Regex.Split(dateText, @"\s*(?:[-\u2013\u2014]|\bto\b)\s*", RegexOptions.IgnoreCase);
                 if (dateParts.Length >= 1)
                     current.StartDate = ParseDate(dateParts[0]);
                 if (dateParts.Length >= 2)
@@ -338,7 +340,7 @@ public class PdfImporter : IImporter
                 var remainingText = text.Replace(match.Value, "").Trim(' ', '-', '\u2013', '\u2014', '|', ',');
                 if (!string.IsNullOrEmpty(remainingText))
                 {
-                    var parts = Regex.Split(remainingText, @"\s*[|,@at]\s*", RegexOptions.IgnoreCase);
+                    var parts = Regex.Split(remainingText, @"\s*(?:[|,@]|\bat\b)\s*", RegexOptions.IgnoreCase);
                     if (parts.Length >= 1)
                         current.JobTitle = parts[0].Trim();
                     if (parts.Length >= 2)

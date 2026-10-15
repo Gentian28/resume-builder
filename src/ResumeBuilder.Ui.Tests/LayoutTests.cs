@@ -107,11 +107,65 @@ public class LayoutTests
             window.Show(); Dispatcher.UIThread.RunJobs();
             var details = window.FindControl<TextBox>("ReviewDetails")!;
             details.IsEffectivelyVisible.Should().BeTrue();
+            details.Bounds.Height.Should().BeGreaterThan(300);
+            details.VerticalContentAlignment.Should().Be(Avalonia.Layout.VerticalAlignment.Top);
             details.Focus();
             window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None); window.KeyReleaseQwerty(PhysicalKey.Escape, RawInputModifiers.None);
             Dispatcher.UIThread.RunJobs(); vm.ShowReview.Should().BeFalse();
         }
         finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public void ApplicationStatusSelection_PreservesRowUntilSelectionCompletes()
+    {
+        var vm = Editor();
+        var refresh = typeof(MainWindowViewModel).GetMethod("UpdateApplicationSummary", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        var row = new JobApplicationViewModel(new() { Id = 1, Company = "Example", Status = ApplicationStatus.Saved },
+            model => Task.FromResult(model), () => refresh.Invoke(vm, null));
+        vm.Applications.Add(row);
+        vm.ApplicationFilter = "Active";
+        var view = new ApplicationsOverlay();
+        var window = new Window { Width = 1000, Height = 700, Content = view, DataContext = vm };
+        try
+        {
+            window.Show(); Dispatcher.UIThread.RunJobs();
+            var status = view.GetVisualDescendants().OfType<ComboBox>().Single(c => Avalonia.Automation.AutomationProperties.GetName(c) == "Status");
+            status.SelectedItem = ApplicationStatus.Applied;
+            Dispatcher.UIThread.RunJobs();
+            row.Status.Should().Be(ApplicationStatus.Applied);
+            view.GetVisualDescendants().Should().Contain(status, "an ordinary row save must preserve the active status picker");
+            var attachedDuringSelection = false;
+            status.SelectionChanged += (_, _) => attachedDuringSelection = status.GetVisualRoot() == window;
+            status.SelectedItem = ApplicationStatus.Rejected;
+            attachedDuringSelection.Should().BeTrue("a filtered-out row must survive the dropdown selection event");
+            Dispatcher.UIThread.RunJobs();
+            vm.FilteredApplications.Should().BeEmpty();
+            view.GetVisualDescendants().Should().NotContain(status);
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public void WordImport_IsAvailableOnceInBothMenus()
+    {
+        var vm = Editor();
+        var window = new MainWindow { Width = 1000, Height = 700, DataContext = vm };
+        try
+        {
+            window.Show(); Dispatcher.UIThread.RunJobs();
+            var importButton = window.GetVisualDescendants().OfType<Button>().Single(b => b.Content is string text && text.StartsWith("Import", StringComparison.Ordinal));
+            var flyout = (MenuFlyout)importButton.Flyout!;
+            flyout.ShowAt(importButton); Dispatcher.UIThread.RunJobs();
+            var toolbarWord = flyout.Items.OfType<MenuItem>().Single(i => i.Header is string text && text.Contains(".docx", StringComparison.Ordinal));
+            toolbarWord.Command.Should().BeSameAs(vm.ImportDocxCommand);
+            flyout.Hide();
+            var menu = window.GetVisualDescendants().OfType<Menu>().Single();
+            var file = menu.Items.OfType<MenuItem>().First();
+            var import = file.Items.OfType<MenuItem>().Single(i => i.Header is "Import");
+            import.Items.OfType<MenuItem>().Count(i => i.Header is string text && text.Contains(".docx", StringComparison.Ordinal)).Should().Be(1);
+        }
+        finally { window.DataContext = null; window.Close(); }
     }
 
     [AvaloniaTheory]

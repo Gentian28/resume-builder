@@ -16,6 +16,7 @@ using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Core.Validation;
 using ResumeBuilder.Data;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
 namespace ResumeBuilder.App.ViewModels;
 
@@ -62,7 +63,24 @@ public partial class MainWindowViewModel
     partial void OnApplicationFilterChanged(string value) => RefreshApplicationFilter();
     partial void OnImportReviewTextChanged(string value) => OnPropertyChanged(nameof(HasImportReview));
     private void RefreshResumeFilter() { OnPropertyChanged(nameof(FilteredResumes)); OnPropertyChanged(nameof(HasResumeMatches)); }
-    private void RefreshApplicationFilter() { OnPropertyChanged(nameof(FilteredApplications)); OnPropertyChanged(nameof(HasApplicationMatches)); }
+    private JobApplicationViewModel[] _lastApplicationMatches = [];
+    private bool _applicationFilterRefreshPending;
+    private void RefreshApplicationFilter()
+    {
+        var matches = FilteredApplications.ToArray();
+        if (_lastApplicationMatches.SequenceEqual(matches)) return;
+        _lastApplicationMatches = matches;
+        if (_applicationFilterRefreshPending) return;
+        _applicationFilterRefreshPending = true;
+        // A status picker can remove its own row from the current filter. Finish the
+        // selection event before rebuilding containers, and retain them for metadata-only saves.
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _applicationFilterRefreshPending = false;
+            OnPropertyChanged(nameof(FilteredApplications));
+            OnPropertyChanged(nameof(HasApplicationMatches));
+        }, Avalonia.Threading.DispatcherPriority.Background);
+    }
     partial void OnPreviewPagesChanged(ObservableCollection<Avalonia.Media.Imaging.Bitmap> value) => OnPropertyChanged(nameof(PreviewPageCount));
     partial void OnSelectedPaperSizeChanged(PaperSize oldValue, PaperSize newValue)
     {
@@ -135,7 +153,7 @@ public partial class MainWindowViewModel
             {
                 var bytes = await _services.ExportService.ExportAsync(snapshot, "PDF");
                 using var pdf = PdfDocument.Open(bytes);
-                var text = string.Join("\n\n", pdf.GetPages().Select(p => p.Text));
+                var text = string.Join("\n\n", pdf.GetPages().Select(p => ContentOrderTextExtractor.GetText(p)));
                 var validation = new ResumeValidator().Validate(snapshot);
                 var warnings = validation.Errors.Concat(validation.Warnings).Select(w => $"{w.FieldName}: {w.ErrorMessage}").ToList();
                 if (string.IsNullOrWhiteSpace(snapshot.PersonalInfo.FullName)) warnings.Add("Add your name.");

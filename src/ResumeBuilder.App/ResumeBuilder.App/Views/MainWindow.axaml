@@ -82,8 +82,7 @@
                     <MenuItem Header="JSON resume or backup (.json)" Command="{Binding ImportJsonResumeCommand}"/>
                     <MenuItem Header="Word document (.docx)" Command="{Binding ImportDocxCommand}"/>
                     <MenuItem Header="LinkedIn Export (.zip)" Command="{Binding ImportLinkedInCommand}"/>
-                    <MenuItem Header="Word document (.docx)" Command="{Binding ImportDocxCommand}"/>
-                            <MenuItem Header="PDF Resume (.pdf)" Command="{Binding ImportPdfCommand}"/>
+                    <MenuItem Header="PDF Resume (.pdf)" Command="{Binding ImportPdfCommand}"/>
                 </MenuItem>
                 <MenuItem Header="_Export as PDF..." Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PDF" InputGesture="Ctrl+E"/>
                 <MenuItem Header="Export">
@@ -192,6 +191,7 @@
                     <Button.Flyout>
                         <MenuFlyout>
                             <MenuItem Header="JSON resume or backup (.json)" Command="{Binding ImportJsonResumeCommand}"/>
+                            <MenuItem Header="Word document (.docx)" Command="{Binding ImportDocxCommand}"/>
                             <MenuItem Header="LinkedIn Export (.zip)" Command="{Binding ImportLinkedInCommand}"/>
                             <MenuItem Header="PDF Resume (.pdf)" Command="{Binding ImportPdfCommand}"/>
                         </MenuFlyout>
@@ -359,7 +359,7 @@
         <Border Grid.RowSpan="4" x:Name="ReviewSurface" KeyboardNavigation.TabNavigation="Cycle" IsVisible="{Binding ShowReview}" Background="{DynamicResource RbBg}" Padding="20" ZIndex="100">
             <Grid RowDefinitions="Auto,*,Auto">
                 <TextBlock Text="{Binding ReviewTitle}" FontSize="20" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                <TextBox x:Name="ReviewDetails" Grid.Row="1" Text="{Binding ReviewText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" AutomationProperties.Name="Review details"/>
+                <TextBox x:Name="ReviewDetails" Grid.Row="1" Text="{Binding ReviewText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalAlignment="Stretch" VerticalContentAlignment="Top" AutomationProperties.Name="Review details"/>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,12,0,0">
                     <Button Content="Copy" Command="{Binding CopyReviewCommand}"/><Button Content="Done" Command="{Binding CloseReviewCommand}"/>
                 </StackPanel>

@@ -91,9 +91,11 @@ public partial class EditorWorkflowTests
     [Fact]
     public async Task ExportReview_ContainsExtractedTextAndDiagnosticsExcludePersonalContent()
     {
-        var vm = Editor(); vm.FirstName = "Synthetic private name"; vm.Summary = "Synthetic private summary";
+        var vm = Editor(); vm.FirstName = "Synthetic private name"; vm.Summary = "Synthetic private summary"; vm.GitHub = "janedoe";
         await vm.ReviewExportCommand.ExecuteAsync(null);
         vm.ReviewText.Should().Contain("Synthetic private summary").And.Contain("page(s)");
+        vm.ReviewText.Should().NotContain("GitHub: Invalid URL");
+        vm.ReviewText.ReplaceLineEndings("\n").Should().Contain("Synthetic private name\n");
         await _dialogs.ShowErrorAsync("Save failed", "secret content");
         vm.ShowSupportDiagnosticsCommand.Execute(null);
         vm.ReviewText.Should().Contain("ResumeBuilder").And.NotContain("Synthetic private").And.NotContain("secret content").And.NotContain(_folder);

@@ -72,9 +72,11 @@ jobs:
       - name: Resolve version
         id: v
         shell: bash
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            ver="${{ github.event.inputs.version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            ver="$INPUT_VERSION"
           else
             ver="${GITHUB_REF_NAME#v}"
           fi
@@ -245,9 +247,11 @@ jobs:
       - name: Resolve tag
         id: v
         shell: bash
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            ver="${{ github.event.inputs.version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            ver="$INPUT_VERSION"
           else
             ver="${GITHUB_REF_NAME#v}"
           fi
@@ -277,6 +281,7 @@ jobs:
         with:
           files: out/**
           tag_name: ${{ steps.v.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           draft: true          # reviewed before it goes public
           body_path: NOTES.md
           fail_on_unmatched_files: true

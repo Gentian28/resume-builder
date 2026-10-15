@@ -1,201 +1,45 @@
-# Things only you can do
+# Release and external access
 
-> Everything automatable is automated. This is what needs a human, in the order it needs one.
+As of 2026-10-15, v1.2.3 is the latest public release. Version 1.3.0 is undergoing native installed-upgrade acceptance before publication. The application review and implementation are recorded in [the delivery report](reviews/2026-10-15-implementation.md).
 
-**v1.2.3 is live** (published 2026-08-08). Downloads serve it on all four platforms and existing
-installs auto-update. Nothing here is blocking a user from installing the app, the rest is reach
-and polish.
+## Release procedure
 
-Releases are now fully automated end-to-end: changelog section + tag push + one Publish click on
-the draft; the winget PR opens itself and merges without help (proven live twice: 1.2.2 and
-1.2.3, and the winget index serves 1.2.3).
+1. Update `Directory.Build.props` and the matching `CHANGELOG.md` section.
+2. Push a version tag to the `public` remote, or dispatch `release.yml` with the version. Never publish from the superseded private `origin` repository.
+3. The workflow builds and tests, packages all four native architectures, checks SHA-256 sums, installs v1.2.3 on disposable runners and applies the actual new Velopack package. It verifies resume, letter and application preservation, the pre-upgrade database backup, native startup, restart and the new installer. Intel macOS runs on an Intel runner.
+4. Inspect the `acceptance-*` evidence artifacts and the draft's files and checksums. Promote the draft only after every acceptance job passes. Publication makes the update available to existing installed copies.
+5. Check the automatic winget submission and its resulting Microsoft validation/merge. Submission is enabled: repository variable `WINGET_AUTO_SUBMIT=true` and secret `WINGET_TOKEN` are configured. A submitted PR is not yet a published winget version.
 
-| # | What | Status |
-|---|---|---|
-| 1 | Send screenshots to the portfolio session (+ winget follow-up, see `portfolio-brief.md`) | **ready: your move** |
-| 2 | winget PR #408983 for 1.0.3 | **done: merged & published 2026-08-07** |
-| 3 | Submit winget 1.2.0 | **done: PR #413617 merged & published 2026-08-08** |
-| 3b | Submit winget 1.2.2 / 1.2.3 | **done: auto-opened PRs merged; the index serves 1.2.3 (1.2.1's #414016 closed as superseded)** |
-| 4 | Turn on automatic winget submission | **done: PAT installed 2026-08-08; proven live end-to-end with 1.2.2** |
-| 4b | Rotate the winget PAT | **your move: the current token transited a chat session; scope is only public_repo, but replace it when convenient (new PAT → update `WINGET_TOKEN` secret)** |
-| 5 | SignPath code-signing | **declined 2026-07-29: reapply once the project has visible adoption** |
-| 6 | macOS notarisation | optional, costs $99/yr |
-| - | Verify the Anthropic provider against the real API | optional, 60 seconds |
+The acceptance harness refuses local and self-hosted runners because the previous app does not support a separate data-directory override. It uses synthetic data on disposable machines. macOS CI tests package installation and the updater with administrative access; it does not prove a human Gatekeeper/admin prompt. Linux launches the extracted AppImage under Xvfb, exercising the actual payload and update replacement without requiring FUSE. Physical display scaling and human task observations remain distinct checks.
 
-### Still unverified: the Anthropic provider
+On a Linux profile whose data base directory did not exist, v1.2.3 could create a relative `ResumeBuilder` folder in its launch directory. Version 1.3.0 resolves the intended data path before the folder exists. If an older workspace is in that relative folder, quit both versions and preserve the entire folder before recovery. Move a copy to `$XDG_DATA_HOME/ResumeBuilder` (or `~/.local/share/ResumeBuilder` when unset) only when that destination has no workspace. Never overwrite an existing destination database; retain both copies for recovery. The release upgrade fixture uses the normal existing desktop data base, and the new-build fresh-profile check covers a missing base directory separately.
 
-It is the one surface nothing has exercised, it compiles and every offline test passes, but no
-real request has ever been made. If you have a key it costs a fraction of a cent:
+## Windows signing
+
+The current builds are unsigned. SignPath declined the initial application on 2026-07-29 and invited reapplication with evidence of adoption. The refreshed [reapplication draft](signing-readiness.md) contains current, clearly labelled download counts and project links. It has not been sent.
+
+There is no signing secret configured in the public release repository and no usable code-signing certificate with a private key in this workstation's certificate stores. A certificate issuer or signing service must grant access before trusted signatures can be produced. Do not create a self-signed certificate and present it as public trust. Do not remove the unsigned-build notice before verifying the released signatures.
+
+winget distribution does not guarantee suppression of SmartScreen or other Windows security prompts. The older claim that winget bypasses SmartScreen was incorrect.
+
+The existing signing application is tracked in Accession as `260921-signpath-reapplication-now-has`. Keep that as the canonical follow-up rather than filing a second application task.
+
+## macOS signing and notarisation
+
+No Apple signing/notarisation credentials are configured in the release repository. Trusted distribution needs owner-controlled Developer ID signing identities and notarisation access. Once available, configure Velopack signing for both app and installer, notarise both architectures, and verify with `codesign`, `spctl`, `pkgutil --check-signature` and the stapler validation commands before publication.
+
+Passing native startup on an unsigned CI runner does not prove that a downloaded build passes Gatekeeper. Preserve the installation notice until signed, notarised downloads have been checked.
+
+## Usability observations
+
+[The session kit](usability-session-kit.md) explains the exercise in ordinary language, includes an unsent invitation and supplies the observation sheet. It needs real people willing to try the app. Automated testing and an agent's own inspection cannot supply those observations. No volunteers have been recruited, contacted or recorded by this work.
+
+## Optional live AI check
+
+The three Anthropic live tests remain skipped without an explicitly supplied API key. With an authorized test key in `ANTHROPIC_API_KEY`, run:
 
 ```powershell
-$env:ANTHROPIC_API_KEY = "sk-ant-..."
 dotnet test ResumeBuilder.sln --filter "FullyQualifiedName~AnthropicLiveTests"
 ```
 
-Without the key those three tests report **Skipped**, which is how CI stays offline and green.
-
----
-
-## 1. Send the screenshots to the portfolio session
-
-The message itself is in `docs/portfolio-message-today.md` and is version-agnostic, it needs no
-edit now that 1.2.0 is out, because the download links always resolve to the newest release.
-
-What that session still needs is the image files: `docs/screenshots/editor.png`,
-`template-gallery.png`, `first-run.png`. Have them committed into the portfolio repo rather than
-hotlinked from GitHub.
-
----
-
-## 2. winget PR #408983: done
-
-Merged 2026-08-07 (moderator-approved, publish pipeline succeeded).
-`winget install Gentian28.ResumeBuilder` now works for everyone, verified present in the index.
-
-Two things worth keeping:
-
-- The CLA is a one-off for your account. Reply `@microsoft-github-policy-service agree`, no
-  `company=`, since this is your own project and you hold the IP.
-- Test-install before submitting. Doing so caught the off-screen-window bug that shipped in 1.0.1
-  and 1.0.2; submitting either would have put a broken build in Microsoft's index.
-
----
-
-## 3. Submit winget 1.2.0: done
-
-Submitted 2026-08-07 as **microsoft/winget-pkgs#413617**, a few hours after #408983 merged.
-Manifest generated by `new-version.ps1` (hash read from the released `SHA256SUMS-win-x64.txt`),
-`winget validate` passed, submitted with `wingetcreate`. As a version bump on an established
-package identity it should ride through validation near-automatically, nothing to do but wait,
-and as before, **do not push to that branch**.
-
-The local test-install step was skipped this time: it exists to catch manifest/release drift or a
-broken installer, but the hash was read from the published checksums by construction, and the
-1.2.0 installer is already what every existing install auto-updates to.
-
-For the next version the commands remain:
-
-```powershell
-.\packaging\winget\new-version.ps1 -Version <x.y.z>
-wingetcreate submit --token <github-PAT> packaging\winget\<x.y.z>
-```
-
-`new-version.ps1` must run **after** publishing, it reads the released `SHA256SUMS` so the hash
-always matches what people actually download. (`wingetcreate` is now installed;
-`gh auth token` works as the token.)
-
-### Proving a manifest installs, if you ever need to
-
-winget refuses local manifests by default. Enable it once, from an **administrator** PowerShell:
-
-```powershell
-winget settings --enable LocalManifestFiles
-```
-
-Then from a normal PowerShell (Velopack installs per-user, nothing to elevate):
-
-```powershell
-winget install --manifest C:\Users\Pc\source\repos\resumebuilder\packaging\winget\1.2.0
-winget uninstall Gentian28.ResumeBuilder
-```
-
-A hash mismatch means the manifest and the release have drifted, regenerate with
-`new-version.ps1`.
-
----
-
-## 4. Turn on automatic winget submission: unblocked, needs your PAT
-
-`.github/workflows/winget.yml` generates the manifest and opens the PR on every published release.
-**Inert until you opt in**, so it does nothing today.
-
-1. **PAT** at github.com/settings/tokens with `public_repo` scope.
-2. **Secret:** Settings → Secrets and variables → Actions → New repository secret → `WINGET_TOKEN`.
-3. **Switch:** same page, Variables tab → New repository variable → `WINGET_AUTO_SUBMIT` = `true`.
-
-**This has never run.** The individual commands are the ones already run by hand for 1.0.3 and
-1.2.0, but the workflow around them is untested. Try it manually first, Actions → Submit to
-winget → Run workflow, with the *next* version once it's released, rather than finding out during
-a real release. (Don't run it for `1.2.0`: that PR is already open as #413617 and a duplicate
-submission gets both flagged.)
-
----
-
-## 5. SignPath code-signing: declined, reapply when there's traction
-
-Applied 2026-07-28; **declined 2026-07-29**: the reply sat unread in the inbox until 2026-08-07.
-The PGP Utility application got the identical decline on 2026-08-05, so this is their standard
-bar for new projects, not something specific to this one.
-
-**The reason was the one predicted here: reputation, not eligibility.** Their email names the
-signals they want: community adoption (GitHub stars, forks, contributors), external articles or
-independent discussion (Reddit, Stack Overflow, YouTube), institutional backing, and sustained
-activity. A days-old repo has none of those, and QuestPDF was never raised at all. Notes for the
-reapplication:
-
-- **Reapply on evidence, not on a timer.** The decline predates the winget merge, so
-  `winget install Gentian28.ResumeBuilder` is a new signal to cite, but their list is about
-  community adoption, so what actually clears the bar is stars, downloads, an independent mention
-  somewhere, and months of visible activity. They explicitly invited reapplying.
-- **The paid route exists** (https://docs.signpath.io/change-subscription) but isn't worth it for
-  a zero-revenue project: winget already bypasses SmartScreen for the recommended install path,
-  which was most of what signing would buy.
-- The README and download page **no longer credit SignPath**: crediting is a condition of a
-  granted certificate, and there isn't one. They now state plainly that builds are unsigned and
-  point Windows users at winget.
-
-Signing the direct `.exe` download remains the biggest trust gap for strangers who skip winget.
-On a successful reapplication (steps kept for then):
-
-1. Add the token as a repository secret, e.g. `SIGNPATH_API_TOKEN`.
-2. In `release.yml`, sign between publish and pack. `vpk pack` already takes signing parameters and
-   currently prints `No signing parameters provided, 260 file(s) will not be signed` on every
-   Windows run, that warning marks the spot.
-3. Re-tag for a signed release, then delete the unsigned-build warnings from the README and the
-   download page.
-
----
-
-## 6. macOS notarisation: optional
-
-Needs a paid Apple Developer account ($99/yr) in your name; SignPath does not cover it. Until then
-Mac users allow the app once under **System Settings → Privacy & Security**. Both Mac builds work;
-Gatekeeper just objects the first time.
-
-Worth doing only if Mac downloads turn out to be significant, it is a papercut, not a blocker, and
-the instructions are already on the download page.
-
----
-
-## How a future release works
-
-```powershell
-# 1. add a "## 1.2.0" section to CHANGELOG.md   (the build fails without one)
-# 2. bump <Version> in Directory.Build.props    (local dev builds only)
-git tag v1.2.0
-git push public v1.2.0
-```
-
-~4 minutes → review the draft → **Publish** → winget PR opens itself (once step 4 is on) and users
-auto-update on next launch.
-
-Two things stay manual on purpose:
-
-- **The changelog.** Generated from commit subjects it would be a log, not release notes, and it
-  is the part users actually read. The build fails when a section is missing, which catches
-  forgetting without pretending to write it for you.
-- **Publishing the draft.** That is the step that pushes an auto-update to everyone already running
-  the app. Worth one human look.
-
----
-
-## Not blocking anything
-
-- **Flathub**: more reach on Linux, but the AppImage already works with no package manager. Do it
-  if Linux traffic justifies it.
-- **Remaining UI work**: the redesign spec in `docs/ui-redesign-proposal.md` is fully implemented.
-  What is left is refinement: collapsing all but the entry being edited, and moving cover letters
-  onto the three-zone surface.
-- **Persisting API keys.** Deliberately memory-only today, and the privacy notice promises exactly
-  that. With two providers, re-entering a key every launch is friction worth revisiting, but it needs a
-  decision (OS credential store, opt-in) rather than a silent change.
+Do not place a key in source, issue reports, screenshots or session materials. Offline drafting and analysis remain available without a key.

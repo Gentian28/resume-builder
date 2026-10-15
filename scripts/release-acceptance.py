@@ -52,7 +52,8 @@ def stop_installer_launch(executable):
 
 
 def manifest_version(directory):
-    manifests = list(directory.rglob("sq.version"))
+    # macOS exposes the same manifest in Resources and through a MacOS symlink.
+    manifests = list({p.resolve() for p in directory.rglob("sq.version")})
     assert len(manifests) == 1, manifests
     root = ET.parse(manifests[0]).getroot()
     return next(e.text for e in root.iter() if e.tag.split("}")[-1] == "version")
@@ -191,6 +192,11 @@ def main():
     else:
         database = Path(env.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))) / "ResumeBuilder/resumes.db"
     assert not database.exists(), f"Acceptance profile was not empty: {database}"
+    if sys.platform.startswith("linux"):
+        # v1.2.3 asks .NET to verify that the XDG base exists. Provision the
+        # normal desktop base for this old-app upgrade fixture. The fresh new
+        # app check below deliberately uses a missing base as a regression.
+        database.parent.parent.mkdir(parents=True, exist_ok=True)
     if sys.platform == "win32":
         install = root / "installed"
         run(old / name, "--silent", "--installto", install, "--log", evidence / "install.log")
@@ -264,7 +270,12 @@ def main():
         env["APPIMAGE"] = str(fresh_image)
         assert manifest_version(fresh / "squashfs-root") == args.version
     fresh_profile = root / "fresh-profile"
-    env["RESUMEBUILDER_DATA_DIRECTORY"] = str(fresh_profile)
+    if sys.platform.startswith("linux"):
+        env["XDG_DATA_HOME"] = str(fresh_profile)
+        fresh_profile = fresh_profile / "ResumeBuilder"
+        env.pop("RESUMEBUILDER_DATA_DIRECTORY", None)
+    else:
+        env["RESUMEBUILDER_DATA_DIRECTORY"] = str(fresh_profile)
     start_and_stop(fresh_executable, evidence / "fresh-startup.log", env, fresh_profile / "resumes.db")
     with sqlite3.connect(fresh_profile / "resumes.db") as db:
         assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"

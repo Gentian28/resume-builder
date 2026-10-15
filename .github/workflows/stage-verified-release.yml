@@ -1,0 +1,104 @@
+name: Stage verified release
+
+# Recover a release after a harness correction without rebuilding tested bytes.
+on:
+  workflow_dispatch:
+    inputs:
+      package_run:
+        description: Release run that produced the packages
+        required: true
+      verification_run:
+        description: Successful exact-package verification run
+        required: true
+      version:
+        description: Version without leading v
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: packages
+          run-id: ${{ inputs.package_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: acceptance-*
+          path: evidence
+          run-id: ${{ inputs.verification_run }}
+          github-token: ${{ github.token }}
+      - name: Validate provenance, evidence and all asset checksums
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_RUN: ${{ inputs.package_run }}
+          VERIFICATION_RUN: ${{ inputs.verification_run }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, re, shutil, subprocess
+          def gh(*args):
+              return json.loads(subprocess.check_output(['gh', *args], text=True))
+          repo, version = os.environ['GITHUB_REPOSITORY'], os.environ['VERSION']
+          assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version)
+          source = gh('run', 'view', os.environ['PACKAGE_RUN'], '--repo', repo, '--json', 'headSha,jobs,workflowName')
+          verified = gh('run', 'view', os.environ['VERIFICATION_RUN'], '--repo', repo, '--json', 'conclusion,workflowName')
+          assert source['workflowName'] == 'Release'
+          expected_jobs = {'test the tagged commit', 'package win-x64', 'package linux-x64', 'package osx-arm64', 'package osx-x64'}
+          assert expected_jobs <= {j['name'] for j in source['jobs'] if j['conclusion'] == 'success'}
+          assert verified == {'conclusion': 'success', 'workflowName': 'Verify packaged release'}
+          proofs = [json.loads(p.read_text()) for p in pathlib.Path('evidence').rglob('result.json')]
+          assert len(proofs) == 5
+          assert {(p['rid'], p['upgrade_route']) for p in proofs} == {('win-x64', 'package'), ('win-x64', 'installer'), ('linux-x64', 'package'), ('osx-arm64', 'package'), ('osx-x64', 'package')}
+          for p in proofs:
+              assert p['source_run'] == os.environ['PACKAGE_RUN'] and p['source_commit'] == source['headSha']
+              assert p['installed_version'] == version and p['safety_backup_verified'] and p['native_startup_and_restart'] and p['new_installer_startup']
+              if p['rid'] == 'win-x64': assert p['windows_default_install_migration_and_uninstall_preservation']
+          existing = subprocess.run(['gh', 'api', f'repos/{repo}/releases/tags/v{version}'], capture_output=True, text=True)
+          if existing.returncode == 0:
+              release = json.loads(existing.stdout)
+              assert release['draft'] and release['target_commitish'] == source['headSha'], 'Refusing to modify a public release or different candidate'
+          output = pathlib.Path('out')
+          output.mkdir()
+          sums = list(pathlib.Path('packages').rglob('SHA256SUMS-*.txt'))
+          assert len(sums) == 4
+          covered = set()
+          for checksum in sums:
+              for line in checksum.read_text().splitlines():
+                  digest, name = line.split(maxsplit=1)
+                  asset = checksum.parent / name.lstrip('*')
+                  assert asset.parent == checksum.parent and asset.is_file()
+                  with asset.open('rb') as stream: assert hashlib.file_digest(stream, 'sha256').hexdigest() == digest
+                  covered.add(asset)
+          assets = {p for p in pathlib.Path('packages').rglob('*') if p.is_file()}
+          assert assets == covered | set(sums)
+          for asset in assets:
+              destination = output / asset.name
+              assert not destination.exists(), 'Duplicate release asset name'
+              shutil.copy2(asset, destination)
+          changelog = subprocess.check_output(['git', 'show', source['headSha'] + ':CHANGELOG.md'], text=True)
+          notes = re.search(r'(?ms)^## ' + re.escape(version) + r'[^\n]*\n(.*?)(?=^## |\Z)', changelog)
+          assert notes and notes.group(1).strip()
+          pathlib.Path('NOTES.md').write_text(notes.group(1).strip() + '\n\n### Installation trust\n\nThese builds are unsigned. Windows signing and macOS notarisation are pending owner-controlled credentials. See the README for platform installation details.\n')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as stream:
+              stream.write('sha=' + source['headSha'] + '\ntag=v' + version + '\n')
+          print('Verified', len(assets), 'assets and all five native acceptance proofs for', source['headSha'])
+          PY
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
+          tag_name: ${{ steps.release.outputs.tag }}
+          target_commitish: ${{ steps.release.outputs.sha }}
+          draft: true
+          body_path: NOTES.md
+          fail_on_unmatched_files: true

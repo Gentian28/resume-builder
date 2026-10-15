@@ -73,6 +73,23 @@ jobs:
               throw new Error('Only a published stable release can be submitted.');
             }
 
+      - name: Prepare manifest validator
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # Hosted images can lag behind the schema accepted by Microsoft's repository.
+          # Use the same stable client that validates these manifests locally.
+          $minimum = [version]'1.29.380'
+          $current = [version]((winget --version).Trim().TrimStart('v'))
+          if ($current -lt $minimum) {
+            Install-Module Microsoft.WinGet.Client -Repository PSGallery -Scope CurrentUser -Force -AllowClobber
+            Import-Module Microsoft.WinGet.Client
+            Repair-WinGetPackageManager -Version $minimum.ToString() -Force -ErrorAction Stop
+          }
+          winget --version
+          if ($LASTEXITCODE -ne 0) { throw 'WinGet validator is unavailable.' }
+
       - name: Generate the manifest
         shell: pwsh
         # Reads the published checksum, so the hash always matches what people actually

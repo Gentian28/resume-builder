@@ -43,6 +43,7 @@ public class DocxExporter : IExporter
     public async Task<byte[]> ExportAsync(Resume resume, string templateId)
     {
         var settings = SectionLayout.EffectiveSettings(resume, _templateRegistry, templateId);
+        using var locale = DocumentText.Use(settings.DocumentLanguage);
         var accentColor = NormalizeColor(settings.AccentColor, TemplateSettings.DefaultAccentColor);
         var fontFamily = string.IsNullOrWhiteSpace(settings.FontFamily)
             ? TemplateSettings.DefaultFontFamily
@@ -66,41 +67,41 @@ public class DocxExporter : IExporter
                         break;
 
                     case SectionType.Summary:
-                        AddSectionTitle(body, "Professional Summary", accentColor);
+                        AddSectionTitle(body, DocumentText.Translate("Professional Summary"), accentColor);
                         AddParagraph(body, resume.Summary);
                         break;
 
                     case SectionType.Experience:
-                        AddSectionTitle(body, "Work Experience", accentColor);
+                        AddSectionTitle(body, DocumentText.Translate("Work Experience"), accentColor);
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             AddExperience(body, exp);
                         break;
 
                     case SectionType.Education:
-                        AddSectionTitle(body, "Education", accentColor);
+                        AddSectionTitle(body, DocumentText.Translate("Education"), accentColor);
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             AddEducation(body, edu);
                         break;
 
                     case SectionType.Skills:
-                        AddSectionTitle(body, "Skills", accentColor);
+                        AddSectionTitle(body, DocumentText.Translate("Skills"), accentColor);
                         AddSkills(body, resume.Skills);
                         break;
 
                     case SectionType.Languages:
-                        AddSectionTitle(body, "Languages", accentColor);
+                        AddSectionTitle(body, DocumentText.Translate("Languages"), accentColor);
                         foreach (var lang in resume.Languages.OrderBy(l => l.Order))
                             AddParagraph(body, $"{lang.Name} - {SectionLayout.LanguageProficiencyText(lang.Proficiency)}");
                         break;
 
                     case SectionType.Certifications:
-                        AddSectionTitle(body, "Certifications", accentColor);
+                        AddSectionTitle(body, DocumentText.Translate("Certifications"), accentColor);
                         foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
                             AddCertification(body, cert);
                         break;
 
                     case SectionType.Projects:
-                        AddSectionTitle(body, "Projects", accentColor);
+                        AddSectionTitle(body, DocumentText.Translate("Projects"), accentColor);
                         foreach (var proj in resume.Projects.OrderBy(p => p.Order))
                             AddProject(body, proj);
                         break;
@@ -115,6 +116,11 @@ public class DocxExporter : IExporter
                         break;
                 }
             }
+            body.Append(new SectionProperties(new DocumentFormat.OpenXml.Wordprocessing.PageSize
+            {
+                Width = settings.PaperSize == PaperSize.Letter ? 12240U : 11906U,
+                Height = settings.PaperSize == PaperSize.Letter ? 15840U : 16838U
+            }));
         }
 
         return await Task.FromResult(stream.ToArray());

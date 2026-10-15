@@ -42,7 +42,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid Grid.Row="1" ColumnDefinitions="460,*">
+                    <Grid Grid.Row="1" ColumnDefinitions="2*,3*">
                         <!-- Letter Editor -->
                         <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled"
                                       VerticalScrollBarVisibility="Auto" Margin="0,0,15,0">
@@ -52,6 +52,28 @@
 
                                 <TextBox Watermark="Letter name" Text="{Binding LetterName}" AutomationProperties.Name="Letter name"/>
 
+                                <TextBlock Text="{Binding LetterSourceLabel}" TextWrapping="Wrap" FontSize="11"/>
+                                <Button Content="Use open resume as source" Command="{Binding UseOpenResumeForLetterCommand}"/>
+                                <TextBlock Text="Template" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding LetterTemplates}" SelectedItem="{Binding SelectedLetterTemplate}" HorizontalAlignment="Stretch" AutomationProperties.Name="Letter template">
+                                    <ComboBox.ItemTemplate><DataTemplate x:DataType="models:TemplateInfo"><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Text="Paper size"/><ComboBox ItemsSource="{Binding PaperSizes}" SelectedItem="{Binding LetterPaperSize}" AutomationProperties.Name="Letter paper size" HorizontalAlignment="Stretch"/>
+                                <TextBlock Text="Document language"/><ComboBox ItemsSource="{Binding DocumentLanguages}" SelectedItem="{Binding LetterDocumentLanguage}" AutomationProperties.Name="Letter document language" HorizontalAlignment="Stretch"/>
+                                <Expander Header="Sender details" HorizontalAlignment="Stretch"><StackPanel Spacing="8">
+                                    <TextBox Watermark="First name" Text="{Binding LetterSenderFirstName}" AutomationProperties.Name="Sender First name"/>
+                                    <TextBox Watermark="Last name" Text="{Binding LetterSenderLastName}" AutomationProperties.Name="Sender Last name"/>
+                                    <TextBox Watermark="Email" Text="{Binding LetterSenderEmail}" AutomationProperties.Name="Sender Email"/>
+                                    <TextBox Watermark="Phone" Text="{Binding LetterSenderPhone}" AutomationProperties.Name="Sender Phone"/>
+                                    <TextBox Watermark="Address" Text="{Binding LetterSenderAddress}" AutomationProperties.Name="Sender Address"/>
+                                    <TextBox Watermark="City" Text="{Binding LetterSenderCity}" AutomationProperties.Name="Sender City"/>
+                                    <TextBox Watermark="Country" Text="{Binding LetterSenderCountry}" AutomationProperties.Name="Sender Country"/>
+                                    <TextBox Watermark="Website" Text="{Binding LetterSenderWebsite}" AutomationProperties.Name="Sender Website"/>
+                                    <TextBox Watermark="LinkedIn" Text="{Binding LetterSenderLinkedIn}" AutomationProperties.Name="Sender LinkedIn"/>
+                                    <TextBox Watermark="GitHub" Text="{Binding LetterSenderGitHub}" AutomationProperties.Name="Sender GitHub"/>
+                                </StackPanel></Expander>
+                                <TextBox Watermark="Target role" Text="{Binding LetterTargetRole}" AutomationProperties.Name="Letter target role"/>
+                                <TextBox Watermark="Job description" Text="{Binding LetterJobDescription}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70" AutomationProperties.Name="Letter job description"/>
                                 <TextBlock Text="Recipient" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
                                 <Grid ColumnDefinitions="*,10,*">
                                     <TextBox Grid.Column="0" Watermark="Recipient name"

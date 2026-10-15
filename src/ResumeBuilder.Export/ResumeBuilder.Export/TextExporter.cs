@@ -16,6 +16,7 @@ public class TextExporter : IExporter
 
     public Task<byte[]> ExportAsync(Resume resume, string templateId)
     {
+        using var locale = DocumentText.Use(resume.TemplateSettings.DocumentLanguage);
         var text = GenerateText(resume);
         return Task.FromResult(Encoding.UTF8.GetBytes(text));
     }
@@ -38,7 +39,7 @@ public class TextExporter : IExporter
                     AppendHeader(sb, resume.PersonalInfo);
                     break;
                 case SectionType.Summary:
-                    AppendHeading(sb, "Professional Summary");
+                    AppendHeading(sb, DocumentText.Translate("Professional Summary"));
                     sb.AppendLine(resume.Summary.Trim());
                     break;
                 case SectionType.Experience:
@@ -98,7 +99,7 @@ public class TextExporter : IExporter
 
     private static void AppendExperience(StringBuilder sb, Resume resume)
     {
-        AppendHeading(sb, "Work Experience");
+        AppendHeading(sb, DocumentText.Translate("Work Experience"));
 
         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
         {
@@ -122,7 +123,7 @@ public class TextExporter : IExporter
 
     private static void AppendEducation(StringBuilder sb, Resume resume)
     {
-        AppendHeading(sb, "Education");
+        AppendHeading(sb, DocumentText.Translate("Education"));
 
         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
         {
@@ -148,7 +149,7 @@ public class TextExporter : IExporter
 
     private static void AppendSkills(StringBuilder sb, Resume resume)
     {
-        AppendHeading(sb, "Skills");
+        AppendHeading(sb, DocumentText.Translate("Skills"));
 
         foreach (var group in resume.Skills.GroupBy(s => s.Category))
         {
@@ -161,7 +162,7 @@ public class TextExporter : IExporter
 
     private static void AppendLanguages(StringBuilder sb, Resume resume)
     {
-        AppendHeading(sb, "Languages");
+        AppendHeading(sb, DocumentText.Translate("Languages"));
 
         foreach (var lang in resume.Languages.OrderBy(l => l.Order))
         {
@@ -171,7 +172,7 @@ public class TextExporter : IExporter
 
     private static void AppendCertifications(StringBuilder sb, Resume resume)
     {
-        AppendHeading(sb, "Certifications");
+        AppendHeading(sb, DocumentText.Translate("Certifications"));
 
         foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
         {
@@ -195,7 +196,7 @@ public class TextExporter : IExporter
 
     private static void AppendProjects(StringBuilder sb, Resume resume)
     {
-        AppendHeading(sb, "Projects");
+        AppendHeading(sb, DocumentText.Translate("Projects"));
 
         foreach (var proj in resume.Projects.OrderBy(p => p.Order))
         {
@@ -203,7 +204,7 @@ public class TextExporter : IExporter
 
             if (proj.StartDate.HasValue)
             {
-                var end = proj.IsOngoing ? "Present" : ResumeDateFormat.MonthYear(proj.EndDate);
+                var end = proj.IsOngoing ? DocumentText.Translate("Present") : ResumeDateFormat.MonthYear(proj.EndDate);
                 sb.AppendLine($"{ResumeDateFormat.MonthYear(proj.StartDate)} - {end}");
             }
 

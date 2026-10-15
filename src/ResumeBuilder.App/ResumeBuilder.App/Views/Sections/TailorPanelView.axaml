@@ -99,7 +99,7 @@
                                             CornerRadius="4" Padding="10">
                                         <StackPanel Spacing="5">
                                             <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Text="Match Score" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Keyword match" FontWeight="SemiBold"/>
                                                 <TextBlock Grid.Column="1"
                                                            Text="{Binding KeywordMatchScore, StringFormat={}{0}%}"
                                                            FontWeight="Bold" FontSize="18"/>

@@ -13,7 +13,7 @@
   header strong { font-size:20px; } .grow { flex:1; } small { color:var(--muted); }
   button { padding:7px 12px; border:1px solid var(--border); border-radius:6px; color:inherit; background:var(--surface); font:inherit; }
   .primary { background:var(--accent); color:var(--on); border-color:var(--accent); }
-  .columns { display:grid; grid-template-columns:460px minmax(0,1fr); gap:15px; }
+  .columns { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); gap:15px; }
   .fields { display:grid; gap:10px; } .pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
   input, textarea { box-sizing:border-box; width:100%; padding:9px; border:1px solid var(--border); border-radius:5px; color:inherit; background:var(--field); font:inherit; }
   .fields h3 { font-size:12px; margin:5px 0 0; } .paragraph { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; padding:8px; background:var(--field); border-radius:4px; }
@@ -49,4 +49,9 @@
   <div style="display:flex;justify-content:flex-end;gap:10px"><button>New Cover Letter</button><button>Cancel</button></div>
 </div></div>
 <p>Save, export and undo shortcuts target the active letter. Each paragraph, recipient field, date and closing has letter undo history. Drafting uses the letter's stored source resume and posting, works with the structured fallback, and asks before replacing existing paragraphs. Editing or switching letters invalidates an in-flight draft. Deletion closes the editor with clean state so autosave cannot recreate the letter.</p>
-<p>Template selection, sender editing and a visible source label remain proposed additions. The three underlying letter renderers already exist; those controls are not part of the current editor shown here. Recovery confirmations and active-document behaviour are described in <a href="../components/recovery-and-document-actions.html">Recovery and document actions</a>.</p>
+<p>The current editor includes template, paper and language selectors, a captured source label with explicit replacement, a collapsible sender form, and editable target role and posting. Source replacement and all form changes support letter undo. The editor/preview columns use a two-to-three proportion so controls remain reachable at 800 logical pixels. See the verified layout images and complete workflow card below. Recovery confirmations and active-document behaviour are described in <a href="../components/recovery-and-document-actions.html">Recovery and document actions</a>.</p>
+
+<h2>Verified current controls</h2><p>Generated from the real Avalonia views using synthetic headless test fixtures.</p>
+<img src="../../screenshots/review-letter-light.png" alt="Current cover-letter controls in the light theme" style="max-width:100%;height:auto">
+<img src="../../screenshots/review-letter-dark.png" alt="Current cover-letter controls in the dark theme" style="max-width:100%;height:auto">
+<p><a href="review-completion.html">Current review-completion workflow specification</a></p>

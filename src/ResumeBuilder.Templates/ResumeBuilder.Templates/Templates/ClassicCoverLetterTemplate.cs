@@ -26,7 +26,7 @@ public class ClassicCoverLetterTemplate : BaseCoverLetterTemplate
 
     protected override void ConfigurePage(PageDescriptor page)
     {
-        page.Size(PageSizes.A4);
+        page.Size((Settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
         page.Margin(Math.Max(Settings.PageMargin, 45)); // A business letter wants generous margins.
         page.DefaultTextStyle(x => x
             .FontSize(11 * Scale)

@@ -1,6 +1,6 @@
 # Review implementation, October 15, 2026
 
-The [review](2026-10-15.md) assessed commit `524fbee`. This implementation repairs its 20 numbered defects and adds complete workspace recovery, immutable sent content, non-secret preferences, and contributor support for growing adoption of the free app. The larger product roadmap remains a staged plan.
+The [review](2026-10-15.md) assessed commit `524fbee`. This implementation repairs its 20 numbered defects and adds complete workspace recovery, immutable sent content, non-secret preferences, and contributor support for growing adoption of the free app. The review's minimum feature scopes are now implemented as well; the delivery table below separates software changes from external research and signing.
 
 ## Defect coverage
 
@@ -31,13 +31,14 @@ The solution and CI target .NET 10; self-contained packages pin runtime 10.0.13 
 ## Validation
 
 - Release solution build with warnings treated as errors: zero warnings and errors.
-- Full library and App workflow suites, with coverage collection: **498 passed, three live-provider tests skipped** (479 library tests and 19 App workflow tests passed).
+- **555 passed, three live-provider tests skipped**: 515 library, 24 App workflow and 16 headless UI tests. Coverage was collected for all three test assemblies.
 - NuGet direct and transitive advisory scan: no known vulnerable packages reported.
-- Windows x64, Linux x64, macOS ARM64 and macOS x64 self-contained publishes: one executable per drop.
+- Windows x64, Linux x64, macOS ARM64 and macOS x64 single-file publish checks are retained in CI, with native unsigned installer packaging added. Local Windows installer and portable packaging succeeded with the pinned Velopack CLI.
 - Windows clean-profile process launch: stayed running for 20 seconds and created its temporary database, with no stderr output.
+- Public v1.2.3 Windows installer/portable, Linux AppImage and both macOS package links returned HTTP 200, with four checksum files present. The repository homepage now points to the canonical latest public release.
 - Temporary test databases and synthetic fixtures only. The normal personal profile was not opened or upgraded.
 
-Cross-publishing does not prove native Linux/macOS operation. File-dialog clickthrough, small-window/DPI/accessibility checks, signed installers, installed updates and actual previous-release installation upgrades remain release checks. No GitHub release or tag is created by this implementation. Local design sources describe the changed controls and states; no design-canvas upload was performed.
+Cross-publishing does not prove native Linux/macOS operation. The headless UI suite now checks light/dark screens at 800 by 500 and 1400 by 900, real bindings, focus and Escape. File-dialog clickthrough, real display scaling, signed installers, installed updates and actual previous-release installation upgrades remain native release checks. No GitHub release or tag is created by this implementation. CI now rehearses unsigned native installer packaging as well as single-file publishing. Local design sources and synthetic rendered fixtures describe the changed controls and states; no design-canvas upload was performed.
 
 The original `probe/` and captured results are historical evidence of defects at `524fbee`, preserved in review commit `3dbfe3d`. They intentionally report success when a bug is present. Run the maintained solution tests for regressions on the repaired app.
 
@@ -47,4 +48,23 @@ Implemented: accurate local/cloud privacy wording, sample import-to-export walkt
 
 The business objective is adoption of the free open-source app. The next useful evidence is five to ten consenting users completing clean installation, import and first export, followed by a second-application check. Record failures and task completion time without collecting resume contents. Compare release asset downloads and support load separately; they are not an activation funnel.
 
-The [review roadmap](2026-10-15.md#missing-capabilities-ranked-by-user-value) retains scoped proposals and acceptance gates for import review/bundled example, export readiness, search/filtering, application CSV/follow-ups, linked letters, DOCX import, letter controls, paper sizes and document language. Sent content is implemented; the broader application-context feature is partial. New screen designs and observed user demand determine the next implementation batch. Signing/notarisation and tester recruitment remain owner/external work in Accession.
+## Completed feature scopes
+
+| Capability | Delivered behaviour |
+| --- | --- |
+| First session and import review | Embedded synthetic example, separate imported identity, persistent warnings and section counts, dismiss action, local DOCX import preserving original body text for review. |
+| Export readiness | Current rendered page count, contact/date/font warnings and extracted PDF text in a focused, scrollable review surface. Warnings do not block exports or claim hiring outcomes. |
+| Search and filters | Name/person/role search keeps base/variant grouping. Applications search company/role/contact and filter active, archived and due rows. |
+| Application follow-ups | Editable applied and next-action dates, contact and posting URL; in-app due indicators; CSV with formula neutralization; stable, escaped, UTF-8-folded all-day calendar events. |
+| Application context | Draft state, letter selection, immutable resume/letter content and generated PDFs at sending. Save captured PDF actions retain original bytes after source changes/deletion. Historical records stay honest about missing captures. |
+| Letter controls | Three templates, sender editor, explicit source label and replacement, editable role/posting, separate undo history including source replacement. |
+| Paper and language | A4/US Letter across resume/letter templates and Word output; matching HTML print geometry. English/Albanian generated headings and dates, including HTML and plain text, scoped per operation. User-authored text is preserved. |
+| Diagnostics and support | Explicit preview/copy of software versions and fixed error codes. No content, identity, paths, endpoints, keys or raw error messages in diagnostics. Contributor/security guides and issue forms remain in place. |
+| Input and rendering boundaries | Bounded files and archive expansion, PDF page cap, safe image dimensions, normalized nested input/layout values, cancellable import adoption and coalesced preview rendering. |
+| Adoption preparation | Bundled walkthrough, accurate privacy and installation copy, real screenshot reference, canonical public release homepage, verified current platform download links, reusable distribution audit and privacy-preserving usability-session kit. |
+
+Workspace archives include the new application context and captured artifacts. Upgrade and roundtrip tests preserve them. Linked sent letters and PDFs cannot be replaced by ordinary row edits. Keys remain session-only.
+
+Parallel Windows rendering also exposed corrupted extractable PDF text in the previous QuestPDF dependency. The app now uses 2026.7.2, whose fix is documented in [QuestPDF issue 1447](https://github.com/QuestPDF/QuestPDF/issues/1447). A parallel 24-document extraction regression verifies the app's exports without hiding the failure through serialized tests.
+
+The [session kit](../usability-session-kit.md) is ready for consenting volunteers. Recruitment, observed sessions, signing/notarisation and owner-controlled credentials are external activities, not claims made by this implementation. No outreach, payment, telemetry or public release was performed. Native computer-use access to the app was rejected by automatic approval review; headless layout, bindings and keyboard checks passed instead. The explicitly deferred web rewrite, account system, cloud OAuth, paid features, UI localization and right-to-left expansion were outside the review's recommended implementation scope.

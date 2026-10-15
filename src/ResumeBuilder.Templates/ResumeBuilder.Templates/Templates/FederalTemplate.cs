@@ -54,12 +54,12 @@ public class FederalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Summary:
-                        column.Item().Element(c => ComposeSection(c, "PROFESSIONAL SUMMARY", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("PROFESSIONAL SUMMARY"), col =>
                             col.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing)));
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSection(c, "PROFESSIONAL EXPERIENCE", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("PROFESSIONAL EXPERIENCE"), col =>
                         {
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                                 col.Item().PaddingBottom(12).Element(e => ComposeExperience(e, exp));
@@ -67,7 +67,7 @@ public class FederalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSection(c, "EDUCATION", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("EDUCATION"), col =>
                         {
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                                 col.Item().PaddingBottom(10).Element(e => ComposeEducation(e, edu));
@@ -75,12 +75,12 @@ public class FederalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeSection(c, "SKILLS AND COMPETENCIES", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("SKILLS AND COMPETENCIES"), col =>
                             ComposeSkills(col, resume.Skills)));
                         break;
 
                     case SectionType.Languages:
-                        column.Item().Element(c => ComposeSection(c, "LANGUAGE PROFICIENCY", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("LANGUAGE PROFICIENCY"), col =>
                         {
                             foreach (var lang in resume.Languages.OrderBy(l => l.Order))
                                 col.Item().Element(e => ComposeLabelledLine(e, lang.Name, GetLanguageProficiencyText(lang.Proficiency)));
@@ -88,7 +88,7 @@ public class FederalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Certifications:
-                        column.Item().Element(c => ComposeSection(c, "CERTIFICATIONS AND LICENSES", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("CERTIFICATIONS AND LICENSES"), col =>
                         {
                             foreach (var cert in resume.Certifications.OrderBy(c2 => c2.Order))
                                 col.Item().PaddingBottom(8).Element(e => ComposeCertification(e, cert));
@@ -96,7 +96,7 @@ public class FederalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSection(c, "PROJECTS", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("PROJECTS"), col =>
                         {
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
                                 col.Item().PaddingBottom(10).Element(e => ComposeProjectEntry(e, project, Entry));
@@ -210,14 +210,14 @@ public class FederalTemplate : BaseTemplate
 
             if (!string.IsNullOrWhiteSpace(exp.Description))
             {
-                column.Item().PaddingTop(5).Text("Duties and Responsibilities")
+                column.Item().PaddingTop(5).Text(DocumentText.Translate("Duties and Responsibilities"))
                     .SemiBold().FontSize(10 * FontSizeScale);
                 column.Item().Text(exp.Description).FontSize(10 * FontSizeScale).LineHeight(LineSpacing);
             }
 
             if (exp.Achievements.Any())
             {
-                column.Item().PaddingTop(5).Text("Key Accomplishments")
+                column.Item().PaddingTop(5).Text(DocumentText.Translate("Key Accomplishments"))
                     .SemiBold().FontSize(10 * FontSizeScale);
                 column.Item().PaddingTop(2).Element(c => ComposeBulletList(c, exp.Achievements, Entry));
             }

@@ -21,7 +21,7 @@ public class BoldTemplate : BaseTemplate
 
     protected override void ConfigurePage(PageDescriptor page)
     {
-        page.Size(PageSizes.A4);
+        page.Size((Settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
         page.Margin(35);
         page.DefaultTextStyle(x => x
             .FontSize(10 * FontSizeScale)
@@ -47,14 +47,14 @@ public class BoldTemplate : BaseTemplate
                         break;
 
                     case SectionType.Summary:
-                        column.Item().Element(c => ComposeSection(c, "SUMMARY", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("SUMMARY"), ct =>
                         {
                             ct.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing);
                         }));
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSection(c, "EXPERIENCE", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("EXPERIENCE"), ct =>
                         {
                             ct.Spacing(12);
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -63,7 +63,7 @@ public class BoldTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSection(c, "EDUCATION", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("EDUCATION"), ct =>
                         {
                             ct.Spacing(10);
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -72,14 +72,14 @@ public class BoldTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeSection(c, "SKILLS", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("SKILLS"), ct =>
                         {
                             ct.Item().Element(e => ComposeSkillPills(e, resume.Skills));
                         }));
                         break;
 
                     case SectionType.Languages:
-                        column.Item().Element(c => ComposeSection(c, "LANGUAGES", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("LANGUAGES"), ct =>
                         {
                             ct.Item().Row(row =>
                             {
@@ -97,7 +97,7 @@ public class BoldTemplate : BaseTemplate
                         break;
 
                     case SectionType.Certifications:
-                        column.Item().Element(c => ComposeSection(c, "CERTIFICATIONS", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("CERTIFICATIONS"), ct =>
                         {
                             ct.Spacing(6);
                             foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
@@ -116,7 +116,7 @@ public class BoldTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSection(c, "PROJECTS", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("PROJECTS"), ct =>
                         {
                             ct.Spacing(10);
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))

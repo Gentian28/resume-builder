@@ -43,6 +43,7 @@ public abstract class BaseTemplate : IResumeTemplate
 
         return Document.Create(container =>
         {
+            using var locale = DocumentText.Use(Settings.DocumentLanguage);
             container.Page(page =>
             {
                 ConfigurePage(page);
@@ -53,7 +54,7 @@ public abstract class BaseTemplate : IResumeTemplate
 
     protected virtual void ConfigurePage(PageDescriptor page)
     {
-        page.Size(PageSizes.A4);
+        page.Size((Settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
         page.Margin(PageMargin);
         page.DefaultTextStyle(x => x
             .FontSize(10 * FontSizeScale)
@@ -69,7 +70,7 @@ public abstract class BaseTemplate : IResumeTemplate
         if (!start.HasValue) return string.Empty;
 
         var startStr = ResumeDateFormat.MonthYear(start);
-        var endStr = isCurrent ? "Present" : ResumeDateFormat.MonthYear(end);
+        var endStr = isCurrent ? DocumentText.Translate("Present") : ResumeDateFormat.MonthYear(end);
 
         return $"{startStr} - {endStr}";
     }
@@ -79,7 +80,7 @@ public abstract class BaseTemplate : IResumeTemplate
         if (!start.HasValue) return string.Empty;
 
         var startStr = ResumeDateFormat.Year(start);
-        var endStr = isCurrent ? "Present" : ResumeDateFormat.Year(end);
+        var endStr = isCurrent ? DocumentText.Translate("Present") : ResumeDateFormat.Year(end);
 
         return $"{startStr} - {endStr}";
     }
@@ -88,22 +89,22 @@ public abstract class BaseTemplate : IResumeTemplate
 
     protected static string GetSkillLevelText(SkillLevel level) => level switch
     {
-        SkillLevel.Beginner => "Beginner",
-        SkillLevel.Elementary => "Elementary",
-        SkillLevel.Intermediate => "Intermediate",
-        SkillLevel.Advanced => "Advanced",
-        SkillLevel.Expert => "Expert",
-        _ => "Intermediate"
+        SkillLevel.Beginner => DocumentText.Translate("Beginner"),
+        SkillLevel.Elementary => DocumentText.Translate("Elementary"),
+        SkillLevel.Intermediate => DocumentText.Translate("Intermediate"),
+        SkillLevel.Advanced => DocumentText.Translate("Advanced"),
+        SkillLevel.Expert => DocumentText.Translate("Expert"),
+        _ => DocumentText.Translate("Intermediate")
     };
 
     protected static string GetLanguageProficiencyText(LanguageProficiency level) => level switch
     {
-        LanguageProficiency.Basic => "Basic",
-        LanguageProficiency.Conversational => "Conversational",
-        LanguageProficiency.Professional => "Professional",
-        LanguageProficiency.Fluent => "Fluent",
-        LanguageProficiency.Native => "Native",
-        _ => "Professional"
+        LanguageProficiency.Basic => DocumentText.Translate("Basic"),
+        LanguageProficiency.Conversational => DocumentText.Translate("Conversational"),
+        LanguageProficiency.Professional => DocumentText.Translate("Professional"),
+        LanguageProficiency.Fluent => DocumentText.Translate("Fluent"),
+        LanguageProficiency.Native => DocumentText.Translate("Native"),
+        _ => DocumentText.Translate("Professional")
     };
 
     protected static string FormatLanguage(Language language, string separator = " - ") =>

@@ -44,7 +44,7 @@ public class SimpleTemplate : BaseTemplate
                     case SectionType.Experience:
                         column.Item().Column(col =>
                         {
-                            col.Item().Text("EXPERIENCE").FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                            col.Item().Text(DocumentText.Translate("EXPERIENCE")).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
                             col.Item().Height(8);
 
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -73,7 +73,7 @@ public class SimpleTemplate : BaseTemplate
                     case SectionType.Education:
                         column.Item().Column(col =>
                         {
-                            col.Item().Text("EDUCATION").FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                            col.Item().Text(DocumentText.Translate("EDUCATION")).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
                             col.Item().Height(8);
 
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -90,7 +90,7 @@ public class SimpleTemplate : BaseTemplate
                     case SectionType.Skills:
                         column.Item().Column(col =>
                         {
-                            col.Item().Text("SKILLS").FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                            col.Item().Text(DocumentText.Translate("SKILLS")).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
                             col.Item().Height(5);
                             col.Item().Text(string.Join(", ", resume.Skills.OrderBy(s => s.Order).Select(s => s.Name))).FontSize(9 * FontSizeScale);
                         });
@@ -99,7 +99,7 @@ public class SimpleTemplate : BaseTemplate
                     case SectionType.Languages:
                         column.Item().Column(col =>
                         {
-                            col.Item().Text("LANGUAGES").FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                            col.Item().Text(DocumentText.Translate("LANGUAGES")).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
                             col.Item().Height(5);
                             foreach (var lang in resume.Languages.OrderBy(l => l.Order))
                                 col.Item().Text($"- {lang.Name} ({GetLanguageProficiencyText(lang.Proficiency)})").FontSize(9 * FontSizeScale);
@@ -109,7 +109,7 @@ public class SimpleTemplate : BaseTemplate
                     case SectionType.Certifications:
                         column.Item().Column(col =>
                         {
-                            col.Item().Text("CERTIFICATIONS").FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                            col.Item().Text(DocumentText.Translate("CERTIFICATIONS")).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
                             col.Item().Height(5);
                             foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
                             {
@@ -129,7 +129,7 @@ public class SimpleTemplate : BaseTemplate
                     case SectionType.Projects:
                         column.Item().Column(col =>
                         {
-                            col.Item().Text("PROJECTS").FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+                            col.Item().Text(DocumentText.Translate("PROJECTS")).FontSize(11 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
                             col.Item().Height(8);
 
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))

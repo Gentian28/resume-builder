@@ -46,6 +46,8 @@ public class NativeJsonImporter : IImporter
                 warnings.Add("Missing name in personal information.");
             }
 
+            ResumeInput.Normalize(resume, warnings);
+
             // An older export can predate a section, so repair the order rather than dropping it.
             resume.SectionOrder ??= SectionOrder.Default;
             resume.SectionOrder.EnsureAllSectionsPresent();

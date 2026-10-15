@@ -12,11 +12,12 @@
                 <StackPanel Spacing="7" HorizontalAlignment="Center">
                     <TextBlock Text="Let's build your résumé" FontSize="24" FontWeight="SemiBold"
                                HorizontalAlignment="Center"/>
-                    <TextBlock Text="Three ways to start. You can change template and layout at any point."
+                    <TextBlock Text="Open an example, import a file, or start your own."
                                FontSize="13" HorizontalAlignment="Center"
                                Foreground="{DynamicResource RbText2}"/>
                 </StackPanel>
 
+                <Button Content="Open example resume" Command="{Binding OpenExampleCommand}" HorizontalAlignment="Center" Classes="accent"/>
                 <UniformGrid Columns="3" Margin="0,4,0,0">
 
                     <!-- Template first: 25 designs is the most visible thing this has over a Word
@@ -49,6 +50,7 @@
                                 <Button Content="LinkedIn export (.zip)" HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Command="{Binding ImportLinkedInCommand}"/>
+                                <Button Content="Word (.docx)" Command="{Binding ImportDocxCommand}" HorizontalAlignment="Stretch"/>
                                 <Button Content="PDF résumé" HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Command="{Binding ImportPdfCommand}"/>
@@ -89,7 +91,7 @@
                                    Foreground="{DynamicResource RbText2}"/>
                     </StackPanel>
                     <StackPanel Spacing="3" Margin="7,0">
-                        <TextBlock Text="Check it against the ATS" FontSize="12.5" FontWeight="SemiBold"/>
+                        <TextBlock Text="Check keyword match" FontSize="12.5" FontWeight="SemiBold"/>
                         <TextBlock Text="See which keywords from the posting you are missing. Runs on this machine, no AI needed."
                                    FontSize="11.5" TextWrapping="Wrap"
                                    Foreground="{DynamicResource RbText2}"/>
@@ -113,9 +115,9 @@
                         <Ellipse Width="7" Height="7" VerticalAlignment="Center"
                                  Fill="{DynamicResource RbSuccess}"/>
                         <TextBlock Grid.Column="2" FontSize="12" TextWrapping="Wrap">
-                            <Run Text="Everything stays on this computer." FontWeight="SemiBold"
+                            <Run Text="Your workspace is stored on this computer." FontWeight="SemiBold"
                                  Foreground="{DynamicResource RbSuccess}"/>
-                            <Run Text="No account, no upload. Résumés save automatically inside the app. Export a PDF when you need a file to send, or turn on sync to have them on your other machines. AI features can run against a model on your own machine."
+                            <Run Text="No account required. Résumés save automatically inside the app. Export a PDF when you need a file to send, or turn on sync to have them on your other machines. Local AI stays on your machine. Choosing cloud AI sends relevant text to that provider."
                                  Foreground="{DynamicResource RbText2}"/>
                         </TextBlock>
                     </Grid>

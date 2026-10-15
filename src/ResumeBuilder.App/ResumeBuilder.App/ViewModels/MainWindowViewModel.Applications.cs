@@ -41,6 +41,7 @@ public partial class MainWindowViewModel
             ShowApplications = true;
             return;
         }
+        await LoadCoverLettersAsync();
         await LoadApplicationsAsync();
         ShowApplications = true;
     }
@@ -63,7 +64,7 @@ public partial class MainWindowViewModel
 
             Applications.Clear();
             foreach (var application in all)
-                Applications.Add(new JobApplicationViewModel(application, SaveApplicationAsync, UpdateApplicationSummary));
+                Applications.Add(new JobApplicationViewModel(application, SaveApplicationAsync, UpdateApplicationSummary, CoverLetters.ToList()));
 
             OnPropertyChanged(nameof(HasApplications));
             UpdateApplicationSummary();
@@ -80,6 +81,7 @@ public partial class MainWindowViewModel
     /// </summary>
     private void UpdateApplicationSummary()
     {
+        RefreshApplicationFilter();
         if (Applications.Count == 0)
         {
             ApplicationSummary = "";
@@ -93,6 +95,8 @@ public partial class MainWindowViewModel
         var parts = new List<string> { $"{Applications.Count} tracked" };
         if (Applications.Any(a => a.SaveError != null)) parts.Add("Changes not saved: press Save to retry");
         else if (Applications.Any(a => a.HasPendingChanges)) parts.Add("Saving changes...");
+        var due = Applications.Count(a => a.IsFollowUpDue);
+        if (due > 0) parts.Add($"{due} follow-up due");
         if (waiting > 0) parts.Add($"{waiting} waiting");
         if (interviewing > 0) parts.Add($"{interviewing} interviewing");
         if (stale > 0) parts.Add($"{stale} silent 2+ weeks");
@@ -125,7 +129,7 @@ public partial class MainWindowViewModel
                 Status = ApplicationStatus.Applied
             });
 
-            Applications.Insert(0, new JobApplicationViewModel(created, SaveApplicationAsync, UpdateApplicationSummary));
+            Applications.Insert(0, new JobApplicationViewModel(created, SaveApplicationAsync, UpdateApplicationSummary, CoverLetters.ToList()));
             OnPropertyChanged(nameof(HasApplications));
             UpdateApplicationSummary();
 

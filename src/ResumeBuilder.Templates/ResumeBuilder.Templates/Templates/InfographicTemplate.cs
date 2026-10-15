@@ -137,7 +137,7 @@ public class InfographicTemplate : BaseTemplate
             switch (sectionType)
             {
                 case SectionType.Experience:
-                    right.Item().Element(c => ComposeTextSection(c, "EXPERIENCE", ct =>
+                    right.Item().Element(c => ComposeTextSection(c, DocumentText.Translate("EXPERIENCE"), ct =>
                     {
                         ct.Spacing(10);
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -146,7 +146,7 @@ public class InfographicTemplate : BaseTemplate
                     break;
 
                 case SectionType.Education:
-                    right.Item().Element(c => ComposeTextSection(c, "EDUCATION", ct =>
+                    right.Item().Element(c => ComposeTextSection(c, DocumentText.Translate("EDUCATION"), ct =>
                     {
                         ct.Spacing(8);
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -155,7 +155,7 @@ public class InfographicTemplate : BaseTemplate
                     break;
 
                 case SectionType.Projects:
-                    right.Item().Element(c => ComposeTextSection(c, "PROJECTS", ct =>
+                    right.Item().Element(c => ComposeTextSection(c, DocumentText.Translate("PROJECTS"), ct =>
                     {
                         ct.Spacing(10);
                         foreach (var project in resume.Projects.OrderBy(p => p.Order))
@@ -179,7 +179,7 @@ public class InfographicTemplate : BaseTemplate
         var accent = ParseColor(AccentColor);
         container.Column(col =>
         {
-            col.Item().Text("SUMMARY")
+            col.Item().Text(DocumentText.Translate("SUMMARY"))
                 .FontSize(12 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.05f);
             col.Item().Height(5);
             col.Item().BorderLeft(3).BorderColor(accent).PaddingLeft(8)
@@ -194,7 +194,7 @@ public class InfographicTemplate : BaseTemplate
 
         container.Column(col =>
         {
-            col.Item().Text("SKILLS")
+            col.Item().Text(DocumentText.Translate("SKILLS"))
                 .FontSize(12 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.05f);
             col.Item().Height(8);
 
@@ -229,7 +229,7 @@ public class InfographicTemplate : BaseTemplate
 
         container.Column(col =>
         {
-            col.Item().Text("LANGUAGES")
+            col.Item().Text(DocumentText.Translate("LANGUAGES"))
                 .FontSize(12 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.05f);
             col.Item().Height(8);
 
@@ -277,7 +277,7 @@ public class InfographicTemplate : BaseTemplate
 
         container.Column(col =>
         {
-            col.Item().Text("CERTIFICATIONS")
+            col.Item().Text(DocumentText.Translate("CERTIFICATIONS"))
                 .FontSize(12 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.05f);
             col.Item().Height(8);
 

@@ -62,14 +62,14 @@ public class ProfessionalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Summary:
-                        column.Item().Element(c => ComposeSection(c, "Professional Summary", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Professional Summary"), ct =>
                         {
                             ct.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing);
                         }));
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSection(c, "Work Experience", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Work Experience"), ct =>
                         {
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
@@ -80,7 +80,7 @@ public class ProfessionalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSection(c, "Education", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Education"), ct =>
                         {
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
@@ -103,7 +103,7 @@ public class ProfessionalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSection(c, "Projects", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Projects"), ct =>
                         {
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
                             {
@@ -127,7 +127,7 @@ public class ProfessionalTemplate : BaseTemplate
 
     private void ComposeSkills(IContainer container, Resume resume)
     {
-        ComposeSection(container, "Skills", ct =>
+        ComposeSection(container, DocumentText.Translate("Skills"), ct =>
         {
             var grouped = resume.Skills.GroupBy(s => s.Category).ToList();
 
@@ -173,7 +173,7 @@ public class ProfessionalTemplate : BaseTemplate
 
     private void ComposeLanguages(IContainer container, Resume resume)
     {
-        ComposeSection(container, "Languages", ct =>
+        ComposeSection(container, DocumentText.Translate("Languages"), ct =>
         {
             foreach (var lang in resume.Languages.OrderBy(l => l.Order))
             {
@@ -184,7 +184,7 @@ public class ProfessionalTemplate : BaseTemplate
 
     private void ComposeCertifications(IContainer container, Resume resume)
     {
-        ComposeSection(container, "Certifications", ct =>
+        ComposeSection(container, DocumentText.Translate("Certifications"), ct =>
         {
             foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
             {

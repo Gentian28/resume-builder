@@ -15,6 +15,11 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        this.FindControl<Border>("ReviewSurface")!.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == IsVisibleProperty && change.NewValue is true)
+                Dispatcher.UIThread.Post(() => this.FindControl<TextBox>("ReviewDetails")!.Focus());
+        };
     }
 
     /// <summary>

@@ -27,6 +27,7 @@ public class LinkedInImporter : IImporter
         try
         {
             using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+            ImportLimits.ValidateArchive(archive);
             var warnings = new List<string>();
             var resume = new Resume();
 
@@ -225,7 +226,8 @@ public class LinkedInImporter : IImporter
         try
         {
             await using var entryStream = entry.Open();
-            using var reader = new StreamReader(entryStream, Encoding.UTF8);
+            using var bounded = new MemoryStream(await ImportLimits.ReadAsync(entryStream, 16 * 1024 * 1024));
+            using var reader = new StreamReader(bounded, Encoding.UTF8);
             using var csv = new CsvReader(reader, CsvConfig);
             return csv.GetRecords<T>().ToList();
         }

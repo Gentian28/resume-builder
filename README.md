@@ -47,10 +47,15 @@ what is stored and the three cases where it touches the network.
 - **25 resume templates**: Modern, Classic, Minimal, Creative, Executive, Technical, Academic, Two Column, Compact, Elegant, Professional, Starter, Simple, Timeline, Bold, Dark Sidebar, Infographic, ATS Plain, Chronology, Color Block, Developer, Europass, Federal, One Page, Photo Header, plus 3 cover-letter templates.
 - **Section ordering and visibility**: reorder or hide any section, including custom sections.
 - **Export**: PDF, DOCX, HTML, PNG, plain text (ATS-friendly), native JSON, and [JSON Resume](https://jsonresume.org/).
-- **Import**: JSON Resume, native JSON, LinkedIn data export (.zip), and PDF text extraction.
+- **Import**: JSON Resume, native JSON, LinkedIn data export (.zip), Word (.docx), and PDF text extraction. A persistent review banner keeps warnings next to the editor.
 - **Spell check**: Hunspell, with a personal dictionary.
 - **ATS keyword analysis**: paste a job description to get a match score, matched/missing keywords, and warnings.
 - **AI assistance**: optional; works against OpenAI or any OpenAI-compatible endpoint, including a local LLM (Ollama, LM Studio).
+- **First session**: open a bundled synthetic example, edit it, review its extracted PDF text and export. Existing saved work stays separate.
+- **Document layout**: choose A4 or US Letter and English or Albanian generated headings and dates. User-authored text is preserved.
+- **Find and follow up**: search grouped resumes, filter applications, edit applied/next-action dates and contacts, and export CSV or calendar events.
+- **Cover-letter controls**: select a template, edit sender details and explicitly change the captured source with undo support.
+- **Support diagnostics**: preview and copy software/OS details and fixed error codes without document content, paths or keys.
 - **Undo/redo**: across text edits and list operations.
 - **Sync**: two-way sync through a local folder, with conflict detection. The sync panel finds your Google Drive, OneDrive, Dropbox or iCloud folder and offers it as one button; no account, no upload.
 - **Applications**: track which résumé went to which company, when, and what happened; one click reopens the exact version they read. Anything silent for more than a fortnight is marked worth chasing.
@@ -60,9 +65,9 @@ what is stored and the three cases where it touches the network.
 
 ![Template gallery](docs/screenshots/template-gallery.png)
 
-For a first run, import the synthetic [sample resume](samples/sample-resume.json), choose a template, edit a field, and export PDF. Use Open or Show in folder on the export confirmation to find the result.
+For a first run, choose Open example resume, edit a field, choose a template and export PDF. Review export shows the current page count, basic warnings and extracted text. You can also import the synthetic [sample resume](samples/sample-resume.json). Use Open or Show in folder on the export confirmation to find the result.
 
-Workspace backups contain your personal documents. Keep them in a location you trust. Restoring replaces the local document workspace and pauses folder sync until you configure it again. A sent application opens its captured content as a separate editable copy, so changing that copy does not change the historical record. Older application records remain live links because their original sent content is unknown.
+Workspace backups contain your personal documents. Keep them in a location you trust. Restoring replaces the local document workspace and pauses folder sync until you configure it again. Marking a draft application as sent captures its resume, linked letter and generated PDFs. These are the documents captured at that moment, not a verification of an externally uploaded file. Saved PDFs stay available after source edits or deletion. A sent application opens its captured content as a separate editable copy, so changing that copy does not change the historical record. Older application records remain live links because their original sent content is unknown.
 
 ## Building from source
 
@@ -103,6 +108,7 @@ The solution is layered; each project depends only on the ones above it.
 | `ResumeBuilder.App` | Avalonia desktop UI (MVVM, CommunityToolkit.Mvvm). |
 | `ResumeBuilder.Tests` | xUnit tests across Core, Data, Export, and Templates. |
 | `ResumeBuilder.App.Tests` | Editor workflow and command-routing regressions. |
+| `ResumeBuilder.Ui.Tests` | Headless layout, binding and keyboard checks in light/dark themes. |
 
 Dependency direction: `App → {Core, Data, Templates, Export}`, `Export → {Core, Templates}`, `Data → Core`, `Templates → Core`.
 
@@ -128,6 +134,8 @@ The AI features are off until configured. They target any OpenAI-compatible `/ch
 
 - **OpenAI**: supply an API key. Requests (including your resume text) go to `api.openai.com`.
 - **Local LLM**: point the base URL at a loopback address (Ollama, LM Studio). No key is needed and nothing leaves your machine.
+
+For volunteer usability sessions and privacy-preserving observation, use the [session kit](docs/usability-session-kit.md). `scripts/verify-distribution.ps1` verifies the currently published installer links and checksums.
 
 ## License
 

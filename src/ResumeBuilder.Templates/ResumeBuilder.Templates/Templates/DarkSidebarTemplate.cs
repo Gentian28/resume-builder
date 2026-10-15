@@ -23,7 +23,7 @@ public class DarkSidebarTemplate : BaseTemplate
 
     protected override void ConfigurePage(PageDescriptor page)
     {
-        page.Size(PageSizes.A4);
+        page.Size((Settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
         page.Margin(0); // Full-bleed, padding handled per column
         page.DefaultTextStyle(x => x
             .FontSize(10 * FontSizeScale)
@@ -101,7 +101,7 @@ public class DarkSidebarTemplate : BaseTemplate
         var info = resume.PersonalInfo;
         container.Column(col =>
         {
-            col.Item().Text("CONTACT").FontSize(10 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.1f);
+            col.Item().Text(DocumentText.Translate("CONTACT")).FontSize(10 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.1f);
             col.Item().Height(5);
             col.Item().LineHorizontal(1).LineColor(accent.WithAlpha(0.4f));
             col.Item().Height(5);
@@ -125,7 +125,7 @@ public class DarkSidebarTemplate : BaseTemplate
     {
         container.Column(col =>
         {
-            col.Item().Text("SKILLS").FontSize(10 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.1f);
+            col.Item().Text(DocumentText.Translate("SKILLS")).FontSize(10 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.1f);
             col.Item().Height(5);
             col.Item().LineHorizontal(1).LineColor(accent.WithAlpha(0.4f));
             col.Item().Height(5);
@@ -146,7 +146,7 @@ public class DarkSidebarTemplate : BaseTemplate
     {
         container.Column(col =>
         {
-            col.Item().Text("LANGUAGES").FontSize(10 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.1f);
+            col.Item().Text(DocumentText.Translate("LANGUAGES")).FontSize(10 * FontSizeScale).Bold().FontColor(accent).LetterSpacing(0.1f);
             col.Item().Height(5);
             col.Item().LineHorizontal(1).LineColor(accent.WithAlpha(0.4f));
             col.Item().Height(5);
@@ -185,14 +185,14 @@ public class DarkSidebarTemplate : BaseTemplate
             switch (sectionType)
             {
                 case SectionType.Summary:
-                    main.Item().Element(c => ComposeMainSection(c, "SUMMARY", ct =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("SUMMARY"), ct =>
                     {
                         ct.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
                     }));
                     break;
 
                 case SectionType.Experience:
-                    main.Item().Element(c => ComposeMainSection(c, "EXPERIENCE", ct =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("EXPERIENCE"), ct =>
                     {
                         ct.Spacing(10);
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -201,7 +201,7 @@ public class DarkSidebarTemplate : BaseTemplate
                     break;
 
                 case SectionType.Education:
-                    main.Item().Element(c => ComposeMainSection(c, "EDUCATION", ct =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("EDUCATION"), ct =>
                     {
                         ct.Spacing(8);
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -210,7 +210,7 @@ public class DarkSidebarTemplate : BaseTemplate
                     break;
 
                 case SectionType.Certifications:
-                    main.Item().Element(c => ComposeMainSection(c, "CERTIFICATIONS", ct =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("CERTIFICATIONS"), ct =>
                     {
                         ct.Spacing(6);
                         foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
@@ -229,7 +229,7 @@ public class DarkSidebarTemplate : BaseTemplate
                     break;
 
                 case SectionType.Projects:
-                    main.Item().Element(c => ComposeMainSection(c, "PROJECTS", ct =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("PROJECTS"), ct =>
                     {
                         ct.Spacing(10);
                         foreach (var project in resume.Projects.OrderBy(p => p.Order))

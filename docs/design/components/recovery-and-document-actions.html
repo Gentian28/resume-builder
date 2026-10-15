@@ -46,7 +46,7 @@ confirmation dialog, status text and export toast. They add no new navigation su
 Cancel preserves the current workspace. Restore failure rolls the transaction back. Success clears the
 old editors, reloads the document lists, and reports the safety-copy location in the status text.</p>
 <h2>Applications and letters</h2>
-<p>Newly sent applications capture document content. Open resume opens that content as a separate editable
+<p>Newly sent applications capture document content, linked letter content and generated PDF artifacts. Captured PDFs can be saved without rendering them again. Open resume opens that content as a separate editable
 copy. Existing historical links without a captured version are described as live links in status text.</p>
 <p>Application save failures remain pending and appear in the existing Applications summary. Done waits
 for pending changes to save. Workspace restore waits until folder sync has finished. File Save retries.
@@ -54,3 +54,5 @@ If persistence fails on window close, the existing Save, Discard and Cancel dial
 <p>Draft with AI uses the letter's own source and job description. An existing body requires the current
 confirmation pattern before replacement. Each letter has its own undo history; changing the resume
 behind it does not change its drafting source.</p>
+
+<p>Current search, follow-up, letter controls, language, paper, export review and diagnostics states are described in <a href="../screens/review-completion.html">Review completion</a>. Escape dismisses the top overlay, using existing unsaved-change confirmation for a letter. The export/diagnostics review traps Tab within its surface and focuses its read-only details.</p>

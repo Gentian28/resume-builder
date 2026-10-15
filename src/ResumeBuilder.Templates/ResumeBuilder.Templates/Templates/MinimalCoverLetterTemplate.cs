@@ -26,7 +26,7 @@ public class MinimalCoverLetterTemplate : BaseCoverLetterTemplate
 
     protected override void ConfigurePage(PageDescriptor page)
     {
-        page.Size(PageSizes.A4);
+        page.Size((Settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
         page.Margin(Math.Max(Settings.PageMargin, 55)); // The whitespace is the design.
         page.DefaultTextStyle(x => x
             .FontSize(10 * Scale)

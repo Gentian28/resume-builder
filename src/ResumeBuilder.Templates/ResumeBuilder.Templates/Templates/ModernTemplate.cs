@@ -40,14 +40,14 @@ public class ModernTemplate : BaseTemplate
                         break;
 
                     case SectionType.Summary:
-                        column.Item().Element(c => ComposeSection(c, "Professional Summary", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Professional Summary"), ct =>
                         {
                             ct.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing);
                         }));
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSection(c, "Work Experience", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Work Experience"), ct =>
                         {
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
@@ -58,7 +58,7 @@ public class ModernTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSection(c, "Education", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Education"), ct =>
                         {
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
@@ -69,14 +69,14 @@ public class ModernTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeSection(c, "Skills", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Skills"), ct =>
                         {
                             ct.Item().Element(e => ComposeSkills(e, resume.Skills));
                         }));
                         break;
 
                     case SectionType.Languages:
-                        column.Item().Element(c => ComposeSection(c, "Languages", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Languages"), ct =>
                         {
                             ct.Item().Row(row =>
                             {
@@ -93,7 +93,7 @@ public class ModernTemplate : BaseTemplate
                         break;
 
                     case SectionType.Certifications:
-                        column.Item().Element(c => ComposeSection(c, "Certifications", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Certifications"), ct =>
                         {
                             foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
                             {
@@ -117,7 +117,7 @@ public class ModernTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSection(c, "Projects", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Projects"), ct =>
                         {
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
                             {

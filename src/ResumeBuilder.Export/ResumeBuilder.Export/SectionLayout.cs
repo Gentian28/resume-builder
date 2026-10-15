@@ -80,22 +80,22 @@ internal static class SectionLayout
 
     public static string LanguageProficiencyText(LanguageProficiency level) => level switch
     {
-        LanguageProficiency.Basic => "Basic",
-        LanguageProficiency.Conversational => "Conversational",
-        LanguageProficiency.Professional => "Professional",
-        LanguageProficiency.Fluent => "Fluent",
-        LanguageProficiency.Native => "Native",
-        _ => "Professional"
+        LanguageProficiency.Basic => DocumentText.Translate("Basic"),
+        LanguageProficiency.Conversational => DocumentText.Translate("Conversational"),
+        LanguageProficiency.Professional => DocumentText.Translate("Professional"),
+        LanguageProficiency.Fluent => DocumentText.Translate("Fluent"),
+        LanguageProficiency.Native => DocumentText.Translate("Native"),
+        _ => DocumentText.Translate("Professional")
     };
 
     public static string SkillLevelText(SkillLevel level) => level switch
     {
-        SkillLevel.Beginner => "Beginner",
-        SkillLevel.Elementary => "Elementary",
-        SkillLevel.Intermediate => "Intermediate",
-        SkillLevel.Advanced => "Advanced",
-        SkillLevel.Expert => "Expert",
-        _ => "Intermediate"
+        SkillLevel.Beginner => DocumentText.Translate("Beginner"),
+        SkillLevel.Elementary => DocumentText.Translate("Elementary"),
+        SkillLevel.Intermediate => DocumentText.Translate("Intermediate"),
+        SkillLevel.Advanced => DocumentText.Translate("Advanced"),
+        SkillLevel.Expert => DocumentText.Translate("Expert"),
+        _ => DocumentText.Translate("Intermediate")
     };
 
     public static string CertificationDate(Certification cert)

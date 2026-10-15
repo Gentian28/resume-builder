@@ -40,9 +40,10 @@ public class CoverLetterTemplate : ICoverLetterTemplate
 
         return Document.Create(container =>
         {
+            using var locale = DocumentText.Use(_settings.DocumentLanguage);
             container.Page(page =>
             {
-                page.Size(PageSizes.A4);
+                page.Size((_settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
                 page.Margin(_settings.PageMargin);
                 page.DefaultTextStyle(x => x
                     .FontSize(10 * _settings.FontSizeScale)

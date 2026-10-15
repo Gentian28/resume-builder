@@ -39,6 +39,7 @@ public class ExportService
         RegisterImporter(new NativeJsonImporter());
         RegisterImporter(new LinkedInImporter());
         RegisterImporter(new PdfImporter());
+        RegisterImporter(new DocxImporter());
     }
 
     public void Register(IExporter exporter)
@@ -144,10 +145,11 @@ public class ExportService
             return ImportResult<Resume>.Failed($"No importer found for extension: {extension}");
         }
 
-        return await importer.ImportFromFileAsync(filePath);
+        await using var input = File.OpenRead(filePath);
+        return await ImportAsync(input, importer.Format);
     }
 
-    public async Task<ImportResult<Resume>> ImportAsync(Stream stream, string format)
+    public async Task<ImportResult<Resume>> ImportAsync(Stream stream, string format, CancellationToken cancellationToken = default)
     {
         var importer = GetImporter(format);
 
@@ -156,7 +158,16 @@ public class ExportService
             return ImportResult<Resume>.Failed($"No importer found for format: {format}");
         }
 
-        return await importer.ImportAsync(stream);
+        try
+        {
+            using var bounded = new MemoryStream(await ImportLimits.ReadAsync(stream, cancellationToken: cancellationToken));
+            var result = await importer.ImportAsync(bounded);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (result.Success && result.Data != null) ResumeInput.Normalize(result.Data, result.Warnings);
+            return result;
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex) { return ImportResult<Resume>.Failed(ex.Message); }
     }
 }
 

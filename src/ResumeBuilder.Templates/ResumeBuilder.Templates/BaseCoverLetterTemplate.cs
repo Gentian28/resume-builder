@@ -32,6 +32,7 @@ public abstract class BaseCoverLetterTemplate : ICoverLetterTemplate
 
         return Document.Create(container =>
         {
+            using var locale = DocumentText.Use(Settings.DocumentLanguage);
             container.Page(page =>
             {
                 ConfigurePage(page);

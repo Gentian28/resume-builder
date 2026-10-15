@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup Label="UI">
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="11.3.14" />
     <PackageVersion Include="Avalonia" Version="11.3.14" />
     <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="11.3.14" />
     <PackageVersion Include="Avalonia.Desktop" Version="11.3.14" />
@@ -39,7 +40,8 @@
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.3.0" />
     <PackageVersion Include="PdfPig" Version="0.1.13" />
-    <PackageVersion Include="QuestPDF" Version="2025.12.1" />
+    <!-- 2026.7.2 fixes concurrent Windows x64 exports corrupting embedded ToUnicode maps. -->
+    <PackageVersion Include="QuestPDF" Version="2026.7.2" />
     <PackageVersion Include="SkiaSharp" Version="3.119.1" />
     <!-- SkiaSharp depends on NativeAssets.Win32 and NativeAssets.macOS but not the Linux one:
          it resolves that through the RID runtime graph, which only kicks in when a RID is

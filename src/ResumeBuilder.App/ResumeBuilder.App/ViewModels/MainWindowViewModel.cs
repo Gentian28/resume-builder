@@ -34,6 +34,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private IUserDialogs Dialogs => _services?.Dialogs ?? WindowDialogs.Instance;
 
     // Autosave and the manual Save both write the same resume; the gate keeps them from overlapping.
+    private static readonly SemaphoreSlim PreviewRenderGate = new(1, 1);
     private readonly SemaphoreSlim _saveGate = new(1, 1);
 
     private DispatcherTimer? _autoSaveTimer;
@@ -48,6 +49,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private DateTime? _lastSavedAt;
     private CancellationTokenSource? _aiCts;
     private bool _branchOnSave;
+    private CancellationTokenSource? _importCts;
+    [ObservableProperty] private bool _isImporting;
 
     [ObservableProperty]
     private Resume _currentResume = new();
@@ -398,6 +401,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     public MainWindowViewModel(AppServices services, bool initialize = true)
     {
         _services = services;
+        SavedResumes.CollectionChanged += (_, _) => RefreshResumeFilter();
+        Applications.CollectionChanged += (_, _) => RefreshApplicationFilter();
 
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -535,6 +540,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private void Undo()
     {
+        if (ShowReview) return;
         if (_services?.UndoRedoManager == null) return;
 
         _suppressUndoRecording = true;
@@ -551,6 +557,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private void Redo()
     {
+        if (ShowReview) return;
         if (_services?.UndoRedoManager == null) return;
 
         _suppressUndoRecording = true;
@@ -611,24 +618,25 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private async Task SaveActiveDocumentAsync()
     {
+        if (ShowReview) return;
         if (ShowApplications) await FlushApplicationsAsync();
         else if (ShowCoverLetterEditor) await SaveCoverLetterAsync();
         else await SaveAsync(isAutoSave: false);
     }
 
     [RelayCommand]
-    private Task ExportActiveDocumentAsync(string format) => ShowCoverLetterEditor && !format.Equals("JSON", StringComparison.OrdinalIgnoreCase)
+    private Task ExportActiveDocumentAsync(string format) => ShowReview ? Task.CompletedTask : ShowCoverLetterEditor && !format.Equals("JSON", StringComparison.OrdinalIgnoreCase)
         ? ExportCoverLetterAsync(format)
         : ExportAsync(format);
 
     [RelayCommand]
-    private Task NewActiveDocumentAsync() => ShowCoverLetterEditor ? NewCoverLetterAsync() : CreateNewResumeAsync();
+    private Task NewActiveDocumentAsync() => ShowReview ? Task.CompletedTask : ShowCoverLetterEditor ? NewCoverLetterAsync() : CreateNewResumeAsync();
 
     [RelayCommand]
-    private Task OpenActiveDocumentAsync() => ShowCoverLetterEditor ? OpenCoverLetterListAsync() : OpenResumeListAsync();
+    private Task OpenActiveDocumentAsync() => ShowReview ? Task.CompletedTask : ShowCoverLetterEditor ? OpenCoverLetterListAsync() : OpenResumeListAsync();
 
     [RelayCommand]
-    private Task DuplicateActiveDocumentAsync() => ShowCoverLetterEditor ? DuplicateCoverLetterAsync() : SaveAsAsync();
+    private Task DuplicateActiveDocumentAsync() => ShowReview ? Task.CompletedTask : ShowCoverLetterEditor ? DuplicateCoverLetterAsync() : SaveAsAsync();
 
     // ---------------------------------------------------------------- Theme
 
@@ -1057,6 +1065,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private void LoadResumeIntoEditor(Resume resume)
     {
         _branchOnSave = false;
+        ImportReviewText = "";
         InvalidateResumeAnalysis();
         _previewCts?.Cancel();
         _isLoadingEditor = true;
@@ -1439,6 +1448,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private void LoadCustomizationFromResume()
     {
         var settings = CurrentResume.TemplateSettings;
+        SelectedPaperSize = settings.PaperSize;
+        SelectedDocumentLanguage = settings.DocumentLanguage;
         AccentColor = settings.AccentColor;
         SecondaryColor = settings.SecondaryColor;
         TextColor = settings.TextColor;
@@ -2651,13 +2662,19 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
             var pages = await Task.Run(() =>
             {
-                var template = registry.GetTemplateOrDefault(templateId);
-                var document = template.CreateDocument(snapshot);
-                return document.GenerateImages(new ImageGenerationSettings
+                PreviewRenderGate.Wait(cts.Token);
+                try
                 {
-                    ImageFormat = ImageFormat.Png,
-                    RasterDpi = 100
-                }).ToList();
+                    cts.Token.ThrowIfCancellationRequested();
+                    var template = registry.GetTemplateOrDefault(templateId);
+                    var document = template.CreateDocument(snapshot);
+                    return document.GenerateImages(new ImageGenerationSettings
+                    {
+                        ImageFormat = ImageFormat.Png,
+                        RasterDpi = 100
+                    }).ToList();
+                }
+                finally { PreviewRenderGate.Release(); }
             }, cts.Token);
 
             if (cts.IsCancellationRequested)
@@ -3256,6 +3273,9 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         });
 
     [RelayCommand]
+    private Task ImportDocxAsync() => ImportAsync("DOCX", new Avalonia.Platform.Storage.FilePickerFileType("Word document") { Patterns = new[] { "*.docx" } });
+
+    [RelayCommand]
     private Task ImportPdfAsync() => ImportAsync(
         "PDF",
         new Avalonia.Platform.Storage.FilePickerFileType("PDF Resume")
@@ -3263,6 +3283,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             Patterns = new[] { "*.pdf" },
             MimeTypes = new[] { "application/pdf" }
         });
+
+    [RelayCommand] private void CancelImport() => _importCts?.Cancel();
 
     private async Task ImportAsync(string importerName, Avalonia.Platform.Storage.FilePickerFileType fileType)
     {
@@ -3285,6 +3307,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
             LoadingMessage = $"Importing {importerName}...";
             IsLoading = true;
+            IsImporting = true;
+            _importCts = new CancellationTokenSource();
             StatusMessage = $"Importing {importerName}...";
 
             // Let the renderer actually paint the overlay before the UI thread gets busy again.
@@ -3293,17 +3317,19 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
 
             await using var input = await files[0].OpenReadAsync();
-            var bytes = await WorkspaceBackupService.ReadBoundedAsync(input);
+            var bytes = await ResumeBuilder.Export.ImportLimits.ReadAsync(input, cancellationToken: _importCts.Token);
             using var stream = new MemoryStream(bytes);
             if (importerName == "JSON" && await Task.Run(() => WorkspaceBackupService.IsWorkspace(bytes)))
             {
                 var archive = await Task.Run(() => WorkspaceBackupService.Read(bytes));
+                _importCts.Token.ThrowIfCancellationRequested();
+                IsImporting = false;
                 await RestoreWorkspaceAsync(archive);
                 return;
             }
             // The importers are CPU-bound (PdfPig, zip, JSON parsing) despite their async
             // signatures: run them off the UI thread or the overlay never gets a frame.
-            var result = await Task.Run(() => _services.ExportService.ImportAsync(stream, importerName));
+            var result = await Task.Run(() => _services.ExportService.ImportAsync(stream, importerName, _importCts.Token));
 
             if (!result.Success || result.Data == null)
             {
@@ -3313,6 +3339,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             }
 
             AdoptImportedResume(result.Data);
+            SetImportReview(result.Data, result.Warnings);
 
             StatusMessage = result.Warnings.Any()
                 ? $"Imported with {result.Warnings.Count} warning(s) - review the result"
@@ -3323,6 +3350,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
                 await Dialogs.ShowErrorAsync("Imported with warnings", string.Join("\n", result.Warnings));
             }
         }
+        catch (OperationCanceledException) { StatusMessage = "Import cancelled"; }
         catch (Exception ex)
         {
             await Dialogs.ShowErrorAsync("Import failed", ex.Message);
@@ -3330,6 +3358,9 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         finally
         {
             IsLoading = false;
+            IsImporting = false;
+            _importCts?.Dispose();
+            _importCts = null;
         }
     }
 

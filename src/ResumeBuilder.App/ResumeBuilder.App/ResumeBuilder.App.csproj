@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <EmbeddedResource Include="../../../samples/sample-resume.json" LogicalName="ResumeBuilder.App.sample-resume.json" />
   </ItemGroup>
 
   <ItemGroup>

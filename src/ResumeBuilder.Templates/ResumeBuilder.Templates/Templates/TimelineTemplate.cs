@@ -41,14 +41,14 @@ public class TimelineTemplate : BaseTemplate
                         break;
 
                     case SectionType.Summary:
-                        column.Item().Element(c => ComposeNonTimelineSection(c, "SUMMARY", ct =>
+                        column.Item().Element(c => ComposeNonTimelineSection(c, DocumentText.Translate("SUMMARY"), ct =>
                         {
                             ct.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
                         }));
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSectionTitle(c, "EXPERIENCE"));
+                        column.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("EXPERIENCE")));
                         var experiences = resume.Experiences.OrderBy(e => e.Order).ToList();
                         foreach (var exp in experiences)
                         {
@@ -84,7 +84,7 @@ public class TimelineTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSectionTitle(c, "EDUCATION"));
+                        column.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("EDUCATION")));
                         var educationList = resume.EducationList.OrderBy(e => e.Order).ToList();
                         foreach (var edu in educationList)
                         {
@@ -103,7 +103,7 @@ public class TimelineTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeNonTimelineSection(c, "SKILLS", ct =>
+                        column.Item().Element(c => ComposeNonTimelineSection(c, DocumentText.Translate("SKILLS"), ct =>
                         {
                             ct.Item().Text(string.Join("  •  ", resume.Skills.OrderBy(s => s.Order).Select(s => s.Name)))
                                 .FontSize(9 * FontSizeScale);
@@ -111,7 +111,7 @@ public class TimelineTemplate : BaseTemplate
                         break;
 
                     case SectionType.Languages:
-                        column.Item().Element(c => ComposeNonTimelineSection(c, "LANGUAGES", ct =>
+                        column.Item().Element(c => ComposeNonTimelineSection(c, DocumentText.Translate("LANGUAGES"), ct =>
                         {
                             ct.Item().Row(row =>
                             {
@@ -128,7 +128,7 @@ public class TimelineTemplate : BaseTemplate
                         break;
 
                     case SectionType.Certifications:
-                        column.Item().Element(c => ComposeSectionTitle(c, "CERTIFICATIONS"));
+                        column.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("CERTIFICATIONS")));
                         var certifications = resume.Certifications.OrderBy(c => c.Order).ToList();
                         foreach (var cert in certifications)
                         {
@@ -148,7 +148,7 @@ public class TimelineTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSectionTitle(c, "PROJECTS"));
+                        column.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("PROJECTS")));
                         var projects = resume.Projects.OrderBy(p => p.Order).ToList();
                         foreach (var project in projects)
                         {

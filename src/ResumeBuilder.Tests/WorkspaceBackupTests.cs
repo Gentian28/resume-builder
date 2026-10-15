@@ -30,7 +30,7 @@ public class WorkspaceBackupTests : IDisposable
         var resume = await resumes.CreateAsync(new Resume { Name = "Base", Summary = "Sent content" });
         var variant = await resumes.CreateVariantAsync(resume.Id, "Engineer", "Posting");
         var letter = await new CoverLetterRepository(source).CreateAsync(CoverLetter.FromResume(variant, "Example"));
-        var application = await new JobApplicationRepository(source).CreateAsync(new JobApplication { ResumeId = variant.Id, Company = "Example" });
+        var application = await new JobApplicationRepository(source, new ResumeBuilder.Export.SentDocumentRenderer(new ResumeBuilder.Templates.TemplateRegistry())).CreateAsync(new JobApplication { ResumeId = variant.Id, Company = "Example", CoverLetterId = letter.Id, Contact = "Recruiter", NextActionOn = new DateTime(2026, 10, 20) });
         var path = Path.Combine(_folder, "workspace.json");
         await new WorkspaceBackupService(source).ExportToFileAsync(path);
         var archive = WorkspaceBackupService.Read(await File.ReadAllBytesAsync(path));
@@ -45,6 +45,10 @@ public class WorkspaceBackupTests : IDisposable
         var restoredApplication = await new JobApplicationRepository(target).GetByIdAsync(application.Id);
         JsonSerializer.Deserialize<Resume>(restoredApplication!.SentResumeJson!)!.Summary.Should().Be("Sent content");
         restoredApplication.RowVersion.Should().NotBe(application.RowVersion);
+        restoredApplication.SentResumePdf.Should().Equal(application.SentResumePdf!);
+        restoredApplication.SentCoverLetterPdf.Should().Equal(application.SentCoverLetterPdf!);
+        restoredApplication.Contact.Should().Be("Recruiter");
+        restoredApplication.NextActionOn.Should().Be(new DateTime(2026, 10, 20));
         using var old = new ResumeDbContextFactory(safety!).CreateDbContext();
         old.Resumes.Single().Name.Should().Be("Old target");
     }

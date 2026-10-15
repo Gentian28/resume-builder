@@ -74,7 +74,7 @@ public class Resume
 /// <summary>Culture-invariant date formatting so resume output is identical on every machine.</summary>
 public static class ResumeDateFormat
 {
-    public static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
+    public static CultureInfo Culture => DocumentText.Culture;
 
     public static string MonthYear(DateTime? date) => date?.ToString("MMM yyyy", Culture) ?? "";
 
@@ -127,7 +127,7 @@ public class Experience
         get
         {
             var start = ResumeDateFormat.MonthYear(StartDate);
-            var end = IsCurrentRole ? "Present" : ResumeDateFormat.MonthYear(EndDate);
+            var end = IsCurrentRole ? DocumentText.Translate("Present") : ResumeDateFormat.MonthYear(EndDate);
             return string.IsNullOrEmpty(start) ? "" : $"{start} - {end}";
         }
     }
@@ -153,7 +153,7 @@ public class Education
         get
         {
             var start = ResumeDateFormat.Year(StartDate);
-            var end = IsCurrentlyStudying ? "Present" : ResumeDateFormat.Year(EndDate);
+            var end = IsCurrentlyStudying ? DocumentText.Translate("Present") : ResumeDateFormat.Year(EndDate);
             return string.IsNullOrEmpty(start) ? "" : $"{start} - {end}";
         }
     }

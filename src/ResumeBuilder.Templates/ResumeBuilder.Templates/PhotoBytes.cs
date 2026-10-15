@@ -20,6 +20,10 @@ public static class PhotoBytes
 
         try
         {
+            if (bytes.Length > 10 * 1024 * 1024) return false;
+            using var data = SkiaSharp.SKData.CreateCopy(bytes);
+            using var codec = SkiaSharp.SKCodec.Create(data);
+            if (codec is null || codec.Info.Width <= 0 || codec.Info.Height <= 0 || (long)codec.Info.Width * codec.Info.Height > 25_000_000) return false;
             Image.FromBinaryData(bytes);
             return true;
         }

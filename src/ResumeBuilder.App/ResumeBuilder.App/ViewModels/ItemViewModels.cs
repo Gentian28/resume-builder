@@ -788,6 +788,21 @@ public partial class JobApplicationViewModel : ObservableObject
     [ObservableProperty] private ApplicationStatus _status;
     [ObservableProperty] private string _notes = "";
     [ObservableProperty] private string _link = "";
+    [ObservableProperty] private string _contact = "";
+    [ObservableProperty] private DateTimeOffset? _appliedDate;
+    [ObservableProperty] private DateTimeOffset? _nextActionDate;
+    [ObservableProperty] private CoverLetter? _selectedCoverLetter;
+    public IReadOnlyList<CoverLetter> LetterChoices { get; }
+    public int? CoverLetterId => SelectedCoverLetter is { Id: > 0 } letter ? letter.Id : null;
+    public string? SentCoverLetterJson { get; private set; }
+    public byte[]? SentResumePdf { get; private set; }
+    public byte[]? SentCoverLetterPdf { get; private set; }
+    public bool HasSentResumePdf => SentResumePdf != null;
+    public bool HasSentLetterPdf => SentCoverLetterPdf != null;
+    public bool HasResume => ResumeId != null || SentResumeJson != null;
+    public bool CanEditLetterLink => SentCoverLetterJson is null;
+    public bool HasLetter => CoverLetterId != null || SentCoverLetterJson != null;
+    public bool IsFollowUpDue => NextActionDate?.Date <= DateTime.Today && !ResumeBuilder.Core.Editing.ApplicationTools.IsArchived(Status);
 
     public int Id { get; }
 
@@ -818,8 +833,13 @@ public partial class JobApplicationViewModel : ObservableObject
     /// <summary>Waiting on them, long enough to chase.</summary>
     public bool IsStale => Status == ApplicationStatus.Applied && AppliedOn is not null && Days >= 14;
 
-    public JobApplicationViewModel(JobApplication model, Func<JobApplication, Task<JobApplication>>? save = null, Action? changed = null)
+    public JobApplicationViewModel(JobApplication model, Func<JobApplication, Task<JobApplication>>? save = null, Action? changed = null, IReadOnlyList<CoverLetter>? letters = null)
     {
+        LetterChoices = new[] { new CoverLetter { Id = 0, Name = "No linked letter" } }.Concat(letters ?? Array.Empty<CoverLetter>()).ToList();
+        _selectedCoverLetter = LetterChoices.FirstOrDefault(l => l.Id == model.CoverLetterId) ?? LetterChoices[0];
+        _appliedDate = ToDate(model.AppliedOn);
+        _nextActionDate = ToDate(model.NextActionOn);
+        _contact = model.Contact;
         Id = model.Id;
         ResumeId = model.ResumeId;
         AppliedOn = model.AppliedOn;
@@ -839,6 +859,11 @@ public partial class JobApplicationViewModel : ObservableObject
         _loading = false;
     }
 
+    private static DateTimeOffset? ToDate(DateTime? date) => date is { } value ? new DateTimeOffset(DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified), TimeSpan.Zero) : null;
+    partial void OnContactChanged(string value) => Persist();
+    partial void OnAppliedDateChanged(DateTimeOffset? value) => Persist();
+    partial void OnNextActionDateChanged(DateTimeOffset? value) => Persist();
+    partial void OnSelectedCoverLetterChanged(CoverLetter? value) { OnPropertyChanged(nameof(HasLetter)); Persist(); }
     partial void OnStatusChanged(ApplicationStatus value) => Persist();
     partial void OnCompanyChanged(string value) => Persist();
     partial void OnRoleChanged(string value) => Persist();
@@ -852,20 +877,38 @@ public partial class JobApplicationViewModel : ObservableObject
             return;
 
         OnPropertyChanged(nameof(IsStale));
+        OnPropertyChanged(nameof(IsFollowUpDue));
         _pendingSave?.MarkDirty();
     }
 
     public Task<bool> FlushAsync() => _pendingSave?.FlushAsync() ?? Task.FromResult(true);
+    [RelayCommand] private void ClearNextAction() => NextActionDate = null;
     public Task StopSavingAsync() => _pendingSave?.StopAsync() ?? Task.CompletedTask;
     public void ResumeSaving() => _pendingSave?.Resume();
 
     private void AcceptMetadata(JobApplication saved)
     {
         AppliedOn = saved.AppliedOn;
+        var wasLoading = _loading;
+        _loading = true;
+        try { if (AppliedDate is null && saved.AppliedOn != null) AppliedDate = ToDate(saved.AppliedOn); }
+        finally { _loading = wasLoading; }
+        SentCoverLetterJson = saved.SentCoverLetterJson;
+        if (SentCoverLetterJson != null && CoverLetterId != saved.CoverLetterId)
+        {
+            wasLoading = _loading; _loading = true;
+            try { SelectedCoverLetter = LetterChoices.FirstOrDefault(l => l.Id == saved.CoverLetterId) ?? LetterChoices[0]; }
+            finally { _loading = wasLoading; }
+        }
+        OnPropertyChanged(nameof(CanEditLetterLink));
+        SentResumePdf = saved.SentResumePdf; SentCoverLetterPdf = saved.SentCoverLetterPdf;
+        OnPropertyChanged(nameof(HasSentResumePdf)); OnPropertyChanged(nameof(HasSentLetterPdf));
+        OnPropertyChanged(nameof(HasLetter));
         CreatedAt = saved.CreatedAt;
         UpdatedAt = saved.UpdatedAt;
         RowVersion = saved.RowVersion;
         SentResumeJson = saved.SentResumeJson;
+        OnPropertyChanged(nameof(HasResume));
         ResumeCapturedAt = saved.ResumeCapturedAt;
         OnPropertyChanged(nameof(AppliedOn));
         OnPropertyChanged(nameof(Age));
@@ -884,7 +927,13 @@ public partial class JobApplicationViewModel : ObservableObject
         Company = Company,
         Role = Role,
         Status = Status,
-        AppliedOn = AppliedOn,
+        AppliedOn = AppliedDate?.Date,
+        NextActionOn = NextActionDate?.Date,
+        Contact = Contact,
+        CoverLetterId = CoverLetterId,
+        SentCoverLetterJson = SentCoverLetterJson,
+        SentResumePdf = SentResumePdf,
+        SentCoverLetterPdf = SentCoverLetterPdf,
         Notes = Notes,
         Link = Link
     };

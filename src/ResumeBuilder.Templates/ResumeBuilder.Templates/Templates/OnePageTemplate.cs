@@ -57,7 +57,7 @@ public class OnePageTemplate : BaseTemplate
 
     protected override void ConfigurePage(PageDescriptor page)
     {
-        page.Size(PageSizes.A4);
+        page.Size((Settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
         page.Margin(Math.Min(PageMargin, 24));
         page.DefaultTextStyle(x => x
             .FontSize(Size(10))
@@ -152,12 +152,12 @@ public class OnePageTemplate : BaseTemplate
             switch (sectionType)
             {
                 case SectionType.Summary:
-                    column.Item().Element(c => ComposeSection(c, "Summary", col =>
+                    column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Summary"), col =>
                         col.Item().Text(resume.Summary).FontSize(Size(8.5f)).LineHeight(TightLineSpacing)));
                     break;
 
                 case SectionType.Experience:
-                    column.Item().Element(c => ComposeSection(c, "Experience", col =>
+                    column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Experience"), col =>
                     {
                         col.Spacing(7);
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -166,7 +166,7 @@ public class OnePageTemplate : BaseTemplate
                     break;
 
                 case SectionType.Projects:
-                    column.Item().Element(c => ComposeSection(c, "Projects", col =>
+                    column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Projects"), col =>
                     {
                         col.Spacing(6);
                         foreach (var project in resume.Projects.OrderBy(p => p.Order))
@@ -175,7 +175,7 @@ public class OnePageTemplate : BaseTemplate
                     break;
 
                 case SectionType.Education:
-                    column.Item().Element(c => ComposeSection(c, "Education", col =>
+                    column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Education"), col =>
                     {
                         col.Spacing(5);
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -184,11 +184,11 @@ public class OnePageTemplate : BaseTemplate
                     break;
 
                 case SectionType.Skills:
-                    column.Item().Element(c => ComposeSection(c, "Skills", col => ComposeSkills(col, resume.Skills)));
+                    column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Skills"), col => ComposeSkills(col, resume.Skills)));
                     break;
 
                 case SectionType.Languages:
-                    column.Item().Element(c => ComposeSection(c, "Languages", col =>
+                    column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Languages"), col =>
                     {
                         foreach (var lang in resume.Languages.OrderBy(l => l.Order))
                         {
@@ -203,7 +203,7 @@ public class OnePageTemplate : BaseTemplate
                     break;
 
                 case SectionType.Certifications:
-                    column.Item().Element(c => ComposeSection(c, "Certifications", col =>
+                    column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Certifications"), col =>
                     {
                         foreach (var cert in resume.Certifications.OrderBy(c2 => c2.Order))
                         {

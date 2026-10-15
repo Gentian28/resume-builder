@@ -17,3 +17,7 @@ Keep UI changes aligned with the repo design source under docs/design. Explain t
 For a clean-profile desktop check, set RESUMEBUILDER_DATA_DIRECTORY to a new empty temporary directory before starting the app. All app data, including preferences and dictionary caches, uses that directory. Remove the variable for normal use. Never test database upgrades or restore operations against your only copy of personal work.
 
 Before a release, check an import-to-export flow, restoring a workspace backup into a fresh profile, upgrading an older database, active-document keyboard commands, and the installed update flow. Repeat packaging on Windows x64, Linux x64, macOS Apple silicon, and macOS Intel. Cross-compiling alone does not establish that a package runs on another operating system.
+
+The Ui.Tests project uses Avalonia headless rendering and the real app theme to check 800 by 500 and desktop layouts, light/dark palettes, bindings and Escape behaviour. It creates no native windows. To save synthetic rendered frames for review, set RESUMEBUILDER_UI_ARTIFACTS to a temporary directory before running that project. CI also rehearses unsigned Velopack packaging for every supported runtime without creating a public release.
+
+QuestPDF must remain at 2026.7.2 or later: earlier Windows x64 concurrent exports can corrupt embedded font text maps. Keep the concurrent extraction regression; do not serialize or skip tests to hide corrupted content.

@@ -136,6 +136,12 @@ public sealed class WorkspaceBackupService(IResumeDbContextFactory factory)
         foreach (var application in archive.Applications)
         {
             if (!Enum.IsDefined(application.Status)) throw new InvalidDataException("An application has an unknown status.");
+            if (application.SentCoverLetterJson is { } sentLetter)
+            {
+                var letter = JsonSerializer.Deserialize<CoverLetter>(sentLetter);
+                if (letter?.PersonalInfo is null || letter.TemplateSettings is null || letter.Paragraphs is null || letter.Paragraphs.Any(p => p is null))
+                    throw new InvalidDataException("An application contains an incomplete sent letter.");
+            }
             if (application.SentResumeJson is { } sent) ValidateResume(JsonSerializer.Deserialize<Resume>(sent)!);
         }
     }

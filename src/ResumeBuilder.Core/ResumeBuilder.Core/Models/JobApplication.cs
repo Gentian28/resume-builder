@@ -65,6 +65,12 @@ public class JobApplication
     public string Link { get; set; } = string.Empty;
 
     public string Notes { get; set; } = string.Empty;
+    public string Contact { get; set; } = string.Empty;
+    public DateTime? NextActionOn { get; set; }
+    public int? CoverLetterId { get; set; }
+    public string? SentCoverLetterJson { get; set; }
+    public byte[]? SentResumePdf { get; set; }
+    public byte[]? SentCoverLetterPdf { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

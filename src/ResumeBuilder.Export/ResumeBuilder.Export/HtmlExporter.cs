@@ -36,10 +36,11 @@ public class HtmlExporter : IExporter
     private string GenerateHtml(Resume resume, string templateId)
     {
         var settings = SectionLayout.EffectiveSettings(resume, _templateRegistry, templateId);
+        using var locale = DocumentText.Use(settings.DocumentLanguage);
         var sb = new StringBuilder();
 
         sb.AppendLine("<!DOCTYPE html>");
-        sb.AppendLine("<html lang=\"en\">");
+        sb.AppendLine($"<html lang=\"{(settings.DocumentLanguage == DocumentLanguage.Albanian ? "sq" : "en")}\">");
         sb.AppendLine("<head>");
         sb.AppendLine("  <meta charset=\"UTF-8\">");
         sb.AppendLine("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
@@ -129,7 +130,7 @@ public class HtmlExporter : IExporter
     private static void AppendSummary(StringBuilder sb, Resume resume)
     {
         sb.AppendLine("    <section class=\"summary\">");
-        sb.AppendLine("      <h2>Professional Summary</h2>");
+        sb.AppendLine($"      <h2>{Escape(DocumentText.Translate("Professional Summary"))}</h2>");
         sb.AppendLine($"      <p>{Escape(resume.Summary)}</p>");
         sb.AppendLine("    </section>");
     }
@@ -137,7 +138,7 @@ public class HtmlExporter : IExporter
     private static void AppendExperience(StringBuilder sb, Resume resume)
     {
         sb.AppendLine("    <section class=\"experience\">");
-        sb.AppendLine("      <h2>Work Experience</h2>");
+        sb.AppendLine($"      <h2>{Escape(DocumentText.Translate("Work Experience"))}</h2>");
         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
         {
             sb.AppendLine("      <div class=\"entry\">");
@@ -159,7 +160,7 @@ public class HtmlExporter : IExporter
     private static void AppendEducation(StringBuilder sb, Resume resume)
     {
         sb.AppendLine("    <section class=\"education\">");
-        sb.AppendLine("      <h2>Education</h2>");
+        sb.AppendLine($"      <h2>{Escape(DocumentText.Translate("Education"))}</h2>");
         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
         {
             sb.AppendLine("      <div class=\"entry\">");
@@ -180,7 +181,7 @@ public class HtmlExporter : IExporter
     private static void AppendSkills(StringBuilder sb, Resume resume)
     {
         sb.AppendLine("    <section class=\"skills\">");
-        sb.AppendLine("      <h2>Skills</h2>");
+        sb.AppendLine($"      <h2>{Escape(DocumentText.Translate("Skills"))}</h2>");
 
         foreach (var group in resume.Skills.GroupBy(s => s.Category))
         {
@@ -201,7 +202,7 @@ public class HtmlExporter : IExporter
     private static void AppendLanguages(StringBuilder sb, Resume resume)
     {
         sb.AppendLine("    <section class=\"languages\">");
-        sb.AppendLine("      <h2>Languages</h2>");
+        sb.AppendLine($"      <h2>{Escape(DocumentText.Translate("Languages"))}</h2>");
         sb.AppendLine("      <ul>");
         foreach (var lang in resume.Languages.OrderBy(l => l.Order))
         {
@@ -214,7 +215,7 @@ public class HtmlExporter : IExporter
     private static void AppendCertifications(StringBuilder sb, Resume resume)
     {
         sb.AppendLine("    <section class=\"certifications\">");
-        sb.AppendLine("      <h2>Certifications</h2>");
+        sb.AppendLine($"      <h2>{Escape(DocumentText.Translate("Certifications"))}</h2>");
         foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
         {
             sb.AppendLine("      <div class=\"entry\">");
@@ -247,7 +248,7 @@ public class HtmlExporter : IExporter
     private static void AppendProjects(StringBuilder sb, Resume resume)
     {
         sb.AppendLine("    <section class=\"projects\">");
-        sb.AppendLine("      <h2>Projects</h2>");
+        sb.AppendLine($"      <h2>{Escape(DocumentText.Translate("Projects"))}</h2>");
         foreach (var proj in resume.Projects.OrderBy(p => p.Order))
         {
             sb.AppendLine("      <div class=\"entry\">");
@@ -321,7 +322,7 @@ public class HtmlExporter : IExporter
         if (!start.HasValue)
             return string.Empty;
 
-        var endStr = isOngoing ? "Present" : ResumeDateFormat.MonthYear(end);
+        var endStr = isOngoing ? DocumentText.Translate("Present") : ResumeDateFormat.MonthYear(end);
         return $"{ResumeDateFormat.MonthYear(start)} - {endStr}";
     }
 
@@ -377,8 +378,8 @@ public class HtmlExporter : IExporter
         var headingColor = SafeColor(settings.HeadingColor);
         var fontFamily = SafeFontFamily(settings.FontFamily);
         var headingFontFamily = SafeFontFamily(settings.HeadingFontFamily);
-        var lineHeight = settings.LineSpacing.ToString(ResumeDateFormat.Culture);
-        var sectionSpacing = settings.SectionSpacing.ToString(ResumeDateFormat.Culture);
+        var lineHeight = settings.LineSpacing.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var sectionSpacing = settings.SectionSpacing.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         return $@"
     :root {{
@@ -512,6 +513,7 @@ public class HtmlExporter : IExporter
       font-size: 0.9em;
       font-style: italic;
     }}
+    @page {{ size: {(settings.PaperSize == PaperSize.Letter ? "Letter" : "A4")}; }}
     @media print {{
       body {{ background: white; }}
       .resume {{ box-shadow: none; margin: 0; max-width: none; }}

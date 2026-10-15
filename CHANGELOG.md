@@ -21,12 +21,22 @@ section matching the tag and fails the build if there isn't one.
 
 ### Added
 
+- A bundled synthetic example and persistent import review beside the populated editor, plus bounded local Word (.docx) import with original body text retained for review.
+- Export readiness with rendered page count, contact/date/small-text checks and extracted PDF text.
+- Resume search with base/variant grouping, application search and active/archive/due filters, editable dates and contacts, CSV export and all-day follow-up calendar export.
+- Linked letters and immutable generated PDFs captured when an application is sent, with actions to save the original captured PDFs later.
+- Letter template, sender, source, target-role and posting controls, with explicit and undoable source replacement.
+- A4/US Letter paper and English/Albanian generated document headings and dates, isolated per export.
+- Local support diagnostics containing software details and fixed error codes only, plus a usability-session kit and distribution-link audit.
+- Headless layout, theme and Escape/focus tests; native unsigned installer packaging is now rehearsed in CI.
+
 - Complete workspace backup and restore through the JSON backup/import flow. Restore validates the archive, keeps a safety database copy and pauses sync.
 - Persistent non-secret preferences for models, sync and the last open resume. API keys remain session-only.
 - A separate app workflow test suite, contributor instructions, and privacy-conscious issue forms.
 
 ### Updated
 
+- QuestPDF 2026.7.2 fixes concurrent Windows x64 exports corrupting embedded text mappings. A parallel export regression verifies extractable content.
 - The app, tests and build workflows use .NET 10. Self-contained builds pin runtime 10.0.13, and SQLite persistence uses EF Core 10.0.13.
 
 ### Other fixes since 1.2.3

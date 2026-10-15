@@ -6,8 +6,8 @@ using ResumeBuilder.Core.Models;
 namespace ResumeBuilder.Templates.Templates;
 
 /// <summary>
-/// The European CV convention: a narrow left column naming the section ("Work experience",
-/// "Education and training") against the content on the right, a photo in the header, and languages
+/// The European CV convention: a narrow left column naming the section (DocumentText.Translate("Work experience"),
+/// DocumentText.Translate("Education and training")) against the content on the right, a photo in the header, and languages
 /// presented as a proficiency table rather than as bars. Every entry repeats its own label, which is
 /// what makes a Europass scannable when it runs long.
 /// </summary>
@@ -54,12 +54,12 @@ public class EuropassTemplate : BaseTemplate
                         break;
 
                     case SectionType.Summary:
-                        column.Item().Element(c => ComposeLabelledSection(c, "Personal statement", col =>
+                        column.Item().Element(c => ComposeLabelledSection(c, DocumentText.Translate("Personal statement"), col =>
                             col.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing)));
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeLabelledSection(c, "Work experience", col =>
+                        column.Item().Element(c => ComposeLabelledSection(c, DocumentText.Translate("Work experience"), col =>
                         {
                             col.Spacing(10);
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -68,7 +68,7 @@ public class EuropassTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeLabelledSection(c, "Education and training", col =>
+                        column.Item().Element(c => ComposeLabelledSection(c, DocumentText.Translate("Education and training"), col =>
                         {
                             col.Spacing(8);
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -77,17 +77,17 @@ public class EuropassTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeLabelledSection(c, "Skills and competences", col =>
+                        column.Item().Element(c => ComposeLabelledSection(c, DocumentText.Translate("Skills and competences"), col =>
                             ComposeSkills(col, resume.Skills)));
                         break;
 
                     case SectionType.Languages:
-                        column.Item().Element(c => ComposeLabelledSection(c, "Language skills", col =>
+                        column.Item().Element(c => ComposeLabelledSection(c, DocumentText.Translate("Language skills"), col =>
                             col.Item().Element(e => ComposeLanguageTable(e, resume.Languages))));
                         break;
 
                     case SectionType.Certifications:
-                        column.Item().Element(c => ComposeLabelledSection(c, "Certificates", col =>
+                        column.Item().Element(c => ComposeLabelledSection(c, DocumentText.Translate("Certificates"), col =>
                         {
                             foreach (var cert in resume.Certifications.OrderBy(c2 => c2.Order))
                             {
@@ -105,7 +105,7 @@ public class EuropassTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeLabelledSection(c, "Projects", col =>
+                        column.Item().Element(c => ComposeLabelledSection(c, DocumentText.Translate("Projects"), col =>
                         {
                             col.Spacing(8);
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
@@ -277,9 +277,9 @@ public class EuropassTemplate : BaseTemplate
                 columns.RelativeColumn(3);
             });
 
-            table.Cell().Background(accent).Padding(4).Text("Language")
+            table.Cell().Background(accent).Padding(4).Text(DocumentText.Translate("Language"))
                 .FontSize(headerFont).Bold().FontColor(Colors.White);
-            table.Cell().Background(accent).Padding(4).Text("Proficiency")
+            table.Cell().Background(accent).Padding(4).Text(DocumentText.Translate("Proficiency"))
                 .FontSize(headerFont).Bold().FontColor(Colors.White);
 
             foreach (var language in languages.OrderBy(l => l.Order))

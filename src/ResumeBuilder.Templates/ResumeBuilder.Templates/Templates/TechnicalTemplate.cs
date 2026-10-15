@@ -106,7 +106,7 @@ public class TechnicalTemplate : BaseTemplate
     {
         container.Column(col =>
         {
-            col.Item().Text("// CONTACT").FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
+            col.Item().Text("// " + DocumentText.Translate("CONTACT")).FontSize(9 * FontSizeScale).Bold().FontColor(ParseColor(AccentColor));
             col.Item().Height(6);
 
             if (!string.IsNullOrWhiteSpace(info.Email))
@@ -173,7 +173,7 @@ public class TechnicalTemplate : BaseTemplate
                 case SectionType.Summary:
                     main.Item().Column(col =>
                     {
-                        col.Item().Element(c => ComposeSectionTitle(c, "About"));
+                        col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("About")));
                         col.Item().Height(4);
                         col.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
                     });
@@ -183,7 +183,7 @@ public class TechnicalTemplate : BaseTemplate
                     main.Item().Column(col =>
                     {
                         col.Spacing(12);
-                        col.Item().Element(c => ComposeSectionTitle(c, "Experience"));
+                        col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("Experience")));
 
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                         {
@@ -196,7 +196,7 @@ public class TechnicalTemplate : BaseTemplate
                     main.Item().Column(col =>
                     {
                         col.Spacing(10);
-                        col.Item().Element(c => ComposeSectionTitle(c, "Projects"));
+                        col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("Projects")));
 
                         foreach (var proj in resume.Projects.OrderBy(p => p.Order))
                         {
@@ -209,7 +209,7 @@ public class TechnicalTemplate : BaseTemplate
                     main.Item().Column(col =>
                     {
                         col.Spacing(8);
-                        col.Item().Element(c => ComposeSectionTitle(c, "Education"));
+                        col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("Education")));
 
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                         {

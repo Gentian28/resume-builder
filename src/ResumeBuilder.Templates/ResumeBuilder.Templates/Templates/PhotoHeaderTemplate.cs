@@ -30,7 +30,7 @@ public class PhotoHeaderTemplate : BaseTemplate
 
     protected override void ConfigurePage(PageDescriptor page)
     {
-        page.Size(PageSizes.A4);
+        page.Size((Settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
         page.Margin(0); // The header band is full-bleed; the body supplies its own padding.
         page.DefaultTextStyle(x => x
             .FontSize(10 * FontSizeScale)
@@ -140,12 +140,12 @@ public class PhotoHeaderTemplate : BaseTemplate
                     break;
 
                 case SectionType.Summary:
-                    body.Item().Element(c => ComposeSection(c, "About", col =>
+                    body.Item().Element(c => ComposeSection(c, DocumentText.Translate("About"), col =>
                         col.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing)));
                     break;
 
                 case SectionType.Experience:
-                    body.Item().Element(c => ComposeSection(c, "Experience", col =>
+                    body.Item().Element(c => ComposeSection(c, DocumentText.Translate("Experience"), col =>
                     {
                         col.Spacing(10);
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -154,7 +154,7 @@ public class PhotoHeaderTemplate : BaseTemplate
                     break;
 
                 case SectionType.Education:
-                    body.Item().Element(c => ComposeSection(c, "Education", col =>
+                    body.Item().Element(c => ComposeSection(c, DocumentText.Translate("Education"), col =>
                     {
                         col.Spacing(8);
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -163,17 +163,17 @@ public class PhotoHeaderTemplate : BaseTemplate
                     break;
 
                 case SectionType.Skills:
-                    body.Item().Element(c => ComposeSection(c, "Skills", col => ComposeSkills(col, resume.Skills)));
+                    body.Item().Element(c => ComposeSection(c, DocumentText.Translate("Skills"), col => ComposeSkills(col, resume.Skills)));
                     break;
 
                 case SectionType.Languages:
-                    body.Item().Element(c => ComposeSection(c, "Languages", col =>
+                    body.Item().Element(c => ComposeSection(c, DocumentText.Translate("Languages"), col =>
                         col.Item().Text(string.Join("   •   ", resume.Languages.OrderBy(l => l.Order).Select(l => FormatLanguage(l))))
                             .FontSize(9 * FontSizeScale)));
                     break;
 
                 case SectionType.Certifications:
-                    body.Item().Element(c => ComposeSection(c, "Certifications", col =>
+                    body.Item().Element(c => ComposeSection(c, DocumentText.Translate("Certifications"), col =>
                     {
                         foreach (var cert in resume.Certifications.OrderBy(c2 => c2.Order))
                         {
@@ -198,7 +198,7 @@ public class PhotoHeaderTemplate : BaseTemplate
                     break;
 
                 case SectionType.Projects:
-                    body.Item().Element(c => ComposeSection(c, "Projects", col =>
+                    body.Item().Element(c => ComposeSection(c, DocumentText.Translate("Projects"), col =>
                     {
                         col.Spacing(8);
                         foreach (var project in resume.Projects.OrderBy(p => p.Order))

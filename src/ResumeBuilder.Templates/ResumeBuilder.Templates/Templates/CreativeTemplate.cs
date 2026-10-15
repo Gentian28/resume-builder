@@ -64,7 +64,7 @@ public class CreativeTemplate : BaseTemplate
                     sidebar.Item().Column(col =>
                     {
                         col.Spacing(6);
-                        col.Item().Text("CONTACT").FontSize(10 * FontSizeScale).Bold().FontColor(Colors.White).LetterSpacing(0.1f);
+                        col.Item().Text(DocumentText.Translate("CONTACT")).FontSize(10 * FontSizeScale).Bold().FontColor(Colors.White).LetterSpacing(0.1f);
                         col.Item().Height(5);
 
                         var info = resume.PersonalInfo;
@@ -87,7 +87,7 @@ public class CreativeTemplate : BaseTemplate
                     sidebar.Item().Column(col =>
                     {
                         col.Spacing(4);
-                        col.Item().Text("SKILLS").FontSize(10 * FontSizeScale).Bold().FontColor(Colors.White).LetterSpacing(0.1f);
+                        col.Item().Text(DocumentText.Translate("SKILLS")).FontSize(10 * FontSizeScale).Bold().FontColor(Colors.White).LetterSpacing(0.1f);
                         col.Item().Height(5);
 
                         foreach (var skill in resume.Skills.OrderBy(s => s.Order))
@@ -106,7 +106,7 @@ public class CreativeTemplate : BaseTemplate
                     sidebar.Item().Column(col =>
                     {
                         col.Spacing(4);
-                        col.Item().Text("LANGUAGES").FontSize(10 * FontSizeScale).Bold().FontColor(Colors.White).LetterSpacing(0.1f);
+                        col.Item().Text(DocumentText.Translate("LANGUAGES")).FontSize(10 * FontSizeScale).Bold().FontColor(Colors.White).LetterSpacing(0.1f);
                         col.Item().Height(5);
 
                         foreach (var lang in resume.Languages.OrderBy(l => l.Order))
@@ -149,14 +149,14 @@ public class CreativeTemplate : BaseTemplate
                     break;
 
                 case SectionType.Summary:
-                    main.Item().Element(c => ComposeSection(c, "ABOUT ME", col =>
+                    main.Item().Element(c => ComposeSection(c, DocumentText.Translate("ABOUT ME"), col =>
                     {
                         col.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
                     }));
                     break;
 
                 case SectionType.Experience:
-                    main.Item().Element(c => ComposeSection(c, "EXPERIENCE", col =>
+                    main.Item().Element(c => ComposeSection(c, DocumentText.Translate("EXPERIENCE"), col =>
                     {
                         col.Spacing(10);
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -187,7 +187,7 @@ public class CreativeTemplate : BaseTemplate
                     break;
 
                 case SectionType.Education:
-                    main.Item().Element(c => ComposeSection(c, "EDUCATION", col =>
+                    main.Item().Element(c => ComposeSection(c, DocumentText.Translate("EDUCATION"), col =>
                     {
                         col.Spacing(8);
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -209,7 +209,7 @@ public class CreativeTemplate : BaseTemplate
                     break;
 
                 case SectionType.Projects:
-                    main.Item().Element(c => ComposeSection(c, "PROJECTS", col =>
+                    main.Item().Element(c => ComposeSection(c, DocumentText.Translate("PROJECTS"), col =>
                     {
                         col.Spacing(8);
                         foreach (var proj in resume.Projects.OrderBy(p => p.Order))
@@ -237,7 +237,7 @@ public class CreativeTemplate : BaseTemplate
                     break;
 
                 case SectionType.Certifications:
-                    main.Item().Element(c => ComposeSection(c, "CERTIFICATIONS", col =>
+                    main.Item().Element(c => ComposeSection(c, DocumentText.Translate("CERTIFICATIONS"), col =>
                     {
                         col.Spacing(8);
                         foreach (var cert in resume.Certifications.OrderBy(c => c.Order))

@@ -8,12 +8,14 @@
 
         <Border Background="#80000000">
             <Border Background="{DynamicResource RbSurface1}"
-                    CornerRadius="12" Margin="100" Padding="20" MaxWidth="600">
-                <Grid RowDefinitions="Auto,*,Auto">
+                    CornerRadius="12" Margin="20" Padding="20" MaxWidth="840">
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
                     <TextBlock Grid.Row="0" Text="Your Resumes" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
 
-                    <ScrollViewer Grid.Row="1">
-                        <ItemsControl ItemsSource="{Binding SavedResumes}">
+                    <TextBox Grid.Row="1" Text="{Binding ResumeSearch}" Watermark="Search name, person or role" Margin="0,0,0,12" AutomationProperties.Name="Search resumes"/>
+                    <TextBlock Grid.Row="2" Text="No matching resumes" IsVisible="{Binding !HasResumeMatches}"/>
+                    <ScrollViewer Grid.Row="2">
+                        <ItemsControl ItemsSource="{Binding FilteredResumes}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="models:Resume">
                                     <Border Background="{DynamicResource RbSurface2}"
@@ -57,7 +59,7 @@
                         </ItemsControl>
                     </ScrollViewer>
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" Spacing="10">
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" Spacing="10">
                         <Button Content="New Resume" Command="{Binding CreateNewResumeCommand}"/>
                         <Button Content="Cancel" Command="{Binding CloseResumeListCommand}"/>
                     </StackPanel>

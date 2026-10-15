@@ -53,13 +53,13 @@ public class ChronologyTemplate : BaseTemplate
                         break;
 
                     case SectionType.Summary:
-                        column.Item().Element(c => ComposeSection(c, "Summary", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Summary"), col =>
                             col.Item().Element(e => ComposeRow(e, string.Empty, body =>
                                 body.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing)))));
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSection(c, "Experience", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Experience"), col =>
                         {
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
@@ -88,7 +88,7 @@ public class ChronologyTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSection(c, "Education", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Education"), col =>
                         {
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
@@ -118,19 +118,19 @@ public class ChronologyTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeSection(c, "Skills", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Skills"), col =>
                             col.Item().Element(e => ComposeRow(e, string.Empty, body => ComposeSkills(body, resume.Skills)))));
                         break;
 
                     case SectionType.Languages:
-                        column.Item().Element(c => ComposeSection(c, "Languages", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Languages"), col =>
                             col.Item().Element(e => ComposeRow(e, string.Empty, body =>
                                 body.Item().Text(string.Join(ContactSeparator, resume.Languages.OrderBy(l => l.Order).Select(l => FormatLanguage(l))))
                                     .FontSize(9 * FontSizeScale)))));
                         break;
 
                     case SectionType.Certifications:
-                        column.Item().Element(c => ComposeSection(c, "Certifications", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Certifications"), col =>
                         {
                             foreach (var cert in resume.Certifications.OrderBy(c2 => c2.Order))
                             {
@@ -153,7 +153,7 @@ public class ChronologyTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSection(c, "Projects", col =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Projects"), col =>
                         {
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
                             {

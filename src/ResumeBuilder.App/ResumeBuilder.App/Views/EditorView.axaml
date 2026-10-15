@@ -12,6 +12,10 @@
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="15" Spacing="15">
 
+                        <Border IsVisible="{Binding HasImportReview}" Background="{DynamicResource RbSurface1}" Padding="12" CornerRadius="8">
+                            <StackPanel Spacing="8"><TextBlock Text="{Binding ImportReviewText}" TextWrapping="Wrap"/>
+                            <Button Content="Dismiss import review" Command="{Binding DismissImportReviewCommand}"/></StackPanel>
+                        </Border>
                         <sections:AiPanelView IsVisible="{Binding ShowAiPanel}"/>
                         <sections:TailorPanelView IsVisible="{Binding ShowTailorPanel}"/>
                         <sections:SyncPanelView IsVisible="{Binding ShowSyncPanel}"/>

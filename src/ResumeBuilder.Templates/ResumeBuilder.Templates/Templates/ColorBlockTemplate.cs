@@ -39,7 +39,7 @@ public class ColorBlockTemplate : BaseTemplate
 
     protected override void ConfigurePage(PageDescriptor page)
     {
-        page.Size(PageSizes.A4);
+        page.Size((Settings.PaperSize == PaperSize.Letter ? QuestPDF.Helpers.PageSizes.Letter : QuestPDF.Helpers.PageSizes.A4));
         page.Margin(0); // Full-bleed sidebar; each column supplies its own padding.
         page.DefaultTextStyle(x => x
             .FontSize(10 * FontSizeScale)
@@ -104,7 +104,7 @@ public class ColorBlockTemplate : BaseTemplate
             switch (sectionType)
             {
                 case SectionType.PersonalInfo:
-                    sidebar.Item().Element(c => ComposeSidebarSection(c, "Contact", col =>
+                    sidebar.Item().Element(c => ComposeSidebarSection(c, DocumentText.Translate("Contact"), col =>
                     {
                         foreach (var contact in ContactLines(resume.PersonalInfo))
                         {
@@ -117,7 +117,7 @@ public class ColorBlockTemplate : BaseTemplate
                     break;
 
                 case SectionType.Skills:
-                    sidebar.Item().Element(c => ComposeSidebarSection(c, "Skills", col =>
+                    sidebar.Item().Element(c => ComposeSidebarSection(c, DocumentText.Translate("Skills"), col =>
                     {
                         foreach (var group in resume.Skills
                                      .GroupBy(s => string.IsNullOrWhiteSpace(s.Category) ? string.Empty : s.Category)
@@ -151,7 +151,7 @@ public class ColorBlockTemplate : BaseTemplate
                     break;
 
                 case SectionType.Languages:
-                    sidebar.Item().Element(c => ComposeSidebarSection(c, "Languages", col =>
+                    sidebar.Item().Element(c => ComposeSidebarSection(c, DocumentText.Translate("Languages"), col =>
                     {
                         foreach (var lang in resume.Languages.OrderBy(l => l.Order))
                         {
@@ -218,12 +218,12 @@ public class ColorBlockTemplate : BaseTemplate
             switch (sectionType)
             {
                 case SectionType.Summary:
-                    main.Item().Element(c => ComposeMainSection(c, "Profile", accent, col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("Profile"), accent, col =>
                         col.Item().Text(resume.Summary).FontSize(9.5f * FontSizeScale).LineHeight(LineSpacing)));
                     break;
 
                 case SectionType.Experience:
-                    main.Item().Element(c => ComposeMainSection(c, "Experience", accent, col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("Experience"), accent, col =>
                     {
                         col.Spacing(11);
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -232,7 +232,7 @@ public class ColorBlockTemplate : BaseTemplate
                     break;
 
                 case SectionType.Education:
-                    main.Item().Element(c => ComposeMainSection(c, "Education", accent, col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("Education"), accent, col =>
                     {
                         col.Spacing(8);
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -241,7 +241,7 @@ public class ColorBlockTemplate : BaseTemplate
                     break;
 
                 case SectionType.Certifications:
-                    main.Item().Element(c => ComposeMainSection(c, "Certifications", accent, col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("Certifications"), accent, col =>
                     {
                         foreach (var cert in resume.Certifications.OrderBy(c2 => c2.Order))
                         {
@@ -265,7 +265,7 @@ public class ColorBlockTemplate : BaseTemplate
                     break;
 
                 case SectionType.Projects:
-                    main.Item().Element(c => ComposeMainSection(c, "Projects", accent, col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("Projects"), accent, col =>
                     {
                         col.Spacing(9);
                         foreach (var project in resume.Projects.OrderBy(p => p.Order))

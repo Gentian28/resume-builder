@@ -81,7 +81,7 @@ public class TwoColumnTemplate : BaseTemplate
             switch (sectionType)
             {
                 case SectionType.PersonalInfo:
-                    sidebar.Item().Element(c => ComposeSidebarSection(c, "CONTACT", col =>
+                    sidebar.Item().Element(c => ComposeSidebarSection(c, DocumentText.Translate("CONTACT"), col =>
                     {
                         var info = resume.PersonalInfo;
                         if (!string.IsNullOrWhiteSpace(info.Email))
@@ -100,7 +100,7 @@ public class TwoColumnTemplate : BaseTemplate
                     break;
 
                 case SectionType.Skills:
-                    sidebar.Item().Element(c => ComposeSidebarSection(c, "SKILLS", col =>
+                    sidebar.Item().Element(c => ComposeSidebarSection(c, DocumentText.Translate("SKILLS"), col =>
                     {
                         foreach (var group in resume.Skills.GroupBy(s => s.Category))
                         {
@@ -124,7 +124,7 @@ public class TwoColumnTemplate : BaseTemplate
                     break;
 
                 case SectionType.Languages:
-                    sidebar.Item().Element(c => ComposeSidebarSection(c, "LANGUAGES", col =>
+                    sidebar.Item().Element(c => ComposeSidebarSection(c, DocumentText.Translate("LANGUAGES"), col =>
                     {
                         foreach (var lang in resume.Languages.OrderBy(l => l.Order))
                         {
@@ -138,7 +138,7 @@ public class TwoColumnTemplate : BaseTemplate
                     break;
 
                 case SectionType.Certifications:
-                    sidebar.Item().Element(c => ComposeSidebarSection(c, "CERTIFICATIONS", col =>
+                    sidebar.Item().Element(c => ComposeSidebarSection(c, DocumentText.Translate("CERTIFICATIONS"), col =>
                     {
                         foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
                         {
@@ -178,14 +178,14 @@ public class TwoColumnTemplate : BaseTemplate
             switch (sectionType)
             {
                 case SectionType.Summary:
-                    main.Item().Element(c => ComposeMainSection(c, "PROFILE", col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("PROFILE"), col =>
                     {
                         col.Item().Text(resume.Summary).FontSize(9 * FontSizeScale).LineHeight(LineSpacing);
                     }));
                     break;
 
                 case SectionType.Experience:
-                    main.Item().Element(c => ComposeMainSection(c, "EXPERIENCE", col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("EXPERIENCE"), col =>
                     {
                         col.Spacing(10);
                         foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
@@ -194,7 +194,7 @@ public class TwoColumnTemplate : BaseTemplate
                     break;
 
                 case SectionType.Education:
-                    main.Item().Element(c => ComposeMainSection(c, "EDUCATION", col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("EDUCATION"), col =>
                     {
                         col.Spacing(8);
                         foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -203,7 +203,7 @@ public class TwoColumnTemplate : BaseTemplate
                     break;
 
                 case SectionType.Projects:
-                    main.Item().Element(c => ComposeMainSection(c, "PROJECTS", col =>
+                    main.Item().Element(c => ComposeMainSection(c, DocumentText.Translate("PROJECTS"), col =>
                     {
                         col.Spacing(8);
                         foreach (var proj in resume.Projects.OrderBy(p => p.Order))

@@ -17,10 +17,12 @@ public interface IJobApplicationRepository
 public class JobApplicationRepository : IJobApplicationRepository
 {
     private readonly IResumeDbContextFactory _factory;
+    private readonly ISentDocumentRenderer? _renderer;
 
-    public JobApplicationRepository(IResumeDbContextFactory factory)
+    public JobApplicationRepository(IResumeDbContextFactory factory, ISentDocumentRenderer? renderer = null)
     {
         _factory = factory;
+        _renderer = renderer;
     }
 
     /// <summary>
@@ -63,6 +65,9 @@ public class JobApplicationRepository : IJobApplicationRepository
         application.UpdatedAt = application.CreatedAt;
         application.RowVersion = Guid.NewGuid();
         application.SentResumeJson = null;
+        application.SentCoverLetterJson = null;
+        application.SentResumePdf = null;
+        application.SentCoverLetterPdf = null;
         application.ResumeCapturedAt = null;
 
         // An application that is already sent needs a date, or "how long have they had this?"
@@ -94,6 +99,9 @@ public class JobApplicationRepository : IJobApplicationRepository
         stored.Status = application.Status;
         stored.Link = application.Link;
         stored.Notes = application.Notes;
+        stored.Contact = application.Contact;
+        stored.NextActionOn = application.NextActionOn;
+        if (stored.SentCoverLetterJson is null) stored.CoverLetterId = application.CoverLetterId;
         stored.AppliedOn = application.AppliedOn ?? stored.AppliedOn;
         stored.UpdatedAt = DateTime.UtcNow;
         stored.RowVersion = Guid.NewGuid();
@@ -101,7 +109,7 @@ public class JobApplicationRepository : IJobApplicationRepository
         if (stored.Status != ApplicationStatus.Saved && stored.AppliedOn is null)
             stored.AppliedOn = DateTime.UtcNow;
 
-        if (wasDraft && stored.Status != ApplicationStatus.Saved && stored.SentResumeJson is null)
+        if (wasDraft && stored.Status != ApplicationStatus.Saved && stored.SentResumeJson is null && stored.SentCoverLetterJson is null && stored.SentResumePdf is null && stored.SentCoverLetterPdf is null)
             await CaptureSentResumeAsync(context, stored);
 
         try
@@ -115,15 +123,26 @@ public class JobApplicationRepository : IJobApplicationRepository
         return stored;
     }
 
-    private static async Task CaptureSentResumeAsync(ResumeDbContext context, JobApplication application)
+    private async Task CaptureSentResumeAsync(ResumeDbContext context, JobApplication application)
     {
-        if (application.ResumeId is not { } resumeId)
-            return;
-        var resume = await context.Resumes.AsNoTracking().FirstOrDefaultAsync(r => r.Id == resumeId);
+        CoverLetter? letter = null;
+        if (application.CoverLetterId is { } letterId)
+        {
+            letter = await context.CoverLetters.AsNoTracking().FirstOrDefaultAsync(l => l.Id == letterId);
+            if (letter != null) application.SentCoverLetterJson = JsonSerializer.Serialize(letter);
+        }
+        var resume = application.ResumeId is { } resumeId
+            ? await context.Resumes.AsNoTracking().FirstOrDefaultAsync(r => r.Id == resumeId) : null;
         if (resume != null)
         {
             application.SentResumeJson = JsonSerializer.Serialize(resume);
             application.ResumeCapturedAt = DateTime.UtcNow;
+        }
+        if (_renderer != null)
+        {
+            var artifacts = await _renderer.CaptureAsync(resume, letter);
+            application.SentResumePdf = artifacts.ResumePdf;
+            application.SentCoverLetterPdf = artifacts.CoverLetterPdf;
         }
     }
 

@@ -90,12 +90,12 @@ public class CompactTemplate : BaseTemplate
         switch (sectionType)
         {
             case SectionType.Summary:
-                ComposeSection(container, "SUMMARY", ct =>
+                ComposeSection(container, DocumentText.Translate("SUMMARY"), ct =>
                     ct.Item().Text(resume.Summary).FontSize(8 * FontSizeScale).LineHeight(LineSpacing));
                 break;
 
             case SectionType.Experience:
-                ComposeSection(container, "EXPERIENCE", ct =>
+                ComposeSection(container, DocumentText.Translate("EXPERIENCE"), ct =>
                 {
                     foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                     {
@@ -106,7 +106,7 @@ public class CompactTemplate : BaseTemplate
                 break;
 
             case SectionType.Education:
-                ComposeSection(container, "EDUCATION", ct =>
+                ComposeSection(container, DocumentText.Translate("EDUCATION"), ct =>
                 {
                     foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                     {
@@ -120,7 +120,7 @@ public class CompactTemplate : BaseTemplate
                 break;
 
             case SectionType.Skills:
-                ComposeSection(container, "SKILLS", ct =>
+                ComposeSection(container, DocumentText.Translate("SKILLS"), ct =>
                 {
                     foreach (var group in resume.Skills.GroupBy(s => s.Category))
                     {
@@ -135,7 +135,7 @@ public class CompactTemplate : BaseTemplate
                 break;
 
             case SectionType.Projects:
-                ComposeSection(container, "PROJECTS", ct =>
+                ComposeSection(container, DocumentText.Translate("PROJECTS"), ct =>
                 {
                     foreach (var proj in resume.Projects.OrderBy(p => p.Order))
                     {
@@ -155,7 +155,7 @@ public class CompactTemplate : BaseTemplate
                 break;
 
             case SectionType.Certifications:
-                ComposeSection(container, "CERTIFICATIONS", ct =>
+                ComposeSection(container, DocumentText.Translate("CERTIFICATIONS"), ct =>
                 {
                     foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
                     {
@@ -170,7 +170,7 @@ public class CompactTemplate : BaseTemplate
                 break;
 
             case SectionType.Languages:
-                ComposeSection(container, "LANGUAGES", ct =>
+                ComposeSection(container, DocumentText.Translate("LANGUAGES"), ct =>
                 {
                     ct.Item().Text(string.Join(ContactSeparator, resume.Languages.OrderBy(l => l.Order)
                         .Select(l => $"{l.Name} ({GetLanguageProficiencyText(l.Proficiency)})")))

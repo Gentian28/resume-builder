@@ -7,7 +7,7 @@
              x:DataType="vm:MainWindowViewModel">
 
     <Border Background="{DynamicResource RbBg}">
-        <Grid RowDefinitions="Auto,*,Auto" Margin="26,22"
+        <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="26,22"
               MaxWidth="1040" HorizontalAlignment="Stretch">
 
             <StackPanel Spacing="4">
@@ -23,8 +23,16 @@
                            IsVisible="{Binding HasApplications}"/>
             </StackPanel>
 
+            <WrapPanel Grid.Row="1" Margin="0,12,0,0">
+                <TextBox Width="230" Text="{Binding ApplicationSearch}" Watermark="Search company, role or contact" AutomationProperties.Name="Search applications" Margin="0,0,8,8"/>
+                <ComboBox ItemsSource="{Binding ApplicationFilters}" SelectedItem="{Binding ApplicationFilter}" Width="150" AutomationProperties.Name="Filter applications" Margin="0,0,8,8"/>
+                <Button Content="Export CSV" Command="{Binding ExportApplicationsCommand}" CommandParameter="csv" Margin="0,0,8,8"/>
+                <Button Content="Export calendar" Command="{Binding ExportApplicationsCommand}" CommandParameter="calendar" Margin="0,0,8,8"/>
+                <Button Content="Add draft" Command="{Binding AddDraftApplicationCommand}" Margin="0,0,8,8"/>
+            </WrapPanel>
+            <TextBlock Grid.Row="2" Text="No applications match this search or filter." IsVisible="{Binding !HasApplicationMatches}" VerticalAlignment="Top" Margin="0,12"/>
             <!-- Empty state explains what the thing is for, rather than saying "no items". -->
-            <StackPanel Grid.Row="1" Spacing="9" VerticalAlignment="Center" HorizontalAlignment="Center"
+            <StackPanel Grid.Row="2" Spacing="9" VerticalAlignment="Center" HorizontalAlignment="Center"
                         MaxWidth="460" IsVisible="{Binding !HasApplications}">
                 <TextBlock Text="Nothing tracked yet" FontSize="15" FontWeight="SemiBold"
                            HorizontalAlignment="Center"/>
@@ -36,8 +44,8 @@
                         Command="{Binding TrackCurrentResumeCommand}"/>
             </StackPanel>
 
-            <ScrollViewer Grid.Row="1" Margin="0,14,0,0" IsVisible="{Binding HasApplications}">
-                <ItemsControl ItemsSource="{Binding Applications}">
+            <ScrollViewer Grid.Row="2" Margin="0,14,0,0" IsVisible="{Binding HasApplications}">
+                <ItemsControl ItemsSource="{Binding FilteredApplications}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:JobApplicationViewModel">
                             <Border Background="{DynamicResource RbSurface1}" CornerRadius="8"
@@ -65,11 +73,11 @@
                                         <TextBlock Grid.Column="2" Text="Not linked to a résumé"
                                                    FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"
                                                    Foreground="{DynamicResource RbText3}"
-                                                   IsVisible="{Binding ResumeId, Converter={x:Static ObjectConverters.IsNull}}"/>
+                                                   IsVisible="{Binding !HasResume}"/>
 
                                         <Button Grid.Column="2" Content="Open résumé" Margin="6,0,0,0"
                                                 VerticalAlignment="Top"
-                                                IsVisible="{Binding ResumeId, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                IsVisible="{Binding HasResume}"
                                                 Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).OpenApplicationResumeCommand}"
                                                 CommandParameter="{Binding}"/>
 
@@ -97,6 +105,23 @@
                                         </Border>
                                     </Grid>
 
+                                    <WrapPanel>
+                                        <StackPanel Margin="0,0,12,8"><TextBlock Text="Applied date" FontSize="11"/><DatePicker SelectedDate="{Binding AppliedDate}" AutomationProperties.Name="Applied date"/></StackPanel>
+                                        <StackPanel Margin="0,0,12,8"><TextBlock Text="Next action" FontSize="11"/><DatePicker SelectedDate="{Binding NextActionDate}" AutomationProperties.Name="Next action date"/></StackPanel>
+                                        <Button Content="Clear next action" Command="{Binding ClearNextActionCommand}" Margin="0,0,8,8"/>
+                                        <TextBlock Text="Follow-up due" IsVisible="{Binding IsFollowUpDue}" Foreground="{DynamicResource RbWarning}" VerticalAlignment="Center"/>
+                                    </WrapPanel>
+                                    <TextBlock Text="Choose a letter while Saved, then change status to capture what you send." FontSize="11" TextWrapping="Wrap"/>
+                                    <TextBox Text="{Binding Contact}" Watermark="Contact name or details" AutomationProperties.Name="Contact"/>
+                                    <TextBox Text="{Binding Link}" Watermark="Posting URL" AutomationProperties.Name="Posting URL"/>
+                                    <WrapPanel>
+                                        <ComboBox Width="250" IsEnabled="{Binding CanEditLetterLink}" ItemsSource="{Binding LetterChoices}" SelectedItem="{Binding SelectedCoverLetter}" AutomationProperties.Name="Linked cover letter">
+                                            <ComboBox.ItemTemplate><DataTemplate x:DataType="models:CoverLetter"><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <Button Content="Save sent PDF" IsVisible="{Binding HasSentResumePdf}" Margin="8,0" Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).ExportSentResumeCommand}" CommandParameter="{Binding}"/>
+                                        <Button Content="Save sent letter PDF" IsVisible="{Binding HasSentLetterPdf}" Margin="8,0" Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).ExportSentLetterCommand}" CommandParameter="{Binding}"/>
+                                        <Button Content="Open letter" IsVisible="{Binding HasLetter}" Margin="8,0" Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).OpenApplicationLetterCommand}" CommandParameter="{Binding}"/>
+                                    </WrapPanel>
                                     <TextBox Text="{Binding Notes}" Watermark="Notes: who you spoke to, what they asked"
                                              AcceptsReturn="True" TextWrapping="Wrap" MinHeight="42"
                                              FontSize="12" AutomationProperties.Name="Notes"/>
@@ -107,7 +132,7 @@
                 </ItemsControl>
             </ScrollViewer>
 
-            <Button Grid.Row="2" Content="+ Track the résumé I have open" Margin="0,12,0,0"
+            <Button Grid.Row="3" Content="+ Track the résumé I have open" Margin="0,12,0,0"
                     HorizontalAlignment="Left" IsVisible="{Binding HasApplications}"
                     Command="{Binding TrackCurrentResumeCommand}"/>
         </Grid>

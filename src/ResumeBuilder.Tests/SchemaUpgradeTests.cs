@@ -41,6 +41,12 @@ public class SchemaUpgradeTests : IDisposable
                 ALTER TABLE "JobApplications" DROP COLUMN "RowVersion";
                 ALTER TABLE "JobApplications" DROP COLUMN "SentResumeJson";
                 ALTER TABLE "JobApplications" DROP COLUMN "ResumeCapturedAt";
+                ALTER TABLE "JobApplications" DROP COLUMN "Contact";
+                ALTER TABLE "JobApplications" DROP COLUMN "NextActionOn";
+                ALTER TABLE "JobApplications" DROP COLUMN "CoverLetterId";
+                ALTER TABLE "JobApplications" DROP COLUMN "SentCoverLetterJson";
+                ALTER TABLE "JobApplications" DROP COLUMN "SentResumePdf";
+                ALTER TABLE "JobApplications" DROP COLUMN "SentCoverLetterPdf";
                 """);
         }
         using var upgraded = Open();

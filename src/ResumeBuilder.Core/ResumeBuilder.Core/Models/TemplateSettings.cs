@@ -5,6 +5,9 @@ public class TemplateSettings
     public const string DefaultAccentColor = "#2563eb";
     public const string DefaultFontFamily = "Arial";
 
+    public PaperSize PaperSize { get; set; } = PaperSize.A4;
+    public DocumentLanguage DocumentLanguage { get; set; } = DocumentLanguage.English;
+
     public string AccentColor { get; set; } = DefaultAccentColor;
     public string SecondaryColor { get; set; } = "#64748b";
     public string TextColor { get; set; } = "#1f2937";

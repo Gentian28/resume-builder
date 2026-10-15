@@ -62,7 +62,7 @@ public class AppServices
         CoverLetterService = coverLetterService;
         UpdateService = updateService;
         TemplateThumbnailService = templateThumbnailService;
-        Dialogs = dialogs ?? WindowDialogs.Instance;
+        Dialogs = new DiagnosticDialogs(dialogs ?? WindowDialogs.Instance);
         WorkspaceBackups = workspaceBackups;
     }
 }

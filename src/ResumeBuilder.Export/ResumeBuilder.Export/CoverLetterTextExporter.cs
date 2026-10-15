@@ -13,6 +13,7 @@ public class CoverLetterTextExporter : ICoverLetterExporter
 
     public Task<byte[]> ExportAsync(CoverLetter letter, string templateId)
     {
+        using var locale = DocumentText.Use(letter.TemplateSettings.DocumentLanguage);
         var sb = new StringBuilder();
         var info = letter.PersonalInfo;
 

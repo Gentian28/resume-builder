@@ -116,6 +116,27 @@ jobs:
           fi
           echo "app stayed up for the full 20s"
 
+      # Rehearse the same expanded publish and unsigned installer packaging used by releases.
+      # This creates no release, tag, feed publication or installed application.
+      - name: Install pinned packaging CLI
+        run: dotnet tool install -g vpk --version 1.2.0
+
+      - name: Verify installer packaging
+        shell: bash
+        run: |
+          version=$(dotnet msbuild src/ResumeBuilder.App/ResumeBuilder.App -getProperty:Version -nologo)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          dotnet publish src/ResumeBuilder.App/ResumeBuilder.App -c Release -r ${{ matrix.rid }} -p:PublishSingleFile=false -o package-content
+          brand=()
+          case "${{ matrix.rid }}" in
+            win-x64) channel=win; brand=(--icon packaging/icon/icon.ico --splashImage packaging/icon/splash.png --splashProgressColor "#4F46E5") ;;
+            linux-x64) channel=linux ;;
+            osx-arm64) channel=osx; brand=(--icon packaging/icon/icon.icns) ;;
+            osx-x64) channel=osx-x64; brand=(--icon packaging/icon/icon.icns) ;;
+          esac
+          vpk pack --packId ResumeBuilder --packVersion "$version" --packDir package-content --mainExe "${{ matrix.exe }}" --packTitle "Resume Builder" --packAuthors "Gentian Shkembi" "${brand[@]}" --channel "$channel" --outputDir package-check
+          test -n "$(find package-check -name '*-full.nupkg' -print -quit)" || exit 1
+
   vulnerable-packages:
     runs-on: ubuntu-latest
 

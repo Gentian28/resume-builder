@@ -18,7 +18,7 @@ using ResumeBuilder.Templates;
 
 namespace ResumeBuilder.App.Tests;
 
-public class EditorWorkflowTests : IDisposable
+public partial class EditorWorkflowTests : IDisposable
 {
     private readonly string _folder = Path.Combine(Path.GetTempPath(), "EditorTests_" + Guid.NewGuid().ToString("N"));
     private readonly ResumeDbContextFactory _factory;

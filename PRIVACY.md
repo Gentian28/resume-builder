@@ -64,3 +64,7 @@ be exported to PDF, DOCX, HTML, PNG, plain text or JSON at any time.
 ## Questions
 
 Open an issue at <https://github.com/Gentian28/resume-builder/issues>.
+
+Application records can store contacts, next-action dates, linked letters and immutable generated resume/letter PDFs captured when marked sent. These stay in the local workspace and its backups. CSV and calendar files contain the selected application details and are created only on request.
+
+Support diagnostics are previewed before an explicit Copy action. They contain app/OS/runtime versions and fixed error codes only. They exclude document content, personal fields, paths, endpoints, API keys and raw exception messages. No report is sent automatically. Export readiness displays your generated PDF text locally; copying that text is a separate explicit action.

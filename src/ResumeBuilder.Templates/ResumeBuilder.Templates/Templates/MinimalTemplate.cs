@@ -47,7 +47,7 @@ public class MinimalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSection(c, "Experience", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Experience"), ct =>
                         {
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
@@ -58,7 +58,7 @@ public class MinimalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSection(c, "Education", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Education"), ct =>
                         {
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
@@ -69,7 +69,7 @@ public class MinimalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeSection(c, "Skills", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Skills"), ct =>
                         {
                             ct.Item().Text(string.Join("   /   ", resume.Skills.OrderBy(s => s.Order).Select(s => s.Name)))
                                 .FontSize(10 * FontSizeScale);
@@ -77,7 +77,7 @@ public class MinimalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Languages:
-                        column.Item().Element(c => ComposeSection(c, "Languages", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Languages"), ct =>
                         {
                             foreach (var lang in resume.Languages.OrderBy(l => l.Order))
                             {
@@ -88,7 +88,7 @@ public class MinimalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Certifications:
-                        column.Item().Element(c => ComposeSection(c, "Certifications", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Certifications"), ct =>
                         {
                             foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
                             {
@@ -106,7 +106,7 @@ public class MinimalTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSection(c, "Projects", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Projects"), ct =>
                         {
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
                             {

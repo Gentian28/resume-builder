@@ -116,6 +116,7 @@ public partial class MainWindowViewModel
         try
         {
             CurrentLetter = letter;
+            LoadLetterControls();
 
             LetterName = letter.Name;
             LetterRecipientName = letter.RecipientName;
@@ -144,6 +145,7 @@ public partial class MainWindowViewModel
     {
         if (_isLoadingLetter) return;
 
+        SyncLetterControls();
         CurrentLetter.Name = string.IsNullOrWhiteSpace(LetterName) ? DefaultLetterName : LetterName.Trim();
         CurrentLetter.RecipientName = LetterRecipientName;
         CurrentLetter.RecipientTitle = LetterRecipientTitle;
@@ -597,13 +599,19 @@ public partial class MainWindowViewModel
 
             var pages = await Task.Run(() =>
             {
-                var template = registry.GetCoverLetterTemplateOrDefault(templateId);
-                var document = template.CreateDocument(snapshot);
-                return document.GenerateImages(new ImageGenerationSettings
+                PreviewRenderGate.Wait(cts.Token);
+                try
                 {
-                    ImageFormat = ImageFormat.Png,
-                    RasterDpi = 100
-                }).ToList();
+                    cts.Token.ThrowIfCancellationRequested();
+                    var template = registry.GetCoverLetterTemplateOrDefault(templateId);
+                    var document = template.CreateDocument(snapshot);
+                    return document.GenerateImages(new ImageGenerationSettings
+                    {
+                        ImageFormat = ImageFormat.Png,
+                        RasterDpi = 100
+                    }).ToList();
+                }
+                finally { PreviewRenderGate.Release(); }
             }, cts.Token);
 
             if (cts.IsCancellationRequested)

@@ -30,6 +30,7 @@ public class PdfImporter : IImporter
             memoryStream.Position = 0;
 
             using var document = PdfDocument.Open(memoryStream);
+            if (document.NumberOfPages > 100) return ImportResult<Resume>.Failed("PDF import supports at most 100 pages.");
             var warnings = new List<string>();
             var resume = new Resume();
 
@@ -50,62 +51,7 @@ public class PdfImporter : IImporter
 
             var fullText = allText.ToString();
 
-            // Try to extract contact information from the first section
-            ExtractContactInfo(textBlocks.Take(20).ToList(), resume, warnings);
-
-            // Parse sections
-            var sections = DetectSections(textBlocks);
-
-            // Process each section
-            foreach (var section in sections)
-            {
-                var sectionText = string.Join("\n", section.Lines.Select(l => l.Text));
-
-                if (MatchesHeader(section.Header, SummaryHeaders))
-                {
-                    resume.Summary = CleanText(sectionText);
-                }
-                else if (MatchesHeader(section.Header, ExperienceHeaders))
-                {
-                    resume.Experiences = ParseExperiences(section.Lines);
-                }
-                else if (MatchesHeader(section.Header, EducationHeaders))
-                {
-                    resume.EducationList = ParseEducation(section.Lines);
-                }
-                else if (MatchesHeader(section.Header, SkillsHeaders))
-                {
-                    resume.Skills = ParseSkills(sectionText);
-                }
-                else if (MatchesHeader(section.Header, CertificationHeaders))
-                {
-                    resume.Certifications = ParseCertifications(section.Lines);
-                }
-                else if (MatchesHeader(section.Header, ProjectHeaders))
-                {
-                    resume.Projects = ParseProjects(section.Lines);
-                }
-                else if (MatchesHeader(section.Header, LanguageHeaders))
-                {
-                    resume.Languages = ParseLanguages(sectionText);
-                }
-            }
-
-            // Set resume name
-            if (!string.IsNullOrEmpty(resume.PersonalInfo.FullName))
-                resume.Name = $"{resume.PersonalInfo.FullName}'s Resume (PDF Import)";
-            else
-                resume.Name = "Imported Resume (PDF)";
-
-            // Add warning if little data was extracted
-            if (string.IsNullOrEmpty(resume.PersonalInfo.FirstName) &&
-                string.IsNullOrEmpty(resume.Summary) &&
-                !resume.Experiences.Any())
-            {
-                warnings.Add("Limited data could be extracted. PDF parsing works best with text-based resumes. Scanned documents may require manual entry.");
-            }
-
-            return ImportResult<Resume>.Succeeded(resume, warnings);
+            return ParseTextBlocks(textBlocks, resume, warnings);
         }
         catch (Exception ex)
         {
@@ -120,6 +66,68 @@ public class PdfImporter : IImporter
 
         await using var stream = File.OpenRead(filePath);
         return await ImportAsync(stream);
+    }
+
+    public ImportResult<Resume> ImportText(IEnumerable<string> lines) => ParseTextBlocks(lines.Select((text, index) => new TextBlock { Text = text, Y = -index, FontSize = 12 }).ToList(), new Resume(), new List<string>());
+
+    private ImportResult<Resume> ParseTextBlocks(List<TextBlock> textBlocks, Resume resume, List<string> warnings)
+    {
+        // Try to extract contact information from the first section
+        ExtractContactInfo(textBlocks.Take(20).ToList(), resume, warnings);
+
+        // Parse sections
+        var sections = DetectSections(textBlocks);
+
+        // Process each section
+        foreach (var section in sections)
+        {
+            var sectionText = string.Join("\n", section.Lines.Select(l => l.Text));
+
+            if (MatchesHeader(section.Header, SummaryHeaders))
+            {
+                resume.Summary = CleanText(sectionText);
+            }
+            else if (MatchesHeader(section.Header, ExperienceHeaders))
+            {
+                resume.Experiences = ParseExperiences(section.Lines);
+            }
+            else if (MatchesHeader(section.Header, EducationHeaders))
+            {
+                resume.EducationList = ParseEducation(section.Lines);
+            }
+            else if (MatchesHeader(section.Header, SkillsHeaders))
+            {
+                resume.Skills = ParseSkills(sectionText);
+            }
+            else if (MatchesHeader(section.Header, CertificationHeaders))
+            {
+                resume.Certifications = ParseCertifications(section.Lines);
+            }
+            else if (MatchesHeader(section.Header, ProjectHeaders))
+            {
+                resume.Projects = ParseProjects(section.Lines);
+            }
+            else if (MatchesHeader(section.Header, LanguageHeaders))
+            {
+                resume.Languages = ParseLanguages(sectionText);
+            }
+        }
+
+        // Set resume name
+        if (!string.IsNullOrEmpty(resume.PersonalInfo.FullName))
+            resume.Name = $"{resume.PersonalInfo.FullName}'s Resume (PDF Import)";
+        else
+            resume.Name = "Imported Resume (PDF)";
+
+        // Add warning if little data was extracted
+        if (string.IsNullOrEmpty(resume.PersonalInfo.FirstName) &&
+            string.IsNullOrEmpty(resume.Summary) &&
+            !resume.Experiences.Any())
+        {
+            warnings.Add("Limited data could be extracted. PDF parsing works best with text-based resumes. Scanned documents may require manual entry.");
+        }
+
+        return ImportResult<Resume>.Succeeded(resume, warnings);
     }
 
     private List<TextBlock> GroupWordsIntoLines(IEnumerable<Word> words)
@@ -248,9 +256,7 @@ public class PdfImporter : IImporter
         foreach (var line in lines)
         {
             var lineText = line.Text.Trim().ToLower();
-            var isHeader = allHeaders.Any(h => lineText.Equals(h) ||
-                lineText.StartsWith(h + " ") ||
-                lineText.EndsWith(" " + h));
+            var isHeader = allHeaders.Any(h => lineText.Equals(h));
 
             // Also detect headers by formatting (bold, larger font, all caps)
             var mightBeHeader = (line.IsBold || line.FontSize > 13 || line.Text == line.Text.ToUpper()) &&

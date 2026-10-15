@@ -43,14 +43,14 @@ public class AcademicTemplate : BaseTemplate
                         break;
 
                     case SectionType.Summary:
-                        column.Item().Element(c => ComposeSection(c, "RESEARCH STATEMENT", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("RESEARCH STATEMENT"), ct =>
                         {
                             ct.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing);
                         }));
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSection(c, "EDUCATION", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("EDUCATION"), ct =>
                         {
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
@@ -61,7 +61,7 @@ public class AcademicTemplate : BaseTemplate
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSection(c, "RESEARCH & PROFESSIONAL EXPERIENCE", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("RESEARCH & PROFESSIONAL EXPERIENCE"), ct =>
                         {
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
@@ -72,7 +72,7 @@ public class AcademicTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSection(c, "RESEARCH PROJECTS", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("RESEARCH PROJECTS"), ct =>
                         {
                             foreach (var proj in resume.Projects.OrderBy(p => p.Order))
                             {
@@ -83,7 +83,7 @@ public class AcademicTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeSection(c, "AREAS OF EXPERTISE", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("AREAS OF EXPERTISE"), ct =>
                         {
                             foreach (var group in resume.Skills.GroupBy(s => s.Category))
                             {
@@ -121,7 +121,7 @@ public class AcademicTemplate : BaseTemplate
                         break;
 
                     case SectionType.Languages:
-                        column.Item().Element(c => ComposeSection(c, "LANGUAGES", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("LANGUAGES"), ct =>
                         {
                             ct.Item().Text(string.Join("; ", resume.Languages.OrderBy(l => l.Order)
                                 .Select(l => $"{l.Name} ({GetLanguageProficiencyText(l.Proficiency)})"))).FontSize(10 * FontSizeScale);

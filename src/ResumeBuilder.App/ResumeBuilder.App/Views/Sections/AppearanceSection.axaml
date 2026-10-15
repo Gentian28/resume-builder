@@ -22,6 +22,9 @@
                                 </Grid>
 
                                 <StackPanel Spacing="10" IsVisible="{Binding ShowCustomizationPanel}">
+                                    <TextBlock Text="Paper size"/><ComboBox ItemsSource="{Binding PaperSizes}" SelectedItem="{Binding SelectedPaperSize}" HorizontalAlignment="Stretch" AutomationProperties.Name="Paper size"/>
+                                    <TextBlock Text="Document language"/><ComboBox ItemsSource="{Binding DocumentLanguages}" SelectedItem="{Binding SelectedDocumentLanguage}" HorizontalAlignment="Stretch" AutomationProperties.Name="Document language"/>
+                                    <TextBlock Text="Language applies to generated headings and dates. Your text is unchanged." TextWrapping="Wrap" FontSize="11"/>
                                     <!-- Accent Color -->
                                     <StackPanel Spacing="5">
                                         <TextBlock Text="Accent Color" FontSize="12" Opacity="0.8"/>

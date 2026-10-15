@@ -35,6 +35,12 @@ public static class DatabaseInitializer
         },
         ["JobApplications"] = new[]
         {
+            ("Contact", "TEXT NOT NULL DEFAULT ''"),
+            ("NextActionOn", "TEXT NULL"),
+            ("CoverLetterId", "INTEGER NULL"),
+            ("SentCoverLetterJson", "TEXT NULL"),
+            ("SentResumePdf", "BLOB NULL"),
+            ("SentCoverLetterPdf", "BLOB NULL"),
             ("RowVersion", $"TEXT NOT NULL DEFAULT '{EmptyGuid}'"),
             ("SentResumeJson", "TEXT NULL"),
             ("ResumeCapturedAt", "TEXT NULL")

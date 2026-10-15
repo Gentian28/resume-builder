@@ -28,6 +28,7 @@ public class CoverLetterDocxExporter : ICoverLetterExporter
     public Task<byte[]> ExportAsync(CoverLetter letter, string templateId)
     {
         var settings = letter.TemplateSettings ?? new TemplateSettings();
+        using var locale = DocumentText.Use(settings.DocumentLanguage);
         var accentColor = DocxExporter.NormalizeColor(settings.AccentColor, TemplateSettings.DefaultAccentColor);
         var fontFamily = string.IsNullOrWhiteSpace(settings.FontFamily)
             ? TemplateSettings.DefaultFontFamily
@@ -74,6 +75,11 @@ public class CoverLetterDocxExporter : ICoverLetterExporter
             {
                 AddParagraph(body, letter.SignatureName, bold: true);
             }
+            body.Append(new SectionProperties(new DocumentFormat.OpenXml.Wordprocessing.PageSize
+            {
+                Width = settings.PaperSize == PaperSize.Letter ? 12240U : 11906U,
+                Height = settings.PaperSize == PaperSize.Letter ? 15840U : 16838U
+            }));
         }
 
         return Task.FromResult(stream.ToArray());

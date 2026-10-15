@@ -66,7 +66,7 @@ public class ElegantTemplate : BaseTemplate
                         break;
 
                     case SectionType.Experience:
-                        column.Item().Element(c => ComposeSection(c, "Experience", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Experience"), ct =>
                         {
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
@@ -77,7 +77,7 @@ public class ElegantTemplate : BaseTemplate
                         break;
 
                     case SectionType.Education:
-                        column.Item().Element(c => ComposeSection(c, "Education", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Education"), ct =>
                         {
                             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
                             {
@@ -88,7 +88,7 @@ public class ElegantTemplate : BaseTemplate
                         break;
 
                     case SectionType.Skills:
-                        column.Item().Element(c => ComposeSection(c, "Expertise", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Expertise"), ct =>
                         {
                             ct.Item().AlignCenter().Text(string.Join("  ◈  ", resume.Skills.OrderBy(s => s.Order).Select(s => s.Name)))
                                 .FontSize(10 * FontSizeScale);
@@ -96,7 +96,7 @@ public class ElegantTemplate : BaseTemplate
                         break;
 
                     case SectionType.Projects:
-                        column.Item().Element(c => ComposeSection(c, "Projects", ct =>
+                        column.Item().Element(c => ComposeSection(c, DocumentText.Translate("Projects"), ct =>
                         {
                             foreach (var project in resume.Projects.OrderBy(p => p.Order))
                             {
@@ -154,7 +154,7 @@ public class ElegantTemplate : BaseTemplate
 
     private void ComposeLanguages(IContainer container, Resume resume)
     {
-        ComposeSection(container, "Languages", ct =>
+        ComposeSection(container, DocumentText.Translate("Languages"), ct =>
         {
             foreach (var lang in resume.Languages.OrderBy(l => l.Order))
             {
@@ -165,7 +165,7 @@ public class ElegantTemplate : BaseTemplate
 
     private void ComposeCertifications(IContainer container, Resume resume)
     {
-        ComposeSection(container, "Certifications", ct =>
+        ComposeSection(container, DocumentText.Translate("Certifications"), ct =>
         {
             foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
             {

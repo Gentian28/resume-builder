@@ -64,7 +64,7 @@ public class ExecutiveTemplate : BaseTemplate
                     case SectionType.Summary:
                         column.Item().Column(col =>
                         {
-                            col.Item().Element(c => ComposeSectionTitle(c, "EXECUTIVE SUMMARY"));
+                            col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("EXECUTIVE SUMMARY")));
                             col.Item().Height(8);
                             col.Item().Text(resume.Summary).FontSize(10 * FontSizeScale).LineHeight(LineSpacing).Italic();
                         });
@@ -74,7 +74,7 @@ public class ExecutiveTemplate : BaseTemplate
                         column.Item().Column(col =>
                         {
                             col.Spacing(15);
-                            col.Item().Element(c => ComposeSectionTitle(c, "PROFESSIONAL EXPERIENCE"));
+                            col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("PROFESSIONAL EXPERIENCE")));
 
                             foreach (var exp in resume.Experiences.OrderBy(e => e.Order))
                             {
@@ -111,7 +111,7 @@ public class ExecutiveTemplate : BaseTemplate
                     case SectionType.Languages:
                         column.Item().Column(col =>
                         {
-                            col.Item().Element(c => ComposeSectionTitle(c, "LANGUAGES"));
+                            col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("LANGUAGES")));
                             col.Item().Height(8);
                             col.Item().Text(string.Join("   ◆   ", resume.Languages.OrderBy(l => l.Order)
                                 .Select(l => FormatLanguage(l, ": ")))).FontSize(9 * FontSizeScale);
@@ -144,7 +144,7 @@ public class ExecutiveTemplate : BaseTemplate
     {
         container.Column(col =>
         {
-            col.Item().Element(c => ComposeSectionTitle(c, "EDUCATION"));
+            col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("EDUCATION")));
             col.Item().Height(8);
 
             foreach (var edu in resume.EducationList.OrderBy(e => e.Order))
@@ -163,7 +163,7 @@ public class ExecutiveTemplate : BaseTemplate
     {
         container.Column(col =>
         {
-            col.Item().Element(c => ComposeSectionTitle(c, "CERTIFICATIONS"));
+            col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("CERTIFICATIONS")));
             col.Item().Height(8);
 
             foreach (var cert in resume.Certifications.OrderBy(c => c.Order))
@@ -185,7 +185,7 @@ public class ExecutiveTemplate : BaseTemplate
 
         container.Column(col =>
         {
-            col.Item().Element(c => ComposeSectionTitle(c, "CORE COMPETENCIES"));
+            col.Item().Element(c => ComposeSectionTitle(c, DocumentText.Translate("CORE COMPETENCIES")));
             col.Item().Height(8);
 
             for (var i = 0; i < skillGroups.Count; i += SkillColumnsPerRow)

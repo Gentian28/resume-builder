@@ -1,0 +1,97 @@
+name: Verify packaged release
+
+on:
+  workflow_call:
+    inputs:
+      source_run:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: Release workflow run containing the exact packages to test
+        required: true
+      version:
+        description: Package version, without leading v
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - name: Verify package provenance
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run }}
+        run: |
+          gh run view "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --json headSha,jobs,workflowName,url > source.json
+          python - <<'PY'
+          import json, os
+          source = json.load(open('source.json'))
+          assert source['workflowName'] == 'Release'
+          packages = [j for j in source['jobs'] if j['name'].startswith('package ')]
+          assert {j['name'] for j in packages} == {'package win-x64', 'package linux-x64', 'package osx-arm64', 'package osx-x64'}
+          assert all(j['conclusion'] == 'success' for j in packages)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('sha=' + source['headSha'] + '\n')
+          print('Verifying exact packages from', source['headSha'], source['url'])
+          PY
+
+  acceptance:
+    name: installed upgrade ${{ matrix.rid }} (${{ matrix.route }})
+    needs: source
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64, route: package }
+          - { os: windows-latest, rid: win-x64, route: installer }
+          - { os: ubuntu-latest, rid: linux-x64, route: package }
+          - { os: macos-latest, rid: osx-arm64, route: package }
+          - { os: macos-15-intel, rid: osx-x64, route: package }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-${{ matrix.rid }}
+          path: artifacts
+          run-id: ${{ inputs.source_run }}
+          github-token: ${{ github.token }}
+      - name: Linux desktop dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1 libice6 libsm6 libx11-6 xvfb
+      - name: Install previous version, upgrade and verify data
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_VERSION: ${{ inputs.version }}
+          SOURCE_RUN_ID: ${{ inputs.source_run }}
+          SOURCE_COMMIT: ${{ needs.source.outputs.sha }}
+        run: |
+          version="${PACKAGE_VERSION#v}"
+          desktop=()
+          if [ "${{ runner.os }}" = "Linux" ]; then desktop=(xvfb-run -a); fi
+          "${desktop[@]}" python scripts/release-acceptance.py --rid "${{ matrix.rid }}" --version "$version" --artifacts artifacts --upgrade-route "${{ matrix.route }}"
+      - name: Keep acceptance evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-${{ matrix.rid }}-${{ matrix.route }}
+          path: acceptance-evidence/**
+          if-no-files-found: warn
+          retention-days: 30

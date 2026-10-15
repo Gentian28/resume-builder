@@ -6,6 +6,7 @@ does not use the current EF model to manufacture an old database.
 """
 
 import argparse
+from contextlib import closing
 import hashlib
 import json
 import os
@@ -69,7 +70,7 @@ def start_and_stop(executable, log, env, database=None):
                 time.sleep(1)
                 assert proc.poll() is None, f"App exited early: {proc.returncode}; see {log}"
                 if database and database.is_file():
-                    with sqlite3.connect(database) as db:
+                    with closing(sqlite3.connect(database)) as db:
                         if db.execute("SELECT count(*) FROM sqlite_master WHERE name='Resumes'").fetchone()[0]:
                             break
             assert proc.poll() is None
@@ -88,7 +89,7 @@ def start_and_stop(executable, log, env, database=None):
 def seed_old_database(path):
     arrays = {"Experiences", "EducationList", "Skills", "Languages", "Certifications", "Projects", "CustomSections"}
     snapshot = {}
-    with sqlite3.connect(path) as db:
+    with closing(sqlite3.connect(path)) as db:
         assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         for table in ("Resumes", "CoverLetters", "JobApplications"):
             columns = db.execute(f'PRAGMA table_info("{table}")').fetchall()
@@ -135,11 +136,12 @@ def seed_old_database(path):
             names = ",".join(f'"{c}"' for c in row)
             db.execute(f'INSERT INTO "{table}" ({names}) VALUES ({",".join("?" for _ in row)})', list(row.values()))
             snapshot[table] = row
+        db.commit()
     return snapshot
 
 
 def verify_data(path, snapshot, upgraded):
-    with sqlite3.connect(path) as db:
+    with closing(sqlite3.connect(path)) as db:
         db.row_factory = sqlite3.Row
         assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         for table, before in snapshot.items():
@@ -297,10 +299,11 @@ def main():
     else:
         env["RESUMEBUILDER_DATA_DIRECTORY"] = str(fresh_profile)
     start_and_stop(fresh_executable, evidence / "fresh-startup.log", env, fresh_profile / "resumes.db")
-    with sqlite3.connect(fresh_profile / "resumes.db") as db:
+    with closing(sqlite3.connect(fresh_profile / "resumes.db")) as db:
         assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert db.execute('SELECT count(*) FROM Resumes').fetchone()[0] == 0
     result = {"rid": args.rid, "native_architecture": actual_arch, "previous_version": args.previous,
+              "source_run": os.environ.get("SOURCE_RUN_ID"), "source_commit": os.environ.get("SOURCE_COMMIT"),
               "upgrade_route": args.upgrade_route,
               "installed_version": version, "old_schema_created_by_previous_app": True,
               "preserved_tables": list(snapshot), "safety_backup_verified": True,

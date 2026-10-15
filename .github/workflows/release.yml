@@ -176,49 +176,14 @@ jobs:
           retention-days: 7
 
   acceptance:
-    name: installed upgrade ${{ matrix.rid }} (${{ matrix.route }})
     needs: package
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: windows-latest, rid: win-x64, route: package }
-          - { os: windows-latest, rid: win-x64, route: installer }
-          - { os: ubuntu-latest, rid: linux-x64, route: package }
-          - { os: macos-latest, rid: osx-arm64, route: package }
-          - { os: macos-15-intel, rid: osx-x64, route: package }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - uses: actions/download-artifact@v4
-        with:
-          name: release-${{ matrix.rid }}
-          path: artifacts
-      - name: Linux desktop dependencies
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1 libice6 libsm6 libx11-6 xvfb
-      - name: Install previous version, update and verify saved data
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          INPUT_VERSION: ${{ github.event.inputs.version }}
-        run: |
-          version="${INPUT_VERSION:-${GITHUB_REF_NAME#v}}"
-          desktop=()
-          if [ "${{ runner.os }}" = "Linux" ]; then desktop=(xvfb-run -a); fi
-          "${desktop[@]}" python scripts/release-acceptance.py --rid "${{ matrix.rid }}" --version "$version" --artifacts artifacts --upgrade-route "${{ matrix.route }}"
-      - name: Keep acceptance evidence even on failure
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: acceptance-${{ matrix.rid }}-${{ matrix.route }}
-          path: acceptance-evidence/**
-          if-no-files-found: warn
-          retention-days: 30
+    uses: ./.github/workflows/verify-packages.yml
+    permissions:
+      contents: read
+      actions: read
+    with:
+      source_run: ${{ format('{0}', github.run_id) }}
+      version: ${{ inputs.version || github.ref_name }}
 
   publish:
     name: publish GitHub release

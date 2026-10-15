@@ -53,8 +53,8 @@ if ($hash -notmatch '^[0-9A-F]{64}$') { throw "Extracted hash does not look like
 Write-Host "SHA256: $hash"
 
 $target = Join-Path $root $Version
-if (Test-Path $target) { throw "$target already exists - delete it first if you mean to regenerate." }
-New-Item -ItemType Directory -Path $target | Out-Null
+$alreadyGenerated = Test-Path -LiteralPath $target
+if (-not $alreadyGenerated) { New-Item -ItemType Directory -Path $target | Out-Null }
 
 # The date the version was RELEASED, not the date this script ran. Those are the same
 # whenever winget.yml fires on release: published, which is why this has always looked
@@ -69,14 +69,36 @@ $releaseDate = try {
     (Get-Date).ToString('yyyy-MM-dd')
 }
 Write-Host "ReleaseDate: $releaseDate"
+if ($alreadyGenerated) {
+    # Submission can fail after the workflow has committed its manifest. A retry
+    # must validate that published artifact rather than overwrite reviewed files.
+    $existing = @(Get-ChildItem -LiteralPath $target -Filter *.yaml)
+    if ($existing.Count -lt 3) { throw "Incomplete manifest directory: $target" }
+    foreach ($manifest in $existing) {
+        $content = [System.IO.File]::ReadAllText($manifest.FullName)
+        if ($content -notmatch ('(?m)^PackageVersion: ' + [regex]::Escape($Version) + '\r?$')) {
+            throw "Existing manifest version differs: $($manifest.Name)"
+        }
+    }
+    $installer = [System.IO.File]::ReadAllText((Join-Path $target 'Gentian28.ResumeBuilder.installer.yaml'))
+    if (-not $installer.Contains("InstallerSha256: $hash") -or
+        -not $installer.Contains("InstallerUrl: https://github.com/$Repo/releases/download/v$Version/$asset") -or
+        -not $installer.Contains("ReleaseDate: $releaseDate")) {
+        throw 'Existing installer manifest does not match the published artifact.'
+    }
+    winget validate --manifest $target
+    if ($LASTEXITCODE -ne 0) { throw "winget validate failed with exit code $LASTEXITCODE." }
+    Write-Host 'Existing manifests match the published release; keeping reviewed files.'
+    return
+}
 foreach ($file in Get-ChildItem -Path $previous.FullName -Filter *.yaml) {
-    $text = Get-Content $file.FullName -Raw
+    $text = [System.IO.File]::ReadAllText($file.FullName)
     $text = $text -replace 'PackageVersion: .+', "PackageVersion: $Version"
     $text = $text -replace 'InstallerSha256: [0-9A-Fa-f]{64}', "InstallerSha256: $hash"
     $text = $text -replace 'ReleaseDate: \d{4}-\d{2}-\d{2}', "ReleaseDate: $releaseDate"
     $text = $text -replace 'releases/download/v[0-9.]+/', "releases/download/v$Version/"
     $text = $text -replace 'releases/tag/v[0-9.]+', "releases/tag/v$Version"
-    Set-Content -Path (Join-Path $target $file.Name) -Value $text -Encoding utf8 -NoNewline
+    [System.IO.File]::WriteAllText((Join-Path $target $file.Name), $text)
 }
 
 Write-Host "`nWrote $target"

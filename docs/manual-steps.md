@@ -1,6 +1,8 @@
 # Release and external access
 
-As of 2026-10-15, v1.2.3 is the latest public release. Version 1.3.0 is undergoing native installed-upgrade acceptance before publication. The application review and implementation are recorded in [the delivery report](reviews/2026-10-15-implementation.md).
+[Version 1.3.0 is public](https://github.com/Gentian28/resume-builder/releases/tag/v1.3.0), published 2026-10-15 from `cad57d1`. All 27 hosted assets match their SHA-256 manifests, all four update feeds name 1.3.0, and the public distribution audit passes. The application review and implementation are recorded in [the delivery report](reviews/2026-10-15-implementation.md).
+
+All five [native acceptance cases passed](https://github.com/Gentian28/resume-builder/actions/runs/38784069423): Windows package update and installer-over-old-release, Linux, Apple silicon and Intel Mac. The [versioned evidence](reviews/2026-10-15-release-acceptance.json) records their scope and limits. The app's release commit passed CI and 571 tests; three optional live-provider tests were skipped.
 
 ## Release procedure
 
@@ -9,6 +11,10 @@ As of 2026-10-15, v1.2.3 is the latest public release. Version 1.3.0 is undergoi
 3. The workflow builds and tests, packages all four native architectures, checks SHA-256 sums, installs v1.2.3 on disposable runners and applies the actual new Velopack package. It verifies resume, letter and application preservation, the pre-upgrade database backup, native startup, restart and the new installer. Windows uses the default install path and verifies workspace relocation, uninstall preservation and reinstall. Intel macOS runs on an Intel runner.
 4. Inspect the `acceptance-*` evidence artifacts and the draft's files and checksums. Promote the draft only after every acceptance job passes. Publication makes the update available to existing installed copies.
 5. Check the automatic winget submission and its resulting Microsoft validation/merge. Submission is enabled: repository variable `WINGET_AUTO_SUBMIT=true` and secret `WINGET_TOKEN` are configured. A submitted PR is not yet a published winget version.
+
+For 1.3.0, automatic submission generated and committed the manifest but reported that `WINGET_TOKEN` was invalid. The release was submitted through the existing authenticated maintainer session as [Microsoft PR 453487](https://github.com/microsoft/winget-pkgs/pull/453487). Local validation passes with schema 1.12.0; the privacy description includes optional cloud AI. Microsoft validation/merge remains external. Future automatic submissions need the dedicated credential replaced; the existing Accession item `260902-rotate-the-winget-pat` is canonical. No general-purpose session token was copied into CI. The generator now validates and keeps an existing matching manifest on retry, and reads/writes UTF-8 consistently.
+
+If a harness correction is needed after packaging, `verify-packages.yml` can test those exact artifacts using the original release run ID. `stage-verified-release.yml` then verifies the five proof files, their source commit and every asset checksum before uploading to an existing draft. Create that draft for the exact source commit using the authenticated maintainer CLI. GitHub's integration token cannot create or edit a historical release when its workflow files differ from main, as described in the [release API permissions](https://docs.github.com/en/rest/releases/releases#create-a-release). Do not rebuild and substitute different bytes after acceptance.
 
 The acceptance harness refuses local and self-hosted runners because the previous app does not support a separate data-directory override. It uses synthetic data on disposable machines. macOS CI tests package installation and the updater with administrative access; it does not prove a human Gatekeeper/admin prompt. Linux launches the extracted AppImage under Xvfb, exercising the actual payload and update replacement without requiring FUSE. Physical display scaling and human task observations remain distinct checks.
 

@@ -1,0 +1,128 @@
+{
+    "version":  "1.3.0",
+    "source_commit":  "cad57d1f51b1a762c454e600e5393ee4286edcf5",
+    "release":  "https://github.com/Gentian28/resume-builder/releases/tag/v1.3.0",
+    "package_run":  "https://github.com/Gentian28/resume-builder/actions/runs/38782837907",
+    "verification_run":  "https://github.com/Gentian28/resume-builder/actions/runs/38784069423",
+    "code_ci":  "https://github.com/Gentian28/resume-builder/actions/runs/38782836975",
+    "tests_passed":  571,
+    "live_tests_skipped":  3,
+    "cases":  [
+                  {
+                      "rid":  "linux-x64",
+                      "native_architecture":  "x86_64",
+                      "previous_version":  "1.2.3",
+                      "source_run":  "38782837907",
+                      "source_commit":  "cad57d1f51b1a762c454e600e5393ee4286edcf5",
+                      "upgrade_route":  "package",
+                      "installed_version":  "1.3.0",
+                      "old_schema_created_by_previous_app":  true,
+                      "preserved_tables":  [
+                                               "Resumes",
+                                               "CoverLetters",
+                                               "JobApplications"
+                                           ],
+                      "safety_backup_verified":  true,
+                      "native_startup_and_restart":  true,
+                      "new_installer_startup":  true,
+                      "unsigned":  true,
+                      "windows_default_install_migration_and_uninstall_preservation":  false,
+                      "scope":  "Installer/AppImage and real updater; not Gatekeeper, SmartScreen or physical DPI acceptance"
+                  },
+                  {
+                      "rid":  "osx-arm64",
+                      "native_architecture":  "arm64",
+                      "previous_version":  "1.2.3",
+                      "source_run":  "38782837907",
+                      "source_commit":  "cad57d1f51b1a762c454e600e5393ee4286edcf5",
+                      "upgrade_route":  "package",
+                      "installed_version":  "1.3.0",
+                      "old_schema_created_by_previous_app":  true,
+                      "preserved_tables":  [
+                                               "Resumes",
+                                               "CoverLetters",
+                                               "JobApplications"
+                                           ],
+                      "safety_backup_verified":  true,
+                      "native_startup_and_restart":  true,
+                      "new_installer_startup":  true,
+                      "unsigned":  true,
+                      "windows_default_install_migration_and_uninstall_preservation":  false,
+                      "scope":  "Installer/AppImage and real updater; not Gatekeeper, SmartScreen or physical DPI acceptance"
+                  },
+                  {
+                      "rid":  "osx-x64",
+                      "native_architecture":  "x86_64",
+                      "previous_version":  "1.2.3",
+                      "source_run":  "38782837907",
+                      "source_commit":  "cad57d1f51b1a762c454e600e5393ee4286edcf5",
+                      "upgrade_route":  "package",
+                      "installed_version":  "1.3.0",
+                      "old_schema_created_by_previous_app":  true,
+                      "preserved_tables":  [
+                                               "Resumes",
+                                               "CoverLetters",
+                                               "JobApplications"
+                                           ],
+                      "safety_backup_verified":  true,
+                      "native_startup_and_restart":  true,
+                      "new_installer_startup":  true,
+                      "unsigned":  true,
+                      "windows_default_install_migration_and_uninstall_preservation":  false,
+                      "scope":  "Installer/AppImage and real updater; not Gatekeeper, SmartScreen or physical DPI acceptance"
+                  },
+                  {
+                      "rid":  "win-x64",
+                      "native_architecture":  "x86_64",
+                      "previous_version":  "1.2.3",
+                      "source_run":  "38782837907",
+                      "source_commit":  "cad57d1f51b1a762c454e600e5393ee4286edcf5",
+                      "upgrade_route":  "installer",
+                      "installed_version":  "1.3.0",
+                      "old_schema_created_by_previous_app":  true,
+                      "preserved_tables":  [
+                                               "Resumes",
+                                               "CoverLetters",
+                                               "JobApplications"
+                                           ],
+                      "safety_backup_verified":  true,
+                      "native_startup_and_restart":  true,
+                      "new_installer_startup":  true,
+                      "unsigned":  true,
+                      "windows_default_install_migration_and_uninstall_preservation":  true,
+                      "scope":  "Installer/AppImage and real updater; not Gatekeeper, SmartScreen or physical DPI acceptance"
+                  },
+                  {
+                      "rid":  "win-x64",
+                      "native_architecture":  "x86_64",
+                      "previous_version":  "1.2.3",
+                      "source_run":  "38782837907",
+                      "source_commit":  "cad57d1f51b1a762c454e600e5393ee4286edcf5",
+                      "upgrade_route":  "package",
+                      "installed_version":  "1.3.0",
+                      "old_schema_created_by_previous_app":  true,
+                      "preserved_tables":  [
+                                               "Resumes",
+                                               "CoverLetters",
+                                               "JobApplications"
+                                           ],
+                      "safety_backup_verified":  true,
+                      "native_startup_and_restart":  true,
+                      "new_installer_startup":  true,
+                      "unsigned":  true,
+                      "windows_default_install_migration_and_uninstall_preservation":  true,
+                      "scope":  "Installer/AppImage and real updater; not Gatekeeper, SmartScreen or physical DPI acceptance"
+                  }
+              ],
+    "limits":  [
+                   "Unsigned Windows and macOS downloads; trusted signing credentials unavailable.",
+                   "Linux uses extracted AppImage under Xvfb. macOS installer/update uses administrative access.",
+                   "Physical DPI, security prompts and human Mac/Linux workflows are not established by native process checks.",
+                   "No consenting-volunteer observations have been collected."
+               ],
+    "published_at":  "2026-10-15T18:24:49Z",
+    "hosted_assets_verified":  27,
+    "update_feeds_verified":  4,
+    "winget_submission":  "https://github.com/microsoft/winget-pkgs/pull/453487",
+    "winget_status_at_recording":  "Open; local manifest validation and CLA check passed; Microsoft review/indexing pending"
+}

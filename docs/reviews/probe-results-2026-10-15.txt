@@ -1,0 +1,20 @@
+B01: CONFIRMED | UI route returns success=True, firstName='', experienceCount=0
+B01 control: sniffer preserved firstName='Jane'
+B02: CONFIRMED | Toolbar TXT does not resolve; registered format is TEXT
+B03: CONFIRMED | Switching to local endpoint retains prior bearer header (synthetic key only, no requests sent)
+B04: CONFIRMED | Tracked application now opens a resume edited after tracking
+B05: CONFIRMED | Saved->Applied row date stays null=True; every edit replaces AppliedOn and CreatedAt
+B06: CONFIRMED | Applying a rewrite ignores whether Original matches current text
+B07: CONFIRMED | New sync folder uploaded=0, warnings=1
+B08: CONFIRMED | Imported variant points to 'Unrelated local resume', not its synced base
+B09: CONFIRMED | PNG writes 5 page files, but toast's export.png does not exist
+B10: CONFIRMED | Save as variant overwrites base and leaves editor on base
+B11: CONFIRMED | SaveAsync returns True while IsDirty=True; navigation/update callers treat it as permission to proceed
+B12: CONFIRMED | Executing the post-confirmation deletion state and autosave recreates the deleted resume
+B13: CONFIRMED | A proposal from the previous document applies to the newly loaded resume
+B17: CONFIRMED | Drafting an existing letter uses the unrelated current resume, not letter.ResumeId
+B20: CONFIRMED | Successful first-run import leaves onboarding visible over populated editor
+B14: CONFIRMED | Remote list includes a parked .deleted.json archive
+B15: CONFIRMED | Reusing template B's state removes A's visible summary from document A
+B16: CONFIRMED | Keyword analysis includes hidden skills that exported document omits
+Confirmed probes: 18

@@ -106,7 +106,7 @@ jobs:
       # install takes whatever shipped that morning, and a packer that moved under a release is
       # not something to discover from a user's failed update.
       - name: Install Velopack CLI
-        run: dotnet tool install -g vpk --version 1.2.0
+        run: dotnet tool install -g vpk --version 1.2.0 --allow-roll-forward
 
       # PublishSingleFile is explicitly OFF here. Velopack's delta updates diff
       # package contents, and a compressed single-file blob defeats that entirely -

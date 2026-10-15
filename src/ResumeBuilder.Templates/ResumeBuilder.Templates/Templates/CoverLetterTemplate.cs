@@ -28,6 +28,12 @@ public class CoverLetterTemplate : ICoverLetterTemplate
 
     public IDocument CreateDocument(CoverLetter letter)
     {
+        ArgumentNullException.ThrowIfNull(letter);
+        return ((CoverLetterTemplate)MemberwiseClone()).CreateIsolatedDocument(letter);
+    }
+
+    private IDocument CreateIsolatedDocument(CoverLetter letter)
+    {
         // The settings are taken as they stand rather than through ApplyTemplateDefaults: they were
         // resolved against the resume's template, and re-defaulting them here would undo the match.
         _settings = letter.TemplateSettings?.Clone() ?? new TemplateSettings();

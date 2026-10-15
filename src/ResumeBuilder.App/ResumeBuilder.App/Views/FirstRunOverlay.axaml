@@ -52,7 +52,7 @@
                                 <Button Content="PDF résumé" HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Command="{Binding ImportPdfCommand}"/>
-                                <Button Content="JSON Resume" HorizontalAlignment="Stretch"
+                                <Button Content="JSON resume or backup" HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Command="{Binding ImportJsonResumeCommand}"/>
                             </StackPanel>

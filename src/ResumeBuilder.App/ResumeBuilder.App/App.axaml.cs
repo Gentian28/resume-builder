@@ -85,7 +85,8 @@ public partial class App : Application
                 tailoringService,
                 coverLetterService,
                 updateService,
-                thumbnailService);
+                thumbnailService,
+                workspaceBackups: new WorkspaceBackupService(contextFactory));
 
             // Initialize spell checker in background
             _ = spellChecker.InitializeAsync();

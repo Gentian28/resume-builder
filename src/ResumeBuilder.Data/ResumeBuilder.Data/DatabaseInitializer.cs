@@ -28,11 +28,23 @@ public static class DatabaseInitializer
     /// <summary>Columns added after the first release, per table.</summary>
     private static readonly Dictionary<string, (string Column, string Ddl)[]> AddedColumns = new()
     {
+        ["CoverLetters"] = new[]
+        {
+            ("TargetRole", "TEXT NOT NULL DEFAULT ''"),
+            ("SourceResumeJson", "TEXT NULL")
+        },
+        ["JobApplications"] = new[]
+        {
+            ("RowVersion", $"TEXT NOT NULL DEFAULT '{EmptyGuid}'"),
+            ("SentResumeJson", "TEXT NULL"),
+            ("ResumeCapturedAt", "TEXT NULL")
+        },
         ["Resumes"] = new[]
         {
             ("RowVersion", $"TEXT NOT NULL DEFAULT '{EmptyGuid}'"),
             ("SyncId", $"TEXT NOT NULL DEFAULT '{EmptyGuid}'"),
             ("BaseResumeId", "INTEGER NULL"),
+            ("BaseResumeSyncId", "TEXT NULL"),
             ("TargetRole", "TEXT NOT NULL DEFAULT ''"),
             ("JobDescription", "TEXT NOT NULL DEFAULT ''")
         }

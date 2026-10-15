@@ -13,7 +13,7 @@
        libraries and the test project must stay RID-agnostic, and a self-contained test host
        would just slow the suite down. -->
   <PropertyGroup>
-    <RuntimeIdentifiers>win-x64;linux-x64;osx-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-arm64;osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <!-- Only when a RID is actually selected (`dotnet publish -r win-x64`). Setting SelfContained

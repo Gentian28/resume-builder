@@ -5,6 +5,8 @@ namespace ResumeBuilder.Core.SmartContent;
 /// <summary>A proposed rewrite the user can accept or reject, scoped to one field.</summary>
 public class TailoredEdit
 {
+    public Guid? ResumeSyncId { get; init; }
+    public Guid? ItemKey { get; init; }
     public required TailoredEditTarget Target { get; init; }
 
     /// <summary>Index into the target collection (experience index), or -1 for the summary.</summary>
@@ -67,6 +69,7 @@ public class JobTailoringService
         string jobDescription,
         CancellationToken cancellationToken = default)
     {
+        resume = System.Text.Json.JsonSerializer.Deserialize<Resume>(System.Text.Json.JsonSerializer.Serialize(resume))!;
         var resumeText = ResumeTextExtractor.ToPlainText(resume);
         var analysis = _analyzer.Analyze(resumeText, jobDescription);
 
@@ -93,6 +96,7 @@ public class JobTailoringService
                 AddIfChanged(edits, new TailoredEdit
                 {
                     Target = TailoredEditTarget.Summary,
+                    ResumeSyncId = resume.SyncId,
                     Original = resume.Summary,
                     Proposed = rewritten.Data!.Trim(),
                     Rationale = "Aligned the summary with the posting's language."
@@ -132,6 +136,8 @@ public class JobTailoringService
                     AddIfChanged(edits, new TailoredEdit
                     {
                         Target = TailoredEditTarget.ExperienceAchievement,
+                        ResumeSyncId = resume.SyncId,
+                        ItemKey = exp.EditKey,
                         ItemIndex = expIndex,
                         SubIndex = i,
                         Original = achievement,
@@ -178,7 +184,7 @@ public class JobTailoringService
     {
         var applied = 0;
 
-        foreach (var edit in edits.Where(e => e.Accepted))
+        foreach (var edit in edits.Where(e => e.Accepted && CanApply(resume, e)))
         {
             switch (edit.Target)
             {
@@ -206,4 +212,28 @@ public class JobTailoringService
     }
 
     private static bool IsInRange<T>(IList<T> list, int index) => index >= 0 && index < list.Count;
+
+    public static bool CanApply(Resume resume, TailoredEdit edit)
+    {
+        if (edit.ResumeSyncId is { } syncId && syncId != resume.SyncId)
+            return false;
+
+        if (edit.Target == TailoredEditTarget.Summary)
+            return string.Equals(resume.Summary, edit.Original, StringComparison.Ordinal);
+
+        if (!IsInRange(resume.Experiences, edit.ItemIndex))
+            return false;
+
+        var experience = resume.Experiences[edit.ItemIndex];
+        if (edit.ItemKey is { } key && key != experience.EditKey)
+            return false;
+
+        return edit.Target switch
+        {
+            TailoredEditTarget.ExperienceDescription => string.Equals(experience.Description, edit.Original, StringComparison.Ordinal),
+            TailoredEditTarget.ExperienceAchievement => IsInRange(experience.Achievements, edit.SubIndex) &&
+                string.Equals(experience.Achievements[edit.SubIndex], edit.Original, StringComparison.Ordinal),
+            _ => false
+        };
+    }
 }

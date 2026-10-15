@@ -8,15 +8,43 @@ namespace ResumeBuilder.Core.Sync;
 /// </summary>
 public class SyncStateStore
 {
-    private readonly string _statePath;
+    private readonly string _baseStatePath;
+    private string _statePath;
     private Dictionary<Guid, SyncMetadata> _entries = new();
 
     public SyncStateStore(string? statePath = null)
     {
         _statePath = statePath ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "ResumeBuilder",
+            ResumeBuilder.Core.Editing.UserDataPaths.Directory,
             "sync-state.json");
+        _baseStatePath = _statePath;
+    }
+
+    public async Task LoadForDestinationAsync(string folder)
+    {
+        var destination = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder));
+        if (OperatingSystem.IsWindows())
+            destination = destination.ToUpperInvariant();
+        var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(destination)));
+        _statePath = _baseStatePath + "." + hash + ".state";
+        await LoadAsync();
+
+        // Old state has no destination identity. Adopt only entries whose bytes are present
+        // in this folder; an empty new destination must never inherit old deletion history.
+        if (_entries.Count == 0 && !File.Exists(_statePath) && File.Exists(_baseStatePath))
+        {
+            try
+            {
+                var legacy = JsonSerializer.Deserialize<Dictionary<Guid, SyncMetadata>>(await File.ReadAllTextAsync(_baseStatePath));
+                foreach (var (id, metadata) in legacy ?? new())
+                {
+                    var path = Path.Combine(folder, $"{id:D}.json");
+                    if (File.Exists(path) && metadata.RemoteChecksum == Convert.ToHexString(System.Security.Cryptography.MD5.HashData(await File.ReadAllBytesAsync(path))))
+                        _entries[id] = metadata;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or JsonException) { }
+        }
     }
 
     public SyncMetadata? Get(Guid syncId) =>

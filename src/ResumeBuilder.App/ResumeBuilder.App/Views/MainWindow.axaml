@@ -19,12 +19,19 @@
         <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}"/>
         <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}"/>
         <KeyBinding Gesture="Ctrl+Shift+Z" Command="{Binding RedoCommand}"/>
-        <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCurrentResumeCommand}"/>
-        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}"/>
-        <KeyBinding Gesture="Ctrl+E" Command="{Binding ExportCommand}" CommandParameter="PDF"/>
-        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenResumeListCommand}"/>
-        <KeyBinding Gesture="Ctrl+N" Command="{Binding CreateNewResumeCommand}"/>
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveActiveDocumentCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding DuplicateActiveDocumentCommand}"/>
+        <KeyBinding Gesture="Ctrl+E" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PDF"/>
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenActiveDocumentCommand}"/>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewActiveDocumentCommand}"/>
         <KeyBinding Gesture="Ctrl+T" Command="{Binding ToggleThemeCommand}"/>
+        <KeyBinding Gesture="Meta+Shift+S" Command="{Binding DuplicateActiveDocumentCommand}"/>
+        <KeyBinding Gesture="Meta+S" Command="{Binding SaveActiveDocumentCommand}"/>
+        <KeyBinding Gesture="Meta+E" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PDF"/>
+        <KeyBinding Gesture="Meta+O" Command="{Binding OpenActiveDocumentCommand}"/>
+        <KeyBinding Gesture="Meta+N" Command="{Binding NewActiveDocumentCommand}"/>
+        <KeyBinding Gesture="Meta+Z" Command="{Binding UndoCommand}"/>
+        <KeyBinding Gesture="Meta+Shift+Z" Command="{Binding RedoCommand}"/>
     </Window.KeyBindings>
 
     <Design.DataContext>
@@ -37,10 +44,10 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_New Resume" Command="{Binding CreateNewResumeCommand}" InputGesture="Ctrl+N"/>
                 <MenuItem Header="_Open..." Command="{Binding OpenResumeListCommand}" InputGesture="Ctrl+O"/>
-                <MenuItem Header="_Save" Command="{Binding SaveCurrentResumeCommand}" InputGesture="Ctrl+S"/>
+                <MenuItem Header="_Save" Command="{Binding SaveActiveDocumentCommand}" InputGesture="Ctrl+S"/>
                 <!-- "Duplicate", not "Save As": it clones inside the app. The Word phrase promises
                      a choose-a-location dialog this command has never shown. Files come from Export. -->
-                <MenuItem Header="_Duplicate..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
+                <MenuItem Header="_Duplicate..." Command="{Binding DuplicateActiveDocumentCommand}" InputGesture="Ctrl+Shift+S"/>
                 <Separator/>
                 <MenuItem Header="New _Cover Letter" Command="{Binding NewCoverLetterCommand}"/>
                 <MenuItem Header="Cover _Letters..." Command="{Binding OpenCoverLetterListCommand}"/>
@@ -71,19 +78,19 @@
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="Import">
-                    <MenuItem Header="JSON Resume (.json)" Command="{Binding ImportJsonResumeCommand}"/>
+                    <MenuItem Header="JSON resume or backup (.json)" Command="{Binding ImportJsonResumeCommand}"/>
                     <MenuItem Header="LinkedIn Export (.zip)" Command="{Binding ImportLinkedInCommand}"/>
                     <MenuItem Header="PDF Resume (.pdf)" Command="{Binding ImportPdfCommand}"/>
                 </MenuItem>
-                <MenuItem Header="_Export as PDF..." Command="{Binding ExportCommand}" CommandParameter="PDF" InputGesture="Ctrl+E"/>
+                <MenuItem Header="_Export as PDF..." Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PDF" InputGesture="Ctrl+E"/>
                 <MenuItem Header="Export">
-                    <MenuItem Header="PDF" Command="{Binding ExportCommand}" CommandParameter="PDF"/>
-                    <MenuItem Header="Word (DOCX)" Command="{Binding ExportCommand}" CommandParameter="DOCX"/>
-                    <MenuItem Header="HTML" Command="{Binding ExportCommand}" CommandParameter="HTML"/>
-                    <MenuItem Header="PNG Image" Command="{Binding ExportCommand}" CommandParameter="PNG"/>
+                    <MenuItem Header="PDF" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PDF"/>
+                    <MenuItem Header="Word (DOCX)" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="DOCX"/>
+                    <MenuItem Header="HTML" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="HTML"/>
+                    <MenuItem Header="PNG Image" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PNG"/>
                     <Separator/>
-                    <MenuItem Header="JSON Resume (Standard)" Command="{Binding ExportCommand}" CommandParameter="JSONRESUME"/>
-                    <MenuItem Header="JSON (App Backup)" Command="{Binding ExportCommand}" CommandParameter="JSON"/>
+                    <MenuItem Header="JSON Resume (Standard)" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="JSONRESUME"/>
+                    <MenuItem Header="Workspace backup (JSON)" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="JSON"/>
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_Templates">
@@ -178,7 +185,7 @@
                 <Button Grid.Column="4" Content="Import ▾" Padding="9,4" Margin="4,0,0,0">
                     <Button.Flyout>
                         <MenuFlyout>
-                            <MenuItem Header="JSON Resume (.json)" Command="{Binding ImportJsonResumeCommand}"/>
+                            <MenuItem Header="JSON resume or backup (.json)" Command="{Binding ImportJsonResumeCommand}"/>
                             <MenuItem Header="LinkedIn Export (.zip)" Command="{Binding ImportLinkedInCommand}"/>
                             <MenuItem Header="PDF Resume (.pdf)" Command="{Binding ImportPdfCommand}"/>
                         </MenuFlyout>
@@ -206,19 +213,19 @@
                 <Border Grid.Column="10" Width="1" Margin="9,3"
                         Background="{DynamicResource RbBorder}"/>
 
-                <Button Grid.Column="11" Content="Save" Command="{Binding SaveCurrentResumeCommand}"
+                <Button Grid.Column="11" Content="Save" Command="{Binding SaveActiveDocumentCommand}"
                         Padding="11,4"/>
                 <SplitButton Grid.Column="12" Content="Export PDF" Margin="5,0,0,0"
                              Classes="accent"
-                             Command="{Binding ExportCommand}" CommandParameter="PDF">
+                             Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PDF">
                     <SplitButton.Flyout>
                         <MenuFlyout>
-                            <MenuItem Header="PDF" Command="{Binding ExportCommand}" CommandParameter="PDF"/>
-                            <MenuItem Header="Word (DOCX)" Command="{Binding ExportCommand}" CommandParameter="DOCX"/>
-                            <MenuItem Header="HTML" Command="{Binding ExportCommand}" CommandParameter="HTML"/>
-                            <MenuItem Header="PNG Image" Command="{Binding ExportCommand}" CommandParameter="PNG"/>
-                            <MenuItem Header="Plain text (ATS)" Command="{Binding ExportCommand}" CommandParameter="TXT"/>
-                            <MenuItem Header="JSON (Backup)" Command="{Binding ExportCommand}" CommandParameter="JSON"/>
+                            <MenuItem Header="PDF" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PDF"/>
+                            <MenuItem Header="Word (DOCX)" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="DOCX"/>
+                            <MenuItem Header="HTML" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="HTML"/>
+                            <MenuItem Header="PNG Image" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="PNG"/>
+                            <MenuItem Header="Plain text (ATS)" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="TEXT"/>
+                            <MenuItem Header="Workspace backup (JSON)" Command="{Binding ExportActiveDocumentCommand}" CommandParameter="JSON"/>
                         </MenuFlyout>
                     </SplitButton.Flyout>
                 </SplitButton>

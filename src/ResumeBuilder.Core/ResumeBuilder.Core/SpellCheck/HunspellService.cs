@@ -17,8 +17,7 @@ public class HunspellService : ISpellChecker, IDisposable
     public HunspellService()
     {
         _dictionaryPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "ResumeBuilder",
+            ResumeBuilder.Core.Editing.UserDataPaths.Directory,
             "Dictionaries");
     }
 

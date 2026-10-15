@@ -13,12 +13,32 @@ public static class AtomicFile
 {
     public const string TemporarySuffix = ".tmp";
 
+    public static async Task WriteAllBytesAsync(string path, byte[] content, bool overwrite = true,
+        CancellationToken cancellationToken = default)
+    {
+        var temporary = path + "." + Guid.NewGuid().ToString("N") + TemporarySuffix;
+        try
+        {
+            await File.WriteAllBytesAsync(temporary, content, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temporary, path, overwrite);
+        }
+        finally
+        {
+            if (File.Exists(temporary))
+            {
+                try { File.Delete(temporary); } catch (IOException) { }
+            }
+        }
+    }
+
     public static async Task WriteAllTextAsync(string path, string content, CancellationToken cancellationToken = default)
     {
-        var temporary = path + TemporarySuffix;
+        var temporary = path + "." + Guid.NewGuid().ToString("N") + TemporarySuffix;
         try
         {
             await File.WriteAllTextAsync(temporary, content, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             File.Move(temporary, path, overwrite: true);
         }
         finally

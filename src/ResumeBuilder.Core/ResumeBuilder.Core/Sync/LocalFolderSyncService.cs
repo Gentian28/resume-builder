@@ -33,6 +33,7 @@ public class LocalFolderSyncService : ISyncService
     private readonly SyncStateStore _state;
     private string? _syncFolder;
     private SyncStatus _status = SyncStatus.NotConfigured;
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
     public LocalFolderSyncService(ISyncResumeStore? store = null, SyncStateStore? state = null)
     {
@@ -49,18 +50,27 @@ public class LocalFolderSyncService : ISyncService
 
     public event Action<SyncStatus>? StatusChanged;
 
-    public async Task<bool> ConfigureAsync(string connectionString)
+    public Task<bool> ConfigureAsync(string connectionString) => SerializedAsync(() => ConfigureCoreAsync(connectionString));
+
+    private async Task<T> SerializedAsync<T>(Func<Task<T>> operation)
+    {
+        await _gate.WaitAsync();
+        try { return await operation(); }
+        finally { _gate.Release(); }
+    }
+
+    private async Task<bool> ConfigureCoreAsync(string connectionString)
     {
         try
         {
-            _syncFolder = connectionString;
+            _syncFolder = Path.GetFullPath(connectionString);
 
             if (!Directory.Exists(_syncFolder))
             {
                 Directory.CreateDirectory(_syncFolder);
             }
 
-            await _state.LoadAsync();
+            await _state.LoadForDestinationAsync(_syncFolder);
 
             SetStatus(SyncStatus.Idle);
             return true;
@@ -73,7 +83,10 @@ public class LocalFolderSyncService : ISyncService
         }
     }
 
-    public async Task<SyncResult> SyncAllAsync(CancellationToken cancellationToken = default)
+    public Task<SyncResult> SyncAllAsync(CancellationToken cancellationToken = default) =>
+        SerializedAsync(() => SyncAllCoreAsync(cancellationToken));
+
+    private async Task<SyncResult> SyncAllCoreAsync(CancellationToken cancellationToken)
     {
         if (!IsConfigured || _syncFolder == null)
             return SyncResult.NotConfigured();
@@ -130,6 +143,7 @@ public class LocalFolderSyncService : ISyncService
                 }
             }
 
+            await RepairParentLinksAsync();
             await _state.SaveAsync();
 
             var result = new SyncResult
@@ -162,7 +176,10 @@ public class LocalFolderSyncService : ISyncService
         }
     }
 
-    public async Task<SyncResult> SyncResumeAsync(int resumeId, CancellationToken cancellationToken = default)
+    public Task<SyncResult> SyncResumeAsync(int resumeId, CancellationToken cancellationToken = default) =>
+        SerializedAsync(() => SyncResumeCoreAsync(resumeId, cancellationToken));
+
+    private async Task<SyncResult> SyncResumeCoreAsync(int resumeId, CancellationToken cancellationToken)
     {
         if (!IsConfigured || _syncFolder == null)
             return SyncResult.NotConfigured();
@@ -185,7 +202,7 @@ public class LocalFolderSyncService : ISyncService
             remotes.Files.TryGetValue(local.SyncId, out var remote);
 
             // An explicit "sync this one" is the user overriding a remote deletion on purpose.
-            _state.Remove(local.SyncId);
+            if (remote is null) _state.Remove(local.SyncId);
             var outcome = await SyncOneAsync(local, remote, cancellationToken);
             await _state.SaveAsync();
 
@@ -330,6 +347,9 @@ public class LocalFolderSyncService : ISyncService
     private async Task SaveDownloadedAsync(Resume incoming, int? existingLocalId)
     {
         incoming.SectionOrder.EnsureAllSectionsPresent();
+        incoming.BaseResumeId = incoming.BaseResumeSyncId is { } parentSyncId
+            ? (await _store!.GetAllAsync()).FirstOrDefault(r => r.SyncId == parentSyncId)?.Id
+            : null;
 
         if (existingLocalId is null)
         {
@@ -352,10 +372,26 @@ public class LocalFolderSyncService : ISyncService
 
     private async Task WriteRemoteAsync(Resume resume, CancellationToken cancellationToken)
     {
+        if (resume.BaseResumeSyncId is null && resume.BaseResumeId is { } parentId && _store != null)
+            resume.BaseResumeSyncId = (await _store.GetByIdAsync(parentId))?.SyncId;
         var json = JsonSerializer.Serialize(resume, SerializerOptions);
         var path = RemotePathFor(resume.SyncId);
         await AtomicFile.WriteAllTextAsync(path, json, cancellationToken);
         RecordSynced(resume.SyncId, ComputeChecksum(path));
+    }
+
+    private async Task RepairParentLinksAsync()
+    {
+        var resumes = await _store!.GetAllAsync();
+        foreach (var resume in resumes.Where(r => r.BaseResumeSyncId != null))
+        {
+            var localParentId = resumes.FirstOrDefault(r => r.SyncId == resume.BaseResumeSyncId)?.Id;
+            if (resume.BaseResumeId != localParentId)
+            {
+                resume.BaseResumeId = localParentId;
+                await _store.UpdateAsync(resume);
+            }
+        }
     }
 
     private async Task BackupConflictAsync(RemoteResume remote, CancellationToken cancellationToken)
@@ -461,7 +497,7 @@ public class LocalFolderSyncService : ISyncService
         if (uploaded > 0) parts.Add($"{uploaded} uploaded");
         if (downloaded > 0) parts.Add($"{downloaded} downloaded");
         if (removed > 0) parts.Add($"{removed} removed");
-        if (conflicts > 0) parts.Add($"{conflicts} conflict{(conflicts == 1 ? "" : "s")} resolved");
+        if (conflicts > 0) parts.Add($"{conflicts} conflict{(conflicts == 1 ? "" : "s")}");
         if (errors > 0) parts.Add($"{errors} failed");
         return parts.Count == 0 ? "Already up to date" : string.Join(", ", parts);
     }
@@ -522,7 +558,8 @@ public class LocalFolderSyncService : ISyncService
         try
         {
             var files = Directory.GetFiles(_syncFolder, "*.json")
-                .Where(f => !f.EndsWith(".conflict.json", StringComparison.OrdinalIgnoreCase))
+                .Where(f => !f.EndsWith(".conflict.json", StringComparison.OrdinalIgnoreCase)
+                    && !f.EndsWith(".deleted.json", StringComparison.OrdinalIgnoreCase))
                 .Select(f => new FileInfo(f))
                 .Select(fi => new RemoteResumeInfo
                 {

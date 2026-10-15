@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace ResumeBuilder.Data;
@@ -40,10 +41,23 @@ public static class DatabaseBackup
             context.Database.ExecuteSqlRaw("PRAGMA wal_checkpoint(TRUNCATE);");
 
             var directory = Path.GetDirectoryName(path)!;
-            var stamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+            var stamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fffffff");
             var destination = Path.Combine(directory, $"resumes.backup-{stamp}.db");
 
-            File.Copy(path, destination, overwrite: true);
+            var source = (SqliteConnection)context.Database.GetDbConnection();
+            var closeSource = source.State != System.Data.ConnectionState.Open;
+            if (closeSource) source.Open();
+            try
+            {
+                using var copy = new SqliteConnection(new SqliteConnectionStringBuilder
+                {
+                    DataSource = destination,
+                    Pooling = false
+                }.ToString());
+                copy.Open();
+                source.BackupDatabase(copy);
+            }
+            finally { if (closeSource) source.Close(); }
             Prune(directory);
             return BackupResult.Made(destination);
         }

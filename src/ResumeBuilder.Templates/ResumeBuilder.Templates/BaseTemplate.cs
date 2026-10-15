@@ -25,6 +25,14 @@ public abstract class BaseTemplate : IResumeTemplate
 
     public IDocument CreateDocument(Resume resume)
     {
+        ArgumentNullException.ThrowIfNull(resume);
+        // QuestPDF composes lazily. Each document owns its renderer, including the settings
+        // and visibility read while generating pages after another render has started.
+        return ((BaseTemplate)MemberwiseClone()).CreateIsolatedDocument(resume);
+    }
+
+    private IDocument CreateIsolatedDocument(Resume resume)
+    {
         CurrentResume = resume;
 
         // Work on a copy: applying this template's defaults must not write back to the caller's resume.

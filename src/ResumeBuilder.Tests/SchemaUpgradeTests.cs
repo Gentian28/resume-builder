@@ -27,6 +27,35 @@ public class SchemaUpgradeTests : IDisposable
             .UseSqlite($"Data Source={Path.Combine(_dir, "resumes.db")}").Options);
 
     [Fact]
+    public async Task PreviousReleaseSchema_GainsRecoveryColumnsWithoutInventingHistory()
+    {
+        using (var current = Open())
+        {
+            DatabaseInitializer.Initialize(current);
+            current.JobApplications.Add(new JobApplication { Company = "Historical", Status = ApplicationStatus.Applied });
+            current.SaveChanges();
+            current.Database.ExecuteSqlRaw("""
+                ALTER TABLE "Resumes" DROP COLUMN "BaseResumeSyncId";
+                ALTER TABLE "CoverLetters" DROP COLUMN "TargetRole";
+                ALTER TABLE "CoverLetters" DROP COLUMN "SourceResumeJson";
+                ALTER TABLE "JobApplications" DROP COLUMN "RowVersion";
+                ALTER TABLE "JobApplications" DROP COLUMN "SentResumeJson";
+                ALTER TABLE "JobApplications" DROP COLUMN "ResumeCapturedAt";
+                """);
+        }
+        using var upgraded = Open();
+        var report = DatabaseInitializer.Initialize(upgraded);
+        report.BackupNeeded.Should().BeTrue();
+        var historic = await upgraded.JobApplications.AsNoTracking().SingleAsync();
+        historic.Company.Should().Be("Historical");
+        historic.SentResumeJson.Should().BeNull();
+        historic.Notes = "New note";
+        var options = new DbContextOptionsBuilder<ResumeDbContext>().UseSqlite(upgraded.Database.GetConnectionString()!).Options;
+        var saved = await new JobApplicationRepository(new ResumeDbContextFactory(options)).UpdateAsync(historic);
+        saved.SentResumeJson.Should().BeNull();
+    }
+
+    [Fact]
     public void AnOlderDatabaseGainsTheTableAndKeepsItsResumes()
     {
         // Stand up a database as it existed before JobApplications, with a résumé in it.

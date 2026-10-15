@@ -2,6 +2,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 using WColor = DocumentFormat.OpenXml.Wordprocessing.Color;
 
 namespace ResumeBuilder.Export;
@@ -81,7 +82,7 @@ public class CoverLetterDocxExporter : ICoverLetterExporter
     public async Task ExportToFileAsync(CoverLetter letter, string templateId, string filePath)
     {
         var bytes = await ExportAsync(letter, templateId);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await AtomicFile.WriteAllBytesAsync(filePath, bytes);
     }
 
     private static List<string> RecipientLines(CoverLetter letter)

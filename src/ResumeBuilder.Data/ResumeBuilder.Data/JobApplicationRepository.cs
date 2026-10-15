@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using ResumeBuilder.Core.Models;
 
@@ -60,6 +61,9 @@ public class JobApplicationRepository : IJobApplicationRepository
 
         application.CreatedAt = DateTime.UtcNow;
         application.UpdatedAt = application.CreatedAt;
+        application.RowVersion = Guid.NewGuid();
+        application.SentResumeJson = null;
+        application.ResumeCapturedAt = null;
 
         // An application that is already sent needs a date, or "how long have they had this?"
         // has no answer. Defaulting here rather than in the model keeps the model honest for the
@@ -68,6 +72,9 @@ public class JobApplicationRepository : IJobApplicationRepository
         {
             application.AppliedOn = DateTime.UtcNow;
         }
+
+        if (application.Status != ApplicationStatus.Saved)
+            await CaptureSentResumeAsync(context, application);
 
         context.JobApplications.Add(application);
         await context.SaveChangesAsync();
@@ -78,17 +85,46 @@ public class JobApplicationRepository : IJobApplicationRepository
     {
         await using var context = _factory.CreateDbContext();
 
-        application.UpdatedAt = DateTime.UtcNow;
+        var stored = await context.JobApplications.FindAsync(application.Id)
+            ?? throw new InvalidOperationException("This application no longer exists.");
+        var wasDraft = stored.Status == ApplicationStatus.Saved;
+        context.Entry(stored).Property(a => a.RowVersion).OriginalValue = application.RowVersion;
+        stored.Company = application.Company;
+        stored.Role = application.Role;
+        stored.Status = application.Status;
+        stored.Link = application.Link;
+        stored.Notes = application.Notes;
+        stored.AppliedOn = application.AppliedOn ?? stored.AppliedOn;
+        stored.UpdatedAt = DateTime.UtcNow;
+        stored.RowVersion = Guid.NewGuid();
 
-        // Moving off Saved is the moment it was actually sent.
-        if (application.Status != ApplicationStatus.Saved && application.AppliedOn is null)
+        if (stored.Status != ApplicationStatus.Saved && stored.AppliedOn is null)
+            stored.AppliedOn = DateTime.UtcNow;
+
+        if (wasDraft && stored.Status != ApplicationStatus.Saved && stored.SentResumeJson is null)
+            await CaptureSentResumeAsync(context, stored);
+
+        try
         {
-            application.AppliedOn = DateTime.UtcNow;
+            await context.SaveChangesAsync();
         }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new InvalidOperationException("This application changed elsewhere. Reload it before saving your changes.", ex);
+        }
+        return stored;
+    }
 
-        context.JobApplications.Update(application);
-        await context.SaveChangesAsync();
-        return application;
+    private static async Task CaptureSentResumeAsync(ResumeDbContext context, JobApplication application)
+    {
+        if (application.ResumeId is not { } resumeId)
+            return;
+        var resume = await context.Resumes.AsNoTracking().FirstOrDefaultAsync(r => r.Id == resumeId);
+        if (resume != null)
+        {
+            application.SentResumeJson = JsonSerializer.Serialize(resume);
+            application.ResumeCapturedAt = DateTime.UtcNow;
+        }
     }
 
     public async Task DeleteAsync(int id)

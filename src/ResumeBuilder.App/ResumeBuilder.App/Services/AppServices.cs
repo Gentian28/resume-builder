@@ -25,6 +25,8 @@ public class AppServices
     public CoverLetterService CoverLetterService { get; }
     public UpdateService UpdateService { get; }
     public TemplateThumbnailService TemplateThumbnailService { get; }
+    public IUserDialogs Dialogs { get; }
+    public WorkspaceBackupService? WorkspaceBackups { get; }
 
     public AppServices(
         IResumeRepository repository,
@@ -41,7 +43,9 @@ public class AppServices
         JobTailoringService tailoringService,
         CoverLetterService coverLetterService,
         UpdateService updateService,
-        TemplateThumbnailService templateThumbnailService)
+        TemplateThumbnailService templateThumbnailService,
+        IUserDialogs? dialogs = null,
+        WorkspaceBackupService? workspaceBackups = null)
     {
         Repository = repository;
         CoverLetterRepository = coverLetterRepository;
@@ -58,5 +62,7 @@ public class AppServices
         CoverLetterService = coverLetterService;
         UpdateService = updateService;
         TemplateThumbnailService = templateThumbnailService;
+        Dialogs = dialogs ?? WindowDialogs.Instance;
+        WorkspaceBackups = workspaceBackups;
     }
 }

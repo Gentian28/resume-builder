@@ -32,7 +32,13 @@ public class JsonImporter : IImporter
         bool isJsonResume;
         try
         {
-            using var document = JsonDocument.Parse(buffer);
+            using var document = JsonDocument.Parse(buffer, new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip
+            });
+            if (!IsRecognizedResume(document.RootElement))
+                return ImportResult<Resume>.Failed("This JSON file is not a resume or an app backup.");
             isJsonResume = IsJsonResume(document.RootElement);
         }
         catch (JsonException ex)
@@ -82,7 +88,7 @@ public class JsonImporter : IImporter
 
         // The native format is identified by its own root property; anything else is treated as
         // JSON Resume, which stays the default for third-party files.
-        if (root.TryGetProperty("personalInfo", out _) || root.TryGetProperty("PersonalInfo", out _))
+        if (root.EnumerateObject().Any(p => p.Name.Equals("personalInfo", StringComparison.OrdinalIgnoreCase)))
             return false;
 
         if (root.TryGetProperty("basics", out _))
@@ -97,4 +103,8 @@ public class JsonImporter : IImporter
 
         return true;
     }
+
+    private static bool IsRecognizedResume(JsonElement root) => root.ValueKind == JsonValueKind.Object &&
+        root.EnumerateObject().Any(p => new[] { "personalInfo", "basics", "work", "education", "skills", "projects", "volunteer", "$schema" }
+            .Contains(p.Name, StringComparer.OrdinalIgnoreCase));
 }

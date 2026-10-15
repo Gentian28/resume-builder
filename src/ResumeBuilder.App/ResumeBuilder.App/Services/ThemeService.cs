@@ -16,9 +16,7 @@ public class ThemeService
 
     public ThemeService()
     {
-        var appDataPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "ResumeBuilder");
+        var appDataPath = ResumeBuilder.Core.Editing.UserDataPaths.Directory;
 
         Directory.CreateDirectory(appDataPath);
         _settingsPath = Path.Combine(appDataPath, SettingsFileName);

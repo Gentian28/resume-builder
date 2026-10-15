@@ -9,19 +9,24 @@ namespace ResumeBuilder.Core.SmartContent;
 /// </summary>
 public static class ResumeTextExtractor
 {
-    public static string ToPlainText(Resume resume)
+    public static string ToPlainText(Resume resume, bool includeHidden = false)
     {
         var sb = new StringBuilder();
+        bool Visible(SectionType section) => includeHidden || resume.SectionOrder.IsSectionVisible(section);
 
         var info = resume.PersonalInfo;
-        AppendLine(sb, info.FullName);
-        AppendLine(sb, info.JobTitle);
-        AppendLine(sb, info.Email);
-        AppendLine(sb, info.Phone);
-        AppendLine(sb, info.Location);
-        AppendLine(sb, resume.Summary);
+        if (Visible(SectionType.PersonalInfo))
+        {
+            AppendLine(sb, info.FullName);
+            AppendLine(sb, info.JobTitle);
+            AppendLine(sb, info.Email);
+            AppendLine(sb, info.Phone);
+            AppendLine(sb, info.Location);
+        }
+        if (Visible(SectionType.Summary))
+            AppendLine(sb, resume.Summary);
 
-        foreach (var exp in resume.Experiences)
+        foreach (var exp in resume.Experiences.Where(_ => Visible(SectionType.Experience)))
         {
             AppendLine(sb, exp.JobTitle);
             AppendLine(sb, exp.Company);
@@ -33,31 +38,31 @@ public static class ResumeTextExtractor
             }
         }
 
-        foreach (var edu in resume.EducationList)
+        foreach (var edu in resume.EducationList.Where(_ => Visible(SectionType.Education)))
         {
             AppendLine(sb, edu.DegreeWithField);
             AppendLine(sb, edu.Institution);
             AppendLine(sb, edu.Description);
         }
 
-        foreach (var skill in resume.Skills)
+        foreach (var skill in resume.Skills.Where(_ => Visible(SectionType.Skills)))
         {
             AppendLine(sb, skill.Name);
             AppendLine(sb, skill.Category);
         }
 
-        foreach (var language in resume.Languages)
+        foreach (var language in resume.Languages.Where(_ => Visible(SectionType.Languages)))
         {
             AppendLine(sb, language.Name);
         }
 
-        foreach (var cert in resume.Certifications)
+        foreach (var cert in resume.Certifications.Where(_ => Visible(SectionType.Certifications)))
         {
             AppendLine(sb, cert.Name);
             AppendLine(sb, cert.IssuingOrganization);
         }
 
-        foreach (var project in resume.Projects)
+        foreach (var project in resume.Projects.Where(_ => Visible(SectionType.Projects)))
         {
             AppendLine(sb, project.Name);
             AppendLine(sb, project.Description);
@@ -65,7 +70,7 @@ public static class ResumeTextExtractor
             foreach (var highlight in project.Highlights) AppendLine(sb, highlight);
         }
 
-        foreach (var section in resume.CustomSections)
+        foreach (var section in resume.CustomSections.Where(_ => Visible(SectionType.CustomSections)))
         {
             AppendLine(sb, section.Title);
             foreach (var item in section.Items)

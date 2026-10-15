@@ -6,7 +6,7 @@ There is no account, no sign-up, no telemetry, no analytics, no crash reporting 
 advertising. Nothing you type is transmitted to the author of this software, and there is no
 server operated by this project that your copy talks to.
 
-Last updated: 2026-09-09.
+Last updated: 2026-10-15.
 
 ## What is stored, and where
 
@@ -18,6 +18,8 @@ Everything stays on your own computer, in your user profile:
 | Database backups | Up to three copies of that database, taken before an upgrade changes its schema, in the same folder |
 | Spell-check dictionaries | Downloaded once on first use, then cached locally |
 | Sync state | A local file, only if you enable folder sync |
+| Model endpoint, model names, sync destination, conflict preference and last open resume | A local preferences file beside the database. API keys are excluded. |
+| Workspace archives you export | The file location you choose. They contain resumes, cover letters, applications and sent-content snapshots, with no API keys. |
 
 The exact location follows the platform convention: `%LocalAppData%\ResumeBuilder` on Windows,
 `~/.local/share/ResumeBuilder` on Linux, `~/Library/Application Support/ResumeBuilder` on macOS.
@@ -33,7 +35,7 @@ of them either optional or clearly signposted:
 receives the request as it would any download. No information about you or your résumé is
 included. This only happens in builds installed from the installer; portable builds never check.
 
-**2. Spell-check dictionaries.** The first time spell check runs for a language, the dictionary
+**2. Spell-check dictionaries.** On the first startup for a language, the dictionary
 file is downloaded and then cached. Your text is not sent. Only the dictionary comes down.
 
 **3. AI features, only if you configure them.** These are off until you provide an endpoint:

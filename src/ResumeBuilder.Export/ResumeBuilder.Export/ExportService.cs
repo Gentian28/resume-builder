@@ -74,12 +74,16 @@ public class ExportService
         return await exporter.ExportAsync(resume, resume.SelectedTemplateId);
     }
 
-    public async Task ExportToFileAsync(Resume resume, string format, string filePath)
+    public async Task<IReadOnlyList<string>> ExportToFileAsync(Resume resume, string format, string filePath)
     {
         var exporter = GetExporter(format)
             ?? throw new ArgumentException($"Unknown export format: {format}");
 
+        if (exporter is PngExporter png)
+            return await png.ExportAllPagesToFilesAsync(resume, resume.SelectedTemplateId, filePath);
+
         await exporter.ExportToFileAsync(resume, resume.SelectedTemplateId, filePath);
+        return new[] { filePath };
     }
 
     /// <summary>

@@ -31,6 +31,16 @@ public class NativeJsonImporter : IImporter
 
             var warnings = new List<string>();
 
+            resume.PersonalInfo ??= new();
+            resume.TemplateSettings ??= new();
+            resume.Experiences ??= new();
+            resume.EducationList ??= new();
+            resume.Skills ??= new();
+            resume.Languages ??= new();
+            resume.Certifications ??= new();
+            resume.Projects ??= new();
+            resume.CustomSections ??= new();
+
             if (string.IsNullOrWhiteSpace(resume.PersonalInfo.FullName))
             {
                 warnings.Add("Missing name in personal information.");

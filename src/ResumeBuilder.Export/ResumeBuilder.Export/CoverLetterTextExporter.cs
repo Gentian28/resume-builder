@@ -1,5 +1,6 @@
 using System.Text;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 
 namespace ResumeBuilder.Export;
 
@@ -64,7 +65,7 @@ public class CoverLetterTextExporter : ICoverLetterExporter
     public async Task ExportToFileAsync(CoverLetter letter, string templateId, string filePath)
     {
         var bytes = await ExportAsync(letter, templateId);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await AtomicFile.WriteAllBytesAsync(filePath, bytes);
     }
 
     private static void AppendIfPresent(StringBuilder sb, string? value)

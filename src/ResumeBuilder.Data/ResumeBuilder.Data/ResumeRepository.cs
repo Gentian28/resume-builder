@@ -165,6 +165,7 @@ public class ResumeRepository : IResumeRepository
 
         // Variants branch from a base resume, never from another variant, so the tree stays flat.
         variant.BaseResumeId = original.BaseResumeId ?? original.Id;
+        variant.BaseResumeSyncId = original.BaseResumeSyncId ?? original.SyncId;
         variant.TargetRole = targetRole;
         variant.JobDescription = jobDescription;
         variant.Name = string.IsNullOrWhiteSpace(targetRole)

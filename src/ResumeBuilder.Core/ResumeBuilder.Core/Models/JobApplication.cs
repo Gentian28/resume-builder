@@ -41,6 +41,12 @@ public class JobApplication
     /// </summary>
     public int? ResumeId { get; set; }
 
+    public Guid RowVersion { get; set; } = Guid.NewGuid();
+
+    /// <summary>Immutable content captured when this application is sent. Null for historical live links.</summary>
+    public string? SentResumeJson { get; set; }
+    public DateTime? ResumeCapturedAt { get; set; }
+
     public string Company { get; set; } = string.Empty;
 
     public string Role { get; set; } = string.Empty;

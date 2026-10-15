@@ -44,6 +44,8 @@ public class CoverLetter
 
     /// <summary>The posting this letter was written against, kept for re-tailoring.</summary>
     public string JobDescription { get; set; } = string.Empty;
+    public string TargetRole { get; set; } = string.Empty;
+    public string? SourceResumeJson { get; set; }
 
     [JsonIgnore]
     public string EffectiveSalutation => string.IsNullOrWhiteSpace(Salutation)
@@ -74,7 +76,9 @@ public class CoverLetter
             TemplateSettings = resume.TemplateSettings.Clone(),
             CompanyName = companyName ?? string.Empty,
             Subject = string.IsNullOrWhiteSpace(role) ? string.Empty : $"Application for {role}",
-            JobDescription = resume.JobDescription
+            JobDescription = resume.JobDescription,
+            TargetRole = role,
+            SourceResumeJson = System.Text.Json.JsonSerializer.Serialize(resume)
         };
     }
 

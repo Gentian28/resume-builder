@@ -25,6 +25,7 @@ public class Resume
     /// branched from. Null for a base resume.
     /// </summary>
     public int? BaseResumeId { get; set; }
+    public Guid? BaseResumeSyncId { get; set; }
 
     /// <summary>The role this variant targets, e.g. "Senior Backend Engineer at Northwind".</summary>
     public string TargetRole { get; set; } = string.Empty;
@@ -108,6 +109,7 @@ public class PersonalInfo
 
 public class Experience
 {
+    public Guid EditKey { get; set; } = Guid.NewGuid();
     public int Id { get; set; }
     public int Order { get; set; }
     public string JobTitle { get; set; } = string.Empty;

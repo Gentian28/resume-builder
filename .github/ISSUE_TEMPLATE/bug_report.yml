@@ -1,0 +1,47 @@
+name: Bug report
+description: Report a broken workflow without sharing personal documents.
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach resumes, workspace backups, API keys, or other personal data. Use a synthetic example if a file is needed.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and architecture
+      placeholder: Windows 11 x64, macOS Apple silicon, or Linux distribution
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method
+      options:
+        - Installer
+        - winget
+        - Portable archive
+        - AppImage
+        - Built from source
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the selected template and import or export format if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual result
+    validations:
+      required: true
+  - type: textarea
+    id: message
+    attributes:
+      label: Error message or screenshot
+      description: Remove names, addresses, document text, and credentials before sharing.

@@ -31,6 +31,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private const string DefaultResumeName = "Untitled Resume";
 
     private readonly AppServices _services;
+    private IUserDialogs Dialogs => _services?.Dialogs ?? WindowDialogs.Instance;
 
     // Autosave and the manual Save both write the same resume; the gate keeps them from overlapping.
     private readonly SemaphoreSlim _saveGate = new(1, 1);
@@ -45,6 +46,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private bool _isLoadingEditor;
     private bool _suppressUndoRecording;
     private DateTime? _lastSavedAt;
+    private CancellationTokenSource? _aiCts;
+    private bool _branchOnSave;
 
     [ObservableProperty]
     private Resume _currentResume = new();
@@ -392,13 +395,13 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
     public MainWindowViewModel() : this(null!) { }
 
-    public MainWindowViewModel(AppServices services)
+    public MainWindowViewModel(AppServices services, bool initialize = true)
     {
         _services = services;
 
         QuestPDF.Settings.License = LicenseType.Community;
 
-        if (services != null)
+        if (services != null && initialize)
         {
             LoadTemplates();
             _ = LoadSavedResumesAsync();
@@ -407,7 +410,12 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             InitializeTheme();
             InitializeUndoRedo();
             UpdateAiPrivacyNotice();
+            _ = RestorePreferencesAsync();
             _ = CheckForUpdatesAsync();
+        }
+        else if (services != null)
+        {
+            InitializeUndoRedo();
         }
     }
 
@@ -444,6 +452,9 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         if (!IsUpdateAvailable)
             return;
 
+        if (!await FlushApplicationsAsync())
+            return;
+
         // ApplyAndRestart exits the process, so a save that failed has to stop the restart: the
         // user keeps the error dialog and the app they were in, not a fresh one missing their work.
         if (IsDirty && !await SaveAsync(isAutoSave: false))
@@ -455,6 +466,9 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             if (IsLetterDirty)
                 return;
         }
+
+        if (IsDirty || IsLetterDirty || Applications.Any(a => a.HasPendingChanges))
+            return;
 
         _services.UpdateService.ApplyAndRestart();
     }
@@ -488,8 +502,11 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     private void InitializeUndoRedo()
     {
         var manager = _services.UndoRedoManager;
+        manager.PropertyChanged += (_, _) => RefreshActiveUndoState();
+        _letterUndoManager.PropertyChanged += (_, _) => RefreshActiveUndoState();
         manager.PropertyChanged += (s, e) =>
         {
+            if (ShowCoverLetterEditor) return;
             if (e.PropertyName == nameof(UndoRedoManager.CanUndo))
                 CanUndo = manager.CanUndo;
             else if (e.PropertyName == nameof(UndoRedoManager.CanRedo))
@@ -523,7 +540,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         _suppressUndoRecording = true;
         try
         {
-            _services.UndoRedoManager.Undo();
+            (ShowCoverLetterEditor ? _letterUndoManager : _services.UndoRedoManager).Undo();
         }
         finally
         {
@@ -539,7 +556,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         _suppressUndoRecording = true;
         try
         {
-            _services.UndoRedoManager.Redo();
+            (ShowCoverLetterEditor ? _letterUndoManager : _services.UndoRedoManager).Redo();
         }
         finally
         {
@@ -580,6 +597,38 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         !_suppressUndoRecording &&
         _services?.UndoRedoManager != null &&
         !_services.UndoRedoManager.IsExecutingAction;
+
+    private void RefreshActiveUndoState()
+    {
+        if (_services is null) return;
+        var manager = ShowCoverLetterEditor ? _letterUndoManager : _services.UndoRedoManager;
+        CanUndo = manager.CanUndo;
+        CanRedo = manager.CanRedo;
+        NextUndoDescription = manager.NextUndoDescription;
+        NextRedoDescription = manager.NextRedoDescription;
+    }
+
+    [RelayCommand]
+    private async Task SaveActiveDocumentAsync()
+    {
+        if (ShowApplications) await FlushApplicationsAsync();
+        else if (ShowCoverLetterEditor) await SaveCoverLetterAsync();
+        else await SaveAsync(isAutoSave: false);
+    }
+
+    [RelayCommand]
+    private Task ExportActiveDocumentAsync(string format) => ShowCoverLetterEditor && !format.Equals("JSON", StringComparison.OrdinalIgnoreCase)
+        ? ExportCoverLetterAsync(format)
+        : ExportAsync(format);
+
+    [RelayCommand]
+    private Task NewActiveDocumentAsync() => ShowCoverLetterEditor ? NewCoverLetterAsync() : CreateNewResumeAsync();
+
+    [RelayCommand]
+    private Task OpenActiveDocumentAsync() => ShowCoverLetterEditor ? OpenCoverLetterListAsync() : OpenResumeListAsync();
+
+    [RelayCommand]
+    private Task DuplicateActiveDocumentAsync() => ShowCoverLetterEditor ? DuplicateCoverLetterAsync() : SaveAsAsync();
 
     // ---------------------------------------------------------------- Theme
 
@@ -707,7 +756,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Photo upload failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Photo upload failed", ex.Message);
         }
     }
 
@@ -962,7 +1011,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Could not load your resumes", ex.Message);
+            await Dialogs.ShowErrorAsync("Could not load your resumes", ex.Message);
         }
     }
 
@@ -1007,6 +1056,9 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
     private void LoadResumeIntoEditor(Resume resume)
     {
+        _branchOnSave = false;
+        InvalidateResumeAnalysis();
+        _previewCts?.Cancel();
         _isLoadingEditor = true;
         try
         {
@@ -1067,6 +1119,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         {
             _isLoadingEditor = false;
         }
+        PersistPreferences();
     }
 
     private void SyncEditorToResume()
@@ -1219,9 +1272,35 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     {
         if (_isLoadingEditor) return;
 
+        InvalidateResumeAnalysis();
         _edits.MarkDirty();
         IsDirty = true;
         UpdateSaveState();
+    }
+
+    private void InvalidateResumeAnalysis()
+    {
+        _aiCts?.Cancel();
+        AiGeneratedSummary = null;
+        AiSkillSuggestions.Clear();
+        AiBulletSuggestions.Clear();
+        TailoredEdits.Clear();
+        HasTailoredEdits = false;
+        HasKeywordAnalysis = false;
+        MatchedKeywords.Clear();
+        MissingKeywords.Clear();
+        KeywordSuggestions.Clear();
+        KeywordWarnings.Clear();
+        TailorSuggestedSkills.Clear();
+        TailorAiError = null;
+        KeywordMatchScore = 0;
+    }
+
+    private CancellationTokenSource BeginAiRequest()
+    {
+        _aiCts?.Cancel();
+        _aiCts?.Dispose();
+        return _aiCts = new CancellationTokenSource();
     }
 
     private void UpdateSaveState()
@@ -1668,7 +1747,6 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
 
         var ai = router.OpenAiCompatible;
-        router.Active = AiProvider.OpenAiCompatible;
 
         var baseUrl = string.IsNullOrWhiteSpace(AiBaseUrl) ? LocalAiService.OpenAiBaseUrl : AiBaseUrl.Trim();
         var model = string.IsNullOrWhiteSpace(AiModel) ? LocalAiService.DefaultModel : AiModel.Trim();
@@ -1685,17 +1763,22 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             return;
         }
 
-        // ConfigureLocal is the only way to move the endpoint; Configure then attaches the key.
-        ai.ConfigureLocal(baseUrl, model);
-
-        if (!string.IsNullOrWhiteSpace(AiApiKey))
+        try
         {
-            ai.Configure(AiApiKey.Trim(), model);
+            ai.ConfigureEndpoint(baseUrl, model, AiApiKey);
+        }
+        catch (ArgumentException ex)
+        {
+            AiStatusMessage = ex.Message;
+            return;
         }
 
+        InvalidateResumeAnalysis();
+        router.Active = AiProvider.OpenAiCompatible;
         IsAiConfigured = ai.IsConfigured;
         UpdateAiPrivacyNotice();
         AiStatusMessage = $"Ready - using {ai.Model} at {ai.BaseUrl}";
+        PersistPreferences();
     }
 
     /// <summary>
@@ -1712,12 +1795,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
         var model = string.IsNullOrWhiteSpace(AiModel) ? AnthropicAiService.DefaultModel : AiModel.Trim();
 
+        InvalidateResumeAnalysis();
         router.Anthropic.Configure(AiApiKey.Trim(), model);
         router.Active = AiProvider.Anthropic;
 
         IsAiConfigured = router.Anthropic.IsConfigured;
         UpdateAiPrivacyNotice();
         AiStatusMessage = $"Ready - using {router.Anthropic.Model}";
+        PersistPreferences();
     }
 
     [RelayCommand]
@@ -1823,6 +1908,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
         IsAiProcessing = true;
         AiStatusMessage = "Generating summary...";
+        var request = BeginAiRequest();
 
         try
         {
@@ -1836,7 +1922,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
                 .Select(s => s.Name)
                 .ToList();
 
-            var result = await ai.GenerateSummaryAsync(JobTitle, experiences, skills);
+            var result = await ai.GenerateSummaryAsync(JobTitle, experiences, skills, request.Token);
+            if (request.IsCancellationRequested) return;
 
             if (result.Success && result.Data != null)
             {
@@ -1846,17 +1933,18 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             else
             {
                 AiStatusMessage = result.ErrorMessage ?? "Failed to generate summary";
-                await DialogService.ShowErrorAsync("AI request failed", AiStatusMessage);
+                await Dialogs.ShowErrorAsync("AI request failed", AiStatusMessage);
             }
         }
         catch (Exception ex)
         {
+            if (request.IsCancellationRequested) return;
             AiStatusMessage = ex.Message;
-            await DialogService.ShowErrorAsync("AI request failed", ex.Message);
+            await Dialogs.ShowErrorAsync("AI request failed", ex.Message);
         }
         finally
         {
-            IsAiProcessing = false;
+            if (ReferenceEquals(request, _aiCts)) IsAiProcessing = false;
         }
     }
 
@@ -1882,6 +1970,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
         IsAiProcessing = true;
         AiStatusMessage = "Suggesting skills...";
+        var request = BeginAiRequest();
 
         try
         {
@@ -1895,7 +1984,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
                 .Select(e => e.Description)
                 .ToList();
 
-            var result = await ai.SuggestSkillsAsync(JobTitle, currentSkills, experiences);
+            var result = await ai.SuggestSkillsAsync(JobTitle, currentSkills, experiences, request.Token);
+            if (request.IsCancellationRequested) return;
 
             if (result.Success && result.Data != null)
             {
@@ -1909,17 +1999,18 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             else
             {
                 AiStatusMessage = result.ErrorMessage ?? "Failed to suggest skills";
-                await DialogService.ShowErrorAsync("AI request failed", AiStatusMessage);
+                await Dialogs.ShowErrorAsync("AI request failed", AiStatusMessage);
             }
         }
         catch (Exception ex)
         {
+            if (request.IsCancellationRequested) return;
             AiStatusMessage = ex.Message;
-            await DialogService.ShowErrorAsync("AI request failed", ex.Message);
+            await Dialogs.ShowErrorAsync("AI request failed", ex.Message);
         }
         finally
         {
-            IsAiProcessing = false;
+            if (ReferenceEquals(request, _aiCts)) IsAiProcessing = false;
         }
     }
 
@@ -1942,6 +2033,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     partial void OnJobDescriptionTextChanged(string value)
     {
         if (_isLoadingEditor) return;
+        _branchOnSave = CurrentResume.Id != 0 && !CurrentResume.IsVariant && !string.IsNullOrWhiteSpace(value);
 
         // The posting is part of the resume, but it never shows up in the rendered document, so
         // there is nothing for the preview to redraw.
@@ -1966,14 +2058,17 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             return;
         }
 
+        if (_branchOnSave && !await SaveAsync(isAutoSave: false)) return;
         SyncEditorToResume();
 
         IsTailoring = true;
         StatusMessage = "Tailoring to the job...";
+        var request = BeginAiRequest();
 
         try
         {
-            var result = await _services.TailoringService.TailorAsync(CurrentResume, JobDescriptionText);
+            var result = await _services.TailoringService.TailorAsync(CurrentResume, JobDescriptionText, request.Token);
+            if (request.IsCancellationRequested) return;
 
             ApplyKeywordAnalysis(result.Analysis);
 
@@ -2000,7 +2095,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Tailoring failed", ex.Message);
+            if (request.IsCancellationRequested) return;
+            await Dialogs.ShowErrorAsync("Tailoring failed", ex.Message);
             StatusMessage = "Tailoring failed";
         }
         finally
@@ -2049,7 +2145,8 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private void ApplyAcceptedEdits()
     {
-        var accepted = TailoredEdits.Where(e => e.Accepted).Select(e => e.Edit).ToList();
+        SyncEditorToResume();
+        var accepted = TailoredEdits.Where(e => e.Accepted && JobTailoringService.CanApply(CurrentResume, e.Edit)).Select(e => e.Edit).ToList();
         if (accepted.Count == 0)
         {
             StatusMessage = "Tick at least one rewrite to apply";
@@ -2069,9 +2166,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
                 $"Tailor {DescribeEditTarget(edit)}"))
             .ToList();
 
-        var applied = JobTailoringService.Apply(CurrentResume, accepted);
-
-        LoadResumeIntoEditor(CurrentResume);
+        _suppressUndoRecording = true;
+        try
+        {
+            foreach (var edit in accepted)
+                SetTailoredValue(edit, edit.Proposed);
+        }
+        finally { _suppressUndoRecording = false; }
+        var applied = accepted.Count;
         MarkDirty();
         UpdatePreviewDebounced();
 
@@ -2150,25 +2252,59 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         SyncEditorToResume();
 
         // CreateVariantAsync branches from a persisted row, so an unsaved resume has to land first.
-        if (CurrentResume.Id == 0 || IsDirty)
+        if (CurrentResume.Id == 0)
         {
             if (!await SaveAsync(isAutoSave: false))
                 return;
         }
 
         var targetRole = string.IsNullOrWhiteSpace(TargetRoleText) ? JobTitle : TargetRoleText;
+        if (CurrentResume.IsVariant && !_branchOnSave)
+        {
+            if (await SaveAsync(isAutoSave: false)) StatusMessage = $"Saved variant: {CurrentResume.Name}";
+            return;
+        }
 
         try
         {
-            var variant = await _services.Repository.CreateVariantAsync(
-                CurrentResume.Id, targetRole.Trim(), JobDescriptionText);
+            await _saveGate.WaitAsync();
+            try
+            {
+                SyncEditorToResume();
+                var source = CurrentResume;
+                var generation = _edits.BeginSave();
+                var variant = ResumeRepository.DeepClone(source);
+                ResumeRepository.ResetIdentity(variant);
+                variant.BaseResumeId = source.BaseResumeId ?? source.Id;
+                variant.BaseResumeSyncId = source.BaseResumeSyncId ?? source.SyncId;
+                variant.TargetRole = targetRole.Trim();
+                variant.Name = string.IsNullOrWhiteSpace(targetRole) ? $"{source.Name} (Variant)" : $"{source.Name} - {targetRole.Trim()}";
+                await _services.Repository.CreateAsync(variant);
+
+                if (!ReferenceEquals(source, CurrentResume) || generation != _edits.BeginSave())
+                {
+                    StatusMessage = "Variant saved. Newer edits are still open and unsaved.";
+                    await LoadSavedResumesAsync();
+                    return;
+                }
+
+                _services.UndoRedoManager.Clear();
+                CurrentResume = variant;
+                LoadResumeIntoEditor(variant);
+                _edits.Reset();
+                IsDirty = false;
+                _lastSavedAt = DateTime.Now;
+                UpdateSaveState();
+                UpdatePreviewDebounced();
+                StatusMessage = $"Saved variant: {variant.Name}";
+            }
+            finally { _saveGate.Release(); }
 
             await LoadSavedResumesAsync();
-            StatusMessage = $"Saved variant: {variant.Name}";
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Could not save the variant", ex.Message);
+            await Dialogs.ShowErrorAsync("Could not save the variant", ex.Message);
         }
     }
 
@@ -2197,6 +2333,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         {
             sync.ConflictResolution = value;
         }
+        PersistPreferences();
     }
 
     /// <summary>
@@ -2244,12 +2381,13 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             OnSelectedConflictResolutionChanged(SelectedConflictResolution);
             SyncStatusText = "Configured - ready to sync";
             StatusMessage = "Sync configured";
+            PersistPreferences();
             await RefreshRemoteResumesAsync();
         }
         else
         {
             SyncStatusText = "Configuration failed";
-            await DialogService.ShowErrorAsync("Sync setup failed",
+            await Dialogs.ShowErrorAsync("Sync setup failed",
                 $"Could not use '{SyncFolderPath}' as a sync folder. Check that the path is valid and writable.");
         }
     }
@@ -2276,7 +2414,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Could not open folder picker", ex.Message);
+            await Dialogs.ShowErrorAsync("Could not open folder picker", ex.Message);
         }
     }
 
@@ -2303,7 +2441,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         catch (Exception ex)
         {
             SyncStatusText = "Sync failed";
-            await DialogService.ShowErrorAsync("Sync failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Sync failed", ex.Message);
         }
         finally
         {
@@ -2338,7 +2476,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         catch (Exception ex)
         {
             SyncStatusText = "Sync failed";
-            await DialogService.ShowErrorAsync("Sync failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Sync failed", ex.Message);
         }
         finally
         {
@@ -2369,15 +2507,18 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         await LoadSavedResumesAsync();
         await RefreshRemoteResumesAsync();
 
-        if (result.Errors.Count > 0)
+        if (result.Errors.Count > 0 || result.Warnings.Count > 0)
         {
-            await DialogService.ShowErrorAsync("Sync finished with errors", string.Join("\n", result.Errors));
+            await Dialogs.ShowErrorAsync("Sync needs attention", string.Join("\n", result.Errors.Concat(result.Warnings)));
         }
 
         // A download can overwrite the row the editor is showing.
         if (result.DownloadedCount > 0 && CurrentResume.Id != 0)
         {
-            await ReloadCurrentResumeAsync();
+            if (!IsDirty)
+                await ReloadCurrentResumeAsync();
+            else
+                StatusMessage = "Sync downloaded changes. Your newer edits are still open; save a copy before reloading.";
         }
     }
 
@@ -2405,7 +2546,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Could not list remote resumes", ex.Message);
+            await Dialogs.ShowErrorAsync("Could not list remote resumes", ex.Message);
         }
     }
 
@@ -2425,23 +2566,30 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             var json = await _services.SyncService.DownloadAsync(remotePath);
             if (json == null)
             {
-                await DialogService.ShowErrorAsync("Import failed", $"Could not read '{remotePath}' from the sync folder.");
+                await Dialogs.ShowErrorAsync("Import failed", $"Could not read '{remotePath}' from the sync folder.");
                 return;
             }
 
             var resume = JsonSerializer.Deserialize<Resume>(json);
             if (resume == null)
             {
-                await DialogService.ShowErrorAsync("Import failed", $"'{remotePath}' is not a valid resume file.");
+                await Dialogs.ShowErrorAsync("Import failed", $"'{remotePath}' is not a valid resume file.");
                 return;
             }
 
+            var existing = (await _services.Repository.GetAllAsync()).FirstOrDefault(r => r.SyncId == resume.SyncId);
+            if (existing != null)
+            {
+                await LoadResumeAsync(existing);
+                StatusMessage = "This resume is already on this computer. Use Sync to get its latest changes.";
+                return;
+            }
             AdoptImportedResume(resume, preserveSyncId: true);
             StatusMessage = "Resume imported from the sync folder";
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Import failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Import failed", ex.Message);
         }
         finally
         {
@@ -2482,7 +2630,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Preview failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Preview failed", ex.Message);
             return;
         }
 
@@ -2543,7 +2691,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         catch (Exception ex)
         {
             StatusMessage = "Preview failed";
-            await DialogService.ShowErrorAsync("Preview failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Preview failed", ex.Message);
         }
     }
 
@@ -2557,12 +2705,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         {
             await AutoSaveAsync();
             await AutoSaveCoverLetterAsync();
+            await FlushApplicationsAsync(showErrors: false);
         };
         _autoSaveTimer.Start();
     }
 
     private async Task AutoSaveAsync()
     {
+        if (IsLoading) return;
         if (!IsDirty || IsSaving)
             return;
 
@@ -2578,6 +2728,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
     private async Task<bool> SaveAsync(bool isAutoSave)
     {
+        var document = CurrentResume;
         if (isAutoSave)
         {
             if (!await _saveGate.WaitAsync(0))
@@ -2590,36 +2741,60 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
         try
         {
-            var token = _edits.BeginSave();
-            SyncEditorToResume();
-
+            if (!ReferenceEquals(document, CurrentResume)) return false;
             IsSaving = true;
             UpdateSaveState();
-
-            if (CurrentResume.Id == 0)
+            do
             {
-                await _services.Repository.CreateAsync(CurrentResume);
-            }
-            else
-            {
-                await _services.Repository.UpdateAsync(CurrentResume);
-            }
+                var token = _edits.BeginSave();
+                SyncEditorToResume();
+                var snapshot = ResumeRepository.DeepClone(document);
+                var branching = _branchOnSave && document.Id != 0;
+                if (branching)
+                {
+                    ResumeRepository.ResetIdentity(snapshot);
+                    snapshot.BaseResumeId = document.BaseResumeId ?? document.Id;
+                    snapshot.BaseResumeSyncId = document.BaseResumeSyncId ?? document.SyncId;
+                    var baseName = SavedResumes.FirstOrDefault(r => r.Id == snapshot.BaseResumeId)?.Name ?? document.Name;
+                    snapshot.Name = $"{baseName} - {(string.IsNullOrWhiteSpace(TargetRoleText) ? "Job variant" : TargetRoleText.Trim())}";
+                }
+                var saved = snapshot.Id == 0
+                    ? await _services.Repository.CreateAsync(snapshot)
+                    : await _services.Repository.UpdateAsync(snapshot);
+                if (!ReferenceEquals(CurrentResume, document))
+                    return false;
 
-            // An edit that landed while the write was awaited is not in the file. Leaving the flag
-            // set is what makes the next autosave carry it; clearing it would say "all changes saved"
-            // about a change that exists only in memory.
-            IsDirty = !_edits.CompleteSave(token);
-            _lastSavedAt = DateTime.Now;
+                document.Id = saved.Id;
+                document.RowVersion = saved.RowVersion;
+                document.CreatedAt = saved.CreatedAt;
+                document.UpdatedAt = saved.UpdatedAt;
+                if (branching)
+                {
+                    document.BaseResumeId = saved.BaseResumeId;
+                    document.BaseResumeSyncId = saved.BaseResumeSyncId;
+                    document.SyncId = saved.SyncId;
+                    document.Name = saved.Name;
+                    _isLoadingEditor = true;
+                    try { ResumeName = saved.Name; }
+                    finally { _isLoadingEditor = false; }
+                    _branchOnSave = false;
+                }
+                IsDirty = !_edits.CompleteSave(token);
+                _lastSavedAt = DateTime.Now;
+            }
+            while (!isAutoSave && IsDirty);
 
             await LoadSavedResumesAsync();
             StatusMessage = isAutoSave
                 ? $"Auto-saved at {_lastSavedAt:HH:mm:ss}"
                 : $"Saved at {_lastSavedAt:HH:mm:ss}";
-            return true;
+            PersistPreferences();
+            return !IsDirty && ReferenceEquals(document, CurrentResume);
         }
         catch (ResumeConcurrencyException ex)
         {
-            var reload = await DialogService.ConfirmAsync(
+            if (!ReferenceEquals(document, CurrentResume)) return false;
+            var reload = await Dialogs.ConfirmAsync(
                 "Resume changed elsewhere",
                 $"{ex.Message}\n\nReload the saved version? Your unsaved changes to this resume will be lost.",
                 "Reload saved version",
@@ -2633,7 +2808,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Save failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Save failed", ex.Message);
             return false;
         }
         finally
@@ -2647,12 +2822,16 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     [RelayCommand]
     private async Task SaveAsAsync()
     {
-        var name = await DialogService.PromptAsync("Duplicate", "Name for the copy:", ResumeName);
+        var name = await Dialogs.PromptAsync("Duplicate", "Name for the copy:", ResumeName);
         if (name == null) return;
 
+        await _saveGate.WaitAsync();
         try
         {
+            IsSaving = true;
             SyncEditorToResume();
+            var source = CurrentResume;
+            var generation = _edits.BeginSave();
 
             var copy = ResumeRepository.DeepClone(CurrentResume);
             ResumeRepository.ResetIdentity(copy);
@@ -2660,6 +2839,12 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             copy.Name = name;
 
             await _services.Repository.CreateAsync(copy);
+            if (!ReferenceEquals(source, CurrentResume) || generation != _edits.BeginSave())
+            {
+                await LoadSavedResumesAsync();
+                StatusMessage = "Copy saved. Newer edits are still open.";
+                return;
+            }
 
             _services.UndoRedoManager.Clear();
             CurrentResume = copy;
@@ -2675,7 +2860,13 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Duplicate failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Duplicate failed", ex.Message);
+        }
+        finally
+        {
+            IsSaving = false;
+            UpdateSaveState();
+            _saveGate.Release();
         }
     }
 
@@ -2683,7 +2874,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     {
         if (CurrentResume.Id == 0) return;
 
-        var reloaded = await _services.Repository.GetByIdAsync(CurrentResume.Id);
+        var current = CurrentResume;
+        var generation = _edits.BeginSave();
+        var reloaded = await _services.Repository.GetByIdAsync(current.Id);
+        if (!ReferenceEquals(current, CurrentResume) || generation != _edits.BeginSave())
+        {
+            StatusMessage = "Newer edits are still open. Reload was cancelled.";
+            return;
+        }
         if (reloaded == null)
         {
             StatusMessage = "This resume no longer exists";
@@ -2705,10 +2903,12 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     /// </summary>
     public async Task<bool> ConfirmDiscardChangesAsync()
     {
+        await _saveGate.WaitAsync();
+        _saveGate.Release();
         if (!IsDirty)
             return true;
 
-        var choice = await DialogService.ConfirmUnsavedChangesAsync(ResumeName);
+        var choice = await Dialogs.ConfirmUnsavedChangesAsync(ResumeName);
         return choice switch
         {
             UnsavedChangesChoice.Save => await SaveAsync(isAutoSave: false),
@@ -2718,11 +2918,38 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     }
 
     /// <summary>Everything the window holds: the resume and, when its editor is open, the cover letter.</summary>
-    public bool HasUnsavedWork => IsDirty || IsLetterDirty;
+    public bool HasUnsavedWork => IsDirty || IsLetterDirty || IsSaving || Applications.Any(a => a.HasPendingChanges);
 
     /// <summary>The close-window check. Both prompts run; backing out of either keeps the window open.</summary>
     public async Task<bool> ConfirmDiscardAllChangesAsync()
-        => await ConfirmDiscardChangesAsync() && await ConfirmDiscardLetterChangesAsync();
+    {
+        if (!await ConfirmDiscardChangesAsync()) return false;
+        var resume = CurrentResume;
+        var resumeGeneration = _edits.BeginSave();
+        if (!await ConfirmDiscardLetterChangesAsync()) return false;
+        var letter = CurrentLetter;
+        var letterGeneration = _letterEdits.BeginSave();
+        var discardedRows = new List<JobApplicationViewModel>();
+        if (!await FlushApplicationsAsync(showErrors: false))
+        {
+            var choice = await Dialogs.ConfirmUnsavedChangesAsync("application tracker changes");
+            if (choice == UnsavedChangesChoice.Save)
+            {
+                if (!await FlushApplicationsAsync()) return false;
+            }
+            else if (choice == UnsavedChangesChoice.Discard)
+            {
+                discardedRows = Applications.ToList();
+                foreach (var row in discardedRows) await row.StopSavingAsync();
+            }
+            else return false;
+        }
+        var unchanged = ReferenceEquals(resume, CurrentResume) && resumeGeneration == _edits.BeginSave() &&
+            ReferenceEquals(letter, CurrentLetter) && letterGeneration == _letterEdits.BeginSave();
+        if (!unchanged)
+            foreach (var row in discardedRows) row.ResumeSaving();
+        return unchanged;
+    }
 
     /// <summary>
     /// Shown once the window is open when the pre-upgrade backup could not be made. The upgrade
@@ -2731,7 +2958,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
     /// </summary>
     public async Task ReportFailedBackupAsync(ResumeBuilder.Data.DatabaseInitializationReport report)
     {
-        await DialogService.ShowErrorAsync(
+        await Dialogs.ShowErrorAsync(
             "Backup before upgrade failed",
             $"The database could not be copied before this version upgraded it: {report.BackupError}\n\n" +
             $"The upgrade went ahead. Copy {report.DatabasePath} somewhere safe now, before relying on it.");
@@ -2765,10 +2992,17 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
         try
         {
+            var current = CurrentResume;
+            var generation = _edits.BeginSave();
             var loaded = await _services.Repository.GetByIdAsync(resume.Id);
+            if (!ReferenceEquals(current, CurrentResume) || generation != _edits.BeginSave())
+            {
+                StatusMessage = "Newer edits are still open. Open was cancelled.";
+                return;
+            }
             if (loaded == null)
             {
-                await DialogService.ShowErrorAsync("Open failed", $"'{resume.Name}' no longer exists.");
+                await Dialogs.ShowErrorAsync("Open failed", $"'{resume.Name}' no longer exists.");
                 await LoadSavedResumesAsync();
                 return;
             }
@@ -2786,14 +3020,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Open failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Open failed", ex.Message);
         }
     }
 
     [RelayCommand]
     private async Task DeleteResumeAsync(Resume resume)
     {
-        var confirmed = await DialogService.ConfirmAsync(
+        var confirmed = await Dialogs.ConfirmAsync(
             "Delete resume",
             $"Delete \"{resume.Name}\"? This cannot be undone.",
             "Delete",
@@ -2803,21 +3037,21 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
         try
         {
-            await _services.Repository.DeleteAsync(resume.Id);
-
-            // The editor is showing the row that just went away; keep the content, drop the identity.
-            if (CurrentResume.Id == resume.Id)
+            await _saveGate.WaitAsync();
+            try
             {
-                CurrentResume.Id = 0;
-                MarkDirty();
+                await _services.Repository.DeleteAsync(resume.Id);
+                if (CurrentResume.Id == resume.Id)
+                    ResetToNewResume();
             }
+            finally { _saveGate.Release(); }
 
             await LoadSavedResumesAsync();
             StatusMessage = $"Deleted: {resume.Name}";
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Delete failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Delete failed", ex.Message);
         }
     }
 
@@ -2832,7 +3066,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Duplicate failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Duplicate failed", ex.Message);
         }
     }
 
@@ -2859,14 +3093,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             var exporter = _services.ExportService.GetExporter(format);
             if (exporter == null)
             {
-                await DialogService.ShowErrorAsync("Export failed", $"Unknown export format: {format}");
+                await Dialogs.ShowErrorAsync("Export failed", $"Unknown export format: {format}");
                 return;
             }
 
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
             {
                 Title = $"Export as {format}",
-                SuggestedFileName = BuildExportFileName(),
+                SuggestedFileName = format.Equals("JSON", StringComparison.OrdinalIgnoreCase) ? "ResumeBuilder_Workspace_Backup" : BuildExportFileName(),
                 FileTypeChoices = new[]
                 {
                     new Avalonia.Platform.Storage.FilePickerFileType(format)
@@ -2880,6 +3114,17 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             if (file == null)
                 return;
 
+            if (format.Equals("JSON", StringComparison.OrdinalIgnoreCase) && _services.WorkspaceBackups != null)
+            {
+                LoadingMessage = "Backing up resumes, cover letters and applications...";
+                IsLoading = true;
+                if (!await SaveWorkspaceChangesAsync()) return;
+                await Task.Run(() => _services.WorkspaceBackups.ExportToFileAsync(file.Path.LocalPath));
+                StatusMessage = "Workspace backup saved";
+                ShowExportedToast(file.Path.LocalPath);
+                return;
+            }
+
             LoadingMessage = $"Exporting {format}...";
             IsLoading = true;
             var filePath = file.Path.LocalPath;
@@ -2888,13 +3133,14 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             // overlay actually shows. Render from a snapshot: the autosave path mutates
             // CurrentResume (SyncLegacyStyling) and must not race the background render.
             var snapshot = JsonSerializer.Deserialize<Resume>(JsonSerializer.Serialize(CurrentResume))!;
-            await Task.Run(() => _services.ExportService.ExportToFileAsync(snapshot, format, filePath));
-            StatusMessage = $"Exported to: {filePath}";
-            ShowExportedToast(filePath);
+            var paths = await Task.Run(() => _services.ExportService.ExportToFileAsync(snapshot, format, filePath));
+            StatusMessage = paths.Count == 1 ? $"Exported to: {paths[0]}" : $"Exported {paths.Count} pages to: {Path.GetDirectoryName(filePath)}";
+            if (paths.Count > 0)
+                ShowExportedToast(paths[0]);
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Export failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Export failed", ex.Message);
         }
         finally
         {
@@ -2966,7 +3212,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Could not open file", ex.Message);
+            await Dialogs.ShowErrorAsync("Could not open file", ex.Message);
         }
     }
 
@@ -2980,7 +3226,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Could not open folder", ex.Message);
+            await Dialogs.ShowErrorAsync("Could not open folder", ex.Message);
         }
     }
 
@@ -2993,7 +3239,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
     [RelayCommand]
     private Task ImportJsonResumeAsync() => ImportAsync(
-        "JSON Resume",
+        "JSON",
         new Avalonia.Platform.Storage.FilePickerFileType("JSON Resume")
         {
             Patterns = new[] { "*.json" },
@@ -3046,14 +3292,22 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
             // without a single frame showing the overlay: "nothing happened, then it froze".
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
 
-            await using var stream = await files[0].OpenReadAsync();
+            await using var input = await files[0].OpenReadAsync();
+            var bytes = await WorkspaceBackupService.ReadBoundedAsync(input);
+            using var stream = new MemoryStream(bytes);
+            if (importerName == "JSON" && await Task.Run(() => WorkspaceBackupService.IsWorkspace(bytes)))
+            {
+                var archive = await Task.Run(() => WorkspaceBackupService.Read(bytes));
+                await RestoreWorkspaceAsync(archive);
+                return;
+            }
             // The importers are CPU-bound (PdfPig, zip, JSON parsing) despite their async
             // signatures: run them off the UI thread or the overlay never gets a frame.
             var result = await Task.Run(() => _services.ExportService.ImportAsync(stream, importerName));
 
             if (!result.Success || result.Data == null)
             {
-                await DialogService.ShowErrorAsync("Import failed", result.ErrorMessage ?? "The file could not be read.");
+                await Dialogs.ShowErrorAsync("Import failed", result.ErrorMessage ?? "The file could not be read.");
                 StatusMessage = "Import failed";
                 return;
             }
@@ -3066,12 +3320,12 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
             if (result.Warnings.Any())
             {
-                await DialogService.ShowErrorAsync("Imported with warnings", string.Join("\n", result.Warnings));
+                await Dialogs.ShowErrorAsync("Imported with warnings", string.Join("\n", result.Warnings));
             }
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Import failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Import failed", ex.Message);
         }
         finally
         {
@@ -3098,6 +3352,9 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
         {
             imported.SyncId = syncId;
         }
+        imported.BaseResumeId = null;
+        if (!preserveSyncId)
+            imported.BaseResumeSyncId = null;
 
         imported.SectionOrder.EnsureAllSectionsPresent();
 
@@ -3106,6 +3363,7 @@ public partial class MainWindowViewModel : ViewModelBase, ITextEditRecorder
 
         _services.UndoRedoManager.Clear();
         CurrentResume = imported;
+        ShowFirstRun = false;
         LoadResumeIntoEditor(imported);
 
         _edits.MarkDirty();

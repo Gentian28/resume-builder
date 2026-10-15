@@ -37,8 +37,7 @@ public sealed class TemplateThumbnailService
         var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "dev";
 
         _cacheDirectory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "ResumeBuilder",
+            ResumeBuilder.Core.Editing.UserDataPaths.Directory,
             "thumbnails",
             version);
     }

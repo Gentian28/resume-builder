@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <ProjectReference Include="../ResumeBuilder.App/ResumeBuilder.App/ResumeBuilder.App.csproj" />
+    <EmbeddedResource Include="../ResumeBuilder.App/ResumeBuilder.App/Views/MainWindow.axaml" Link="MainWindow.axaml" />
+  </ItemGroup>
+</Project>

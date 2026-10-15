@@ -10,6 +10,7 @@ namespace ResumeBuilder.App.Views;
 public partial class MainWindow : Window
 {
     private bool _closeConfirmed;
+    private bool _confirmingClose;
 
     public MainWindow()
     {
@@ -86,12 +87,17 @@ public partial class MainWindow : Window
         if (!_closeConfirmed && DataContext is MainWindowViewModel vm && vm.HasUnsavedWork)
         {
             e.Cancel = true;
-
-            if (await vm.ConfirmDiscardAllChangesAsync())
+            if (_confirmingClose) return;
+            _confirmingClose = true;
+            try
             {
-                _closeConfirmed = true;
-                Close();
+                if (await vm.ConfirmDiscardAllChangesAsync())
+                {
+                    _closeConfirmed = true;
+                    Close();
+                }
             }
+            finally { _confirmingClose = false; }
 
             return;
         }

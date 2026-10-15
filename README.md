@@ -2,12 +2,11 @@
 
 A cross-platform desktop resume builder: edit a resume in a live editor, see a real-time PDF preview, pick from 25 templates, and export to PDF, DOCX, HTML, PNG, plain text, or JSON Resume.
 
-**Your resume never leaves your machine.** No account, no upload, no cloud. Resumes are stored in a local SQLite database, and the AI features can run against a local model (Ollama, LM Studio) so even those work fully offline.
+**Free, local, and account-free.** Resumes are stored in a local SQLite database. AI can run against a local model (Ollama, LM Studio) for offline use. If you choose cloud AI, relevant text is sent to that provider. Folder sync can use your own cloud-synced folder.
 
 ## Download
 
-On Windows, the quickest route is winget, which also skips the SmartScreen prompt, since winget
-installs through its own trusted client:
+On Windows, install through winget:
 
 ```
 winget install Gentian28.ResumeBuilder
@@ -20,7 +19,7 @@ Or grab the latest build from the [releases page](https://github.com/Gentian28/r
 | Windows | `ResumeBuilder-win-Setup.exe` | Installer, updates itself. `win-Portable.zip` if you'd rather not install. |
 | Linux | `ResumeBuilder.AppImage` | `chmod +x` and run. Needs `libfontconfig1`, present on most desktops. |
 | macOS, Apple silicon | `ResumeBuilder-osx-Setup.pkg` | M1 and later. See the Gatekeeper note below. |
-| macOS, Intel | `ResumeBuilder-osx-x64-Setup.pkg` | 2019 and earlier. An Apple silicon build will not run on Intel. |
+| macOS, Intel | `ResumeBuilder-osx-x64-Setup.pkg` | Macs with an Intel processor. Choose the package matching About This Mac. |
 
 Not sure which Mac you have? Apple menu → About This Mac.
 
@@ -30,14 +29,12 @@ No .NET runtime needed: every build is self-contained.
 
 ### Code signing
 
-Windows builds are not yet code-signed. An application to the [SignPath
-Foundation](https://signpath.org/) free-signing programme was declined in July 2026 (the
-programme wants public adoption signals a brand-new project doesn't have yet) and will be
-resubmitted once the project has them. Until then, the direct download triggers SmartScreen's
-"unknown publisher" warning (choose **More info → Run anyway**), while installing via winget
-avoids it entirely. macOS Gatekeeper likewise refuses the package until you allow it under
-**System Settings → Privacy & Security**; that needs Apple notarisation, which is separate from
-code signing and not yet in place.
+Windows builds are not yet code-signed. The [SignPath Foundation](https://signpath.org/)
+application was declined in July 2026; reapplication remains pending. Direct downloads can
+show an unknown-publisher warning. Windows applies [reputation and security checks](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation)
+according to the device's settings. Download only from the official release page and compare
+the published SHA-256 checksum. Winget is another installation route, not a signing guarantee.
+macOS packages are not yet notarised and can require approval under System Settings, Privacy & Security.
 
 ### Privacy
 
@@ -58,10 +55,20 @@ what is stored and the three cases where it touches the network.
 - **Sync**: two-way sync through a local folder, with conflict detection. The sync panel finds your Google Drive, OneDrive, Dropbox or iCloud folder and offers it as one button; no account, no upload.
 - **Applications**: track which résumé went to which company, when, and what happened; one click reopens the exact version they read. Anything silent for more than a fortnight is marked worth chasing.
 - **Backups before upgrades**: the database is copied before any upgrade that changes its schema, and the last three copies are kept.
+- **Complete workspace recovery**: Workspace backup (JSON) saves all resumes, cover letters, applications and sent-content snapshots. Import that file to restore the workspace, with validation and a safety copy before replacement. Older single-resume JSON backups still import as individual resumes.
+- **Persistent preferences**: your model endpoint, model choice, sync destination and last open resume survive restarts. API keys remain in memory for the current session.
 
-## Requirements
+![Template gallery](docs/screenshots/template-gallery.png)
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+For a first run, import the synthetic [sample resume](samples/sample-resume.json), choose a template, edit a field, and export PDF. Use Open or Show in folder on the export confirmation to find the result.
+
+Workspace backups contain your personal documents. Keep them in a location you trust. Restoring replaces the local document workspace and pauses folder sync until you configure it again. A sent application opens its captured content as a separate editable copy, so changing that copy does not change the historical record. Older application records remain live links because their original sent content is unknown.
+
+## Building from source
+
+Requirements:
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
 - Windows, macOS, or Linux (the UI is [Avalonia](https://avaloniaui.net/))
 
 ## Getting started
@@ -95,14 +102,16 @@ The solution is layered; each project depends only on the ones above it.
 | `ResumeBuilder.Export` | Exporters (PDF/DOCX/HTML/PNG/TXT/JSON) and importers (JSON Resume, LinkedIn, PDF). |
 | `ResumeBuilder.App` | Avalonia desktop UI (MVVM, CommunityToolkit.Mvvm). |
 | `ResumeBuilder.Tests` | xUnit tests across Core, Data, Export, and Templates. |
+| `ResumeBuilder.App.Tests` | Editor workflow and command-routing regressions. |
 
 Dependency direction: `App → {Core, Data, Templates, Export}`, `Export → {Core, Templates}`, `Data → Core`, `Templates → Core`.
 
 ### Where things live
 
 - **Data storage**: `%LocalAppData%/ResumeBuilder/resumes.db` (SQLite). Created on first run; schema upgrades are applied automatically by `DatabaseInitializer`.
+- **Preferences**: `preferences.json` beside the database stores non-secret settings. Theme selection remains in `settings.json`.
 - **Dictionaries**: `%LocalAppData%/ResumeBuilder/Dictionaries/` (downloaded on first spell check).
-- **Sync state**: `%LocalAppData%/ResumeBuilder/sync-state.json`.
+- **Sync history**: destination-specific state files beside the database keep separate deletion and conflict histories for each sync folder.
 
 ## Adding a template
 

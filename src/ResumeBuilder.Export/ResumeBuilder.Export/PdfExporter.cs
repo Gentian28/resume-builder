@@ -1,6 +1,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Templates;
 
 namespace ResumeBuilder.Export;
@@ -33,6 +34,6 @@ public class PdfExporter : IExporter
     public async Task ExportToFileAsync(Resume resume, string templateId, string filePath)
     {
         var bytes = await ExportAsync(resume, templateId);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await AtomicFile.WriteAllBytesAsync(filePath, bytes);
     }
 }

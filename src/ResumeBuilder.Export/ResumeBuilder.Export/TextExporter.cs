@@ -1,5 +1,6 @@
 using System.Text;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 
 namespace ResumeBuilder.Export;
 
@@ -22,7 +23,7 @@ public class TextExporter : IExporter
     public async Task ExportToFileAsync(Resume resume, string templateId, string filePath)
     {
         var bytes = await ExportAsync(resume, templateId);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await AtomicFile.WriteAllBytesAsync(filePath, bytes);
     }
 
     private static string GenerateText(Resume resume)

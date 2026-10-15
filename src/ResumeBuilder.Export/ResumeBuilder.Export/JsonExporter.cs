@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 
 namespace ResumeBuilder.Export;
 
@@ -27,7 +28,7 @@ public class JsonExporter : IExporter
     public async Task ExportToFileAsync(Resume resume, string templateId, string filePath)
     {
         var bytes = await ExportAsync(resume, templateId);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await AtomicFile.WriteAllBytesAsync(filePath, bytes);
     }
 
     public static Resume? Import(string json)

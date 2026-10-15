@@ -99,6 +99,7 @@ public partial class AchievementLineViewModel : ObservableObject
 
 public partial class ExperienceViewModel : ItemViewModelBase
 {
+    public Guid EditKey { get; }
     /// <summary>
     /// Whether this entry's fields are showing. Collapsed entries render as a one-line summary,
     /// because six roles fully expanded is a page of form the user has to scroll past to reach
@@ -151,6 +152,7 @@ public partial class ExperienceViewModel : ItemViewModelBase
     public ExperienceViewModel(Experience exp, Action? onChanged = null, ITextEditRecorder? recorder = null)
         : base(onChanged, recorder)
     {
+        EditKey = exp.EditKey;
         JobTitle = exp.JobTitle;
         Company = exp.Company;
         Location = exp.Location;
@@ -330,6 +332,7 @@ public partial class ExperienceViewModel : ItemViewModelBase
 
     public Experience ToModel(int order) => new()
     {
+        EditKey = EditKey,
         Order = order,
         JobTitle = JobTitle,
         Company = Company,
@@ -729,14 +732,21 @@ public partial class LetterParagraphViewModel : ObservableObject
     [ObservableProperty] private string _text = "";
 
     private readonly Action? _onChanged;
+    private readonly ITextEditRecorder? _recorder;
+    private readonly string _fieldKey = Guid.NewGuid().ToString("N");
 
-    public LetterParagraphViewModel(string text, Action? onChanged = null)
+    public LetterParagraphViewModel(string text, Action? onChanged = null, ITextEditRecorder? recorder = null)
     {
         Text = text;
         _onChanged = onChanged;
+        _recorder = recorder;
     }
 
-    partial void OnTextChanged(string value) => _onChanged?.Invoke();
+    partial void OnTextChanged(string? oldValue, string newValue)
+    {
+        _recorder?.RecordTextEdit(_fieldKey, oldValue ?? "", newValue, value => Text = value, "Edit paragraph");
+        _onChanged?.Invoke();
+    }
 }
 
 public class SyncConflictViewModel
@@ -770,7 +780,7 @@ public class RemoteResumeViewModel
 /// </summary>
 public partial class JobApplicationViewModel : ObservableObject
 {
-    private readonly Func<JobApplicationViewModel, Task>? _onChanged;
+    private readonly ResumeBuilder.Core.Editing.PendingSave<JobApplication>? _pendingSave;
     private bool _loading = true;
 
     [ObservableProperty] private string _company = "";
@@ -784,7 +794,14 @@ public partial class JobApplicationViewModel : ObservableObject
     /// <summary>The résumé that was sent, so the row can open it.</summary>
     public int? ResumeId { get; }
 
-    public DateTime? AppliedOn { get; }
+    public DateTime? AppliedOn { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
+    public Guid RowVersion { get; private set; }
+    public string? SentResumeJson { get; private set; }
+    public DateTime? ResumeCapturedAt { get; private set; }
+    public bool HasPendingChanges => _pendingSave?.HasChanges == true;
+    public string? SaveError => _pendingSave?.Error;
 
     /// <summary>"Applied 21 days ago": the reading that makes the list worth opening.</summary>
     public string Age => AppliedOn is null
@@ -796,12 +813,12 @@ public partial class JobApplicationViewModel : ObservableObject
             _ => $"Applied {Days} days ago"
         };
 
-    private int Days => (int)(DateTime.UtcNow.Date - AppliedOn!.Value.Date).TotalDays;
+    private int Days => Math.Max(0, (int)(DateTime.UtcNow.Date - AppliedOn!.Value.Date).TotalDays);
 
     /// <summary>Waiting on them, long enough to chase.</summary>
     public bool IsStale => Status == ApplicationStatus.Applied && AppliedOn is not null && Days >= 14;
 
-    public JobApplicationViewModel(JobApplication model, Func<JobApplicationViewModel, Task>? onChanged = null)
+    public JobApplicationViewModel(JobApplication model, Func<JobApplication, Task<JobApplication>>? save = null, Action? changed = null)
     {
         Id = model.Id;
         ResumeId = model.ResumeId;
@@ -811,7 +828,14 @@ public partial class JobApplicationViewModel : ObservableObject
         _status = model.Status;
         _notes = model.Notes;
         _link = model.Link;
-        _onChanged = onChanged;
+        AcceptMetadata(model);
+        if (save != null)
+            _pendingSave = new(ToModel, save, AcceptMetadata, () =>
+            {
+                OnPropertyChanged(nameof(HasPendingChanges));
+                OnPropertyChanged(nameof(SaveError));
+                changed?.Invoke();
+            });
         _loading = false;
     }
 
@@ -824,15 +848,38 @@ public partial class JobApplicationViewModel : ObservableObject
     private void Persist()
     {
         // Skip the writes fired while the constructor assigns initial values.
-        if (_loading || _onChanged is null)
+        if (_loading)
             return;
 
-        _ = _onChanged(this);
+        OnPropertyChanged(nameof(IsStale));
+        _pendingSave?.MarkDirty();
+    }
+
+    public Task<bool> FlushAsync() => _pendingSave?.FlushAsync() ?? Task.FromResult(true);
+    public Task StopSavingAsync() => _pendingSave?.StopAsync() ?? Task.CompletedTask;
+    public void ResumeSaving() => _pendingSave?.Resume();
+
+    private void AcceptMetadata(JobApplication saved)
+    {
+        AppliedOn = saved.AppliedOn;
+        CreatedAt = saved.CreatedAt;
+        UpdatedAt = saved.UpdatedAt;
+        RowVersion = saved.RowVersion;
+        SentResumeJson = saved.SentResumeJson;
+        ResumeCapturedAt = saved.ResumeCapturedAt;
+        OnPropertyChanged(nameof(AppliedOn));
+        OnPropertyChanged(nameof(Age));
+        OnPropertyChanged(nameof(IsStale));
     }
 
     public JobApplication ToModel() => new()
     {
         Id = Id,
+        RowVersion = RowVersion,
+        CreatedAt = CreatedAt,
+        UpdatedAt = UpdatedAt,
+        SentResumeJson = SentResumeJson,
+        ResumeCapturedAt = ResumeCapturedAt,
         ResumeId = ResumeId,
         Company = Company,
         Role = Role,

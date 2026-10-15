@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 dotnet build ResumeBuilder.sln            # must end with 0 warnings: analyzers are on and warnings are treated as regressions
-dotnet test ResumeBuilder.sln             # full suite (~360 tests, a few seconds)
+dotnet test ResumeBuilder.sln             # full library and App workflow suites
 dotnet test src/ResumeBuilder.Tests/ResumeBuilder.Tests.csproj --filter "FullyQualifiedName~RepositoryTests"   # one class
 dotnet test ResumeBuilder.sln --filter "FullyQualifiedName~Update_StaleCopy_ThrowsInsteadOfClobbering"         # one test
 dotnet run --project src/ResumeBuilder.App/ResumeBuilder.App   # launch the desktop app
 ```
 
-Package versions live **only** in `Directory.Packages.props` (Central Package Management); `TargetFramework` (net8.0), nullable, and analyzers live only in `Directory.Build.props`. Never add a `Version=` attribute or a `<TargetFramework>` to a csproj. CI (`.github/workflows/ci.yml`) fails on any NuGet package with a known advisory. If it flags a transitive package, pin a patched version in `Directory.Packages.props` (see the `SQLitePCLRaw` and `Tmds.DBus.Protocol` entries there for the pattern: check the advisory's `firstPatchedVersion` and take the smallest bump that clears it).
+Package versions live **only** in `Directory.Packages.props` (Central Package Management); `TargetFramework` (net10.0), nullable, and analyzers live only in `Directory.Build.props`. Never add a `Version=` attribute or a `<TargetFramework>` to a csproj. CI (`.github/workflows/ci.yml`) fails on any NuGet package with a known advisory. If it flags a transitive package, pin a patched version in `Directory.Packages.props` (see the `SQLitePCLRaw` and `Tmds.DBus.Protocol` entries there for the pattern: check the advisory's `firstPatchedVersion` and take the smallest bump that clears it).
 
 ## Architecture
 
@@ -32,7 +32,7 @@ Core cannot reference Data, so sync inverts the dependency: `ISyncResumeStore` (
 
 - **Short-lived DbContexts only.** `ResumeRepository` creates a context per operation via `IResumeDbContextFactory`. Never hold a long-lived context: the UI thread and the autosave timer save concurrently.
 - **Collections are JSON columns.** `Resume.Experiences/Skills/...` persist via `HasConversion` in `ResumeDbContext` (`JsonList`/`JsonObject` helpers). The `ValueComparer` there is what makes in-place mutations (`resume.Skills.Add(...)`) detectable, so don't add a converted column without one.
-- **No EF migrations.** Schema upgrades are idempotent steps in `Data/DatabaseInitializer.cs`: new tables are created from the model's create-script; **new columns must be added to its `AddedColumns` table by hand** or existing installs silently lack them. Adding a property to `Resume`/`CoverLetter` is not done until `AddedColumns` knows about it. `DatabaseInitializer` copies the database via `DatabaseBackup` before applying any schema change (keeping the last 3), because these steps are hand-written and a mistake surfaces on a user's machine, not in CI. **`DatabaseBackup.Create` checkpoints the WAL before copying**; without that the copy silently omits everything written since the last checkpoint, which on a busy database can be most of it.
+- **No EF migrations.** Schema upgrades are idempotent steps in `Data/DatabaseInitializer.cs`: new tables are created from the model's create-script; **new columns must be added to its `AddedColumns` table by hand** or existing installs silently lack them. Adding a property to `Resume`/`CoverLetter` is not done until `AddedColumns` knows about it. `DatabaseInitializer` copies the database via `DatabaseBackup` before applying any schema change (keeping the last 3), because these steps are hand-written and a mistake surfaces on a user's machine, not in CI. **`DatabaseBackup.Create` uses SQLite online backup after a WAL checkpoint**; a raw database-file copy can omit committed WAL data and must not replace it.
 - **Optimistic concurrency.** `UpdateAsync` matches on the loaded `RowVersion`, rotates it, and throws `ResumeConcurrencyException` on conflict. Callers must keep the entity returned by save (it carries the new RowVersion) or the next save spuriously conflicts.
 - **`Id` vs `SyncId`.** `Id` is local to one database; `SyncId` is the stable cross-machine identity used by sync. `ResumeRepository.ResetIdentity` clears all ids **and mints a new SyncId**, correct for imports/duplicates (a copy must not impersonate its source), but a file pulled from the app's own sync folder must *keep* its SyncId (`AdoptImportedResume(..., preserveSyncId: true)` in the App).
 
@@ -69,3 +69,9 @@ Styling has two persisted sources kept in step: legacy `Resume.AccentColor`/`Fon
 
 - **Never commit real résumé data.** `samples/sample-resume.json` (synthetic: Jane Doe / example.com) is the fixture for tests and examples. A root-level `gentian_shkembi_resume.json` holding the owner's real name/phone/address was purged from the working tree and from every commit on 2026-07-27, ahead of open-sourcing; `.gitignore` now blocks `/*_resume.json` at the root so it cannot come back by accident.
 - Tests live in `src/ResumeBuilder.Tests` (xUnit + AwesomeAssertions, the Apache-2.0 fork of FluentAssertions; see `Directory.Packages.props`). The App project is intentionally not referenced by the test project (Avalonia WinExe); logic that needs testing belongs in Core (e.g. `AchievementLines` was extracted for exactly that reason).
+
+The separate `src/ResumeBuilder.App.Tests` project exercises editor commands with injected dialogs and temporary databases. Keep domain logic in Core and its tests in ResumeBuilder.Tests; use App.Tests for wiring, document switching, save transitions and active-document shortcuts. `MainWindowViewModel(services, initialize: false)` skips desktop startup services in these tests.
+
+Templates isolate mutable render state per document using an operation-local renderer. Do not move it back to shared registry state. Applications capture immutable SentResumeJson at creation or when leaving Saved; existing sent records without a snapshot must remain historical live links. BaseResumeSyncId is the transport identity of a variant's parent; BaseResumeId is resolved only within a local database.
+
+WorkspaceBackupService owns full workspace archives and transactional replacement. Save editor and application queues first, validate the entire archive before replacement, keep a safety database copy and pause sync after restore. For native launch checks, set RESUMEBUILDER_DATA_DIRECTORY to a temporary directory so the real profile is not upgraded or modified.

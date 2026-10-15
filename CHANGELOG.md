@@ -4,15 +4,36 @@ Every released version and what changed in it, written for the person reading it
 list of commits. This file *is* the GitHub release notes: the release workflow extracts the
 section matching the tag and fails the build if there isn't one.
 
-
-## Unreleased
+## 1.3.0
 
 ### Fixed
 
+- Native JSON backups import through the correct format detector, and successful first-run imports reveal the editor immediately.
+- Plain-text export works from the toolbar. Multi-page PNG export opens a file that exists and protects existing numbered page files.
+- Preparing a preview, thumbnail or export no longer changes another document's settings or visible sections.
+- Switching AI endpoints clears the old credential. AI results and accepted rewrites cannot overwrite another document or newer manual text.
+- Job tailoring branches from a base without overwriting it, including when autosave runs before Save as variant.
+- Deleting the open resume or letter no longer recreates it through autosave. Save, close, reload and update transitions preserve edits made during a write.
+- Sync folders keep separate histories, variants resolve their parent on the receiving computer, and deleted archives stay out of the active remote list.
+- Applications preserve dates, retain failed edits for retry, and capture the sent content for newly tracked or newly sent applications. Historical records without a snapshot keep their existing live link.
+- Letter drafting uses the letter's own resume and posting. Save, export and undo target the active document, with separate letter undo history and macOS Command shortcuts.
+- Creating or resetting a cover letter works in time zones with a nonzero UTC offset.
+
+### Added
+
+- Complete workspace backup and restore through the JSON backup/import flow. Restore validates the archive, keeps a safety database copy and pauses sync.
+- Persistent non-secret preferences for models, sync and the last open resume. API keys remain session-only.
+- A separate app workflow test suite, contributor instructions, and privacy-conscious issue forms.
+
+### Updated
+
+- The app, tests and build workflows use .NET 10. Self-contained builds pin runtime 10.0.13, and SQLite persistence uses EF Core 10.0.13.
+
+### Other fixes since 1.2.3
+
 - **An edit typed while a save was writing is no longer marked as saved.** The save cleared the
   unsaved flag when it finished, even for changes made during the write, so the status line said
-  "All changes saved on this computer" about text that existed only in memory. A save now settles
-  only the edits it started with; anything newer stays marked unsaved until the next autosave.
+  "All changes saved on this computer" about text that existed only in memory. Manual save now waits for newer edits to be written too; autosave keeps newer edits pending for its next pass.
 - **Closing the window and applying an update both check the cover letter too.** A cover letter
   with unsaved changes was lost when the window closed while the resume was clean, and an update
   restarted the app even when the pre-restart save had failed.

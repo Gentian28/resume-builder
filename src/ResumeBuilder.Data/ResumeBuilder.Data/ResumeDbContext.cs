@@ -30,9 +30,7 @@ public class ResumeDbContext : DbContext
 
     public static string DefaultDatabasePath()
     {
-        var appDataPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "ResumeBuilder");
+        var appDataPath = ResumeBuilder.Core.Editing.UserDataPaths.Directory;
 
         Directory.CreateDirectory(appDataPath);
         return Path.Combine(appDataPath, "resumes.db");
@@ -53,6 +51,7 @@ public class ResumeDbContext : DbContext
         modelBuilder.Entity<JobApplication>(entity =>
         {
             entity.HasKey(a => a.Id);
+            entity.Property(a => a.RowVersion).IsConcurrencyToken();
             entity.Property(a => a.Company).IsRequired().HasMaxLength(200);
             entity.Property(a => a.Role).HasMaxLength(200);
             entity.Property(a => a.Link).HasMaxLength(2000);

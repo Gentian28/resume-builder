@@ -2,6 +2,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Templates;
 using A = DocumentFormat.OpenXml.Drawing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
@@ -122,7 +123,7 @@ public class DocxExporter : IExporter
     public async Task ExportToFileAsync(Resume resume, string templateId, string filePath)
     {
         var bytes = await ExportAsync(resume, templateId);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await AtomicFile.WriteAllBytesAsync(filePath, bytes);
     }
 
     private static void ApplyDefaultFont(MainDocumentPart mainPart, string fontFamily)

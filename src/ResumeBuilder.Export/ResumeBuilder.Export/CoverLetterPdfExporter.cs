@@ -1,6 +1,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Templates;
 
 namespace ResumeBuilder.Export;
@@ -31,6 +32,6 @@ public class CoverLetterPdfExporter : ICoverLetterExporter
     public async Task ExportToFileAsync(CoverLetter letter, string templateId, string filePath)
     {
         var bytes = await ExportAsync(letter, templateId);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await AtomicFile.WriteAllBytesAsync(filePath, bytes);
     }
 }

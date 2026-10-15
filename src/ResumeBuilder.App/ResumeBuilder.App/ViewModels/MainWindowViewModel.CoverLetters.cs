@@ -14,6 +14,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using ResumeBuilder.App.Services;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.UndoRedo;
 
 namespace ResumeBuilder.App.ViewModels;
 
@@ -25,6 +26,25 @@ public partial class MainWindowViewModel
     private CancellationTokenSource? _letterPreviewCts;
     private string? _letterRenderedSignature;
     private bool _isLoadingLetter;
+    private readonly SemaphoreSlim _letterSaveGate = new(1, 1);
+    private CancellationTokenSource? _letterDraftCts;
+    private readonly UndoRedoManager _letterUndoManager = new();
+
+    partial void OnShowCoverLetterEditorChanged(bool value) => RefreshActiveUndoState();
+
+    private void RecordLetterEdit(string key, string oldValue, string newValue, Action<string> setter)
+    {
+        if (_isLoadingLetter || _letterUndoManager.IsExecutingAction || oldValue == newValue) return;
+        _letterUndoManager.RecordAction(new TextEditAction(key, oldValue, newValue, setter, "Edit letter"));
+    }
+
+    private sealed class LetterEditRecorder(MainWindowViewModel owner) : ITextEditRecorder
+    {
+        public void RecordTextEdit(string fieldKey, string oldValue, string newValue, Action<string> setter, string description) =>
+            owner.RecordLetterEdit(fieldKey, oldValue, newValue, setter);
+    }
+
+    private LetterParagraphViewModel CreateLetterParagraph(string text) => new(text, OnLetterEditorChanged, new LetterEditRecorder(this));
 
     [ObservableProperty]
     private bool _showCoverLetterEditor;
@@ -89,6 +109,9 @@ public partial class MainWindowViewModel
 
     private void LoadLetterIntoEditor(CoverLetter letter)
     {
+        _letterUndoManager.Clear();
+        _letterDraftCts?.Cancel();
+        _letterPreviewCts?.Cancel();
         _isLoadingLetter = true;
         try
         {
@@ -99,13 +122,13 @@ public partial class MainWindowViewModel
             LetterRecipientTitle = letter.RecipientTitle;
             LetterCompanyName = letter.CompanyName;
             LetterCompanyAddress = letter.CompanyAddress;
-            LetterDate = new DateTimeOffset(letter.LetterDate.Date, TimeSpan.Zero);
+            LetterDate = new DateTimeOffset(DateTime.SpecifyKind(letter.LetterDate.Date, DateTimeKind.Unspecified), TimeSpan.Zero);
             LetterSubject = letter.Subject;
             LetterSalutation = letter.Salutation;
             LetterClosing = letter.Closing;
 
             LetterParagraphs = new ObservableCollection<LetterParagraphViewModel>(
-                letter.Paragraphs.Select(p => new LetterParagraphViewModel(p, OnLetterEditorChanged)));
+                letter.Paragraphs.Select(CreateLetterParagraph));
 
             UpdateSalutationPlaceholder();
         }
@@ -153,20 +176,26 @@ public partial class MainWindowViewModel
             ? "Dear Hiring Manager,"
             : $"Dear {LetterRecipientName.Trim()},";
 
-    partial void OnLetterNameChanged(string value) => OnLetterEditorChanged();
-    partial void OnLetterRecipientNameChanged(string value) => OnLetterEditorChanged();
-    partial void OnLetterRecipientTitleChanged(string value) => OnLetterEditorChanged();
-    partial void OnLetterCompanyNameChanged(string value) => OnLetterEditorChanged();
-    partial void OnLetterCompanyAddressChanged(string value) => OnLetterEditorChanged();
-    partial void OnLetterDateChanged(DateTimeOffset value) => OnLetterEditorChanged();
-    partial void OnLetterSubjectChanged(string value) => OnLetterEditorChanged();
-    partial void OnLetterSalutationChanged(string value) => OnLetterEditorChanged();
-    partial void OnLetterClosingChanged(string value) => OnLetterEditorChanged();
+    partial void OnLetterNameChanged(string? oldValue, string newValue) { RecordLetterEdit(nameof(LetterName), oldValue ?? "", newValue, v => LetterName = v); OnLetterEditorChanged(); }
+    partial void OnLetterRecipientNameChanged(string? oldValue, string newValue) { RecordLetterEdit(nameof(LetterRecipientName), oldValue ?? "", newValue, v => LetterRecipientName = v); OnLetterEditorChanged(); }
+    partial void OnLetterRecipientTitleChanged(string? oldValue, string newValue) { RecordLetterEdit(nameof(LetterRecipientTitle), oldValue ?? "", newValue, v => LetterRecipientTitle = v); OnLetterEditorChanged(); }
+    partial void OnLetterCompanyNameChanged(string? oldValue, string newValue) { RecordLetterEdit(nameof(LetterCompanyName), oldValue ?? "", newValue, v => LetterCompanyName = v); OnLetterEditorChanged(); }
+    partial void OnLetterCompanyAddressChanged(string? oldValue, string newValue) { RecordLetterEdit(nameof(LetterCompanyAddress), oldValue ?? "", newValue, v => LetterCompanyAddress = v); OnLetterEditorChanged(); }
+    partial void OnLetterDateChanged(DateTimeOffset oldValue, DateTimeOffset newValue)
+    {
+        if (!_isLoadingLetter && !_letterUndoManager.IsExecutingAction)
+            _letterUndoManager.RecordAction(new PropertyChangeAction<DateTimeOffset>(v => LetterDate = v, oldValue, newValue, "Change letter date"));
+        OnLetterEditorChanged();
+    }
+    partial void OnLetterSubjectChanged(string? oldValue, string newValue) { RecordLetterEdit(nameof(LetterSubject), oldValue ?? "", newValue, v => LetterSubject = v); OnLetterEditorChanged(); }
+    partial void OnLetterSalutationChanged(string? oldValue, string newValue) { RecordLetterEdit(nameof(LetterSalutation), oldValue ?? "", newValue, v => LetterSalutation = v); OnLetterEditorChanged(); }
+    partial void OnLetterClosingChanged(string? oldValue, string newValue) { RecordLetterEdit(nameof(LetterClosing), oldValue ?? "", newValue, v => LetterClosing = v); OnLetterEditorChanged(); }
 
     private void MarkLetterDirty()
     {
         if (_isLoadingLetter) return;
 
+        _letterDraftCts?.Cancel();
         _letterEdits.MarkDirty();
         IsLetterDirty = true;
         LetterSaveStateText = "Unsaved changes";
@@ -177,15 +206,17 @@ public partial class MainWindowViewModel
     [RelayCommand]
     private void AddLetterParagraph()
     {
-        LetterParagraphs.Add(new LetterParagraphViewModel("", OnLetterEditorChanged));
-        OnLetterEditorChanged();
+        _letterUndoManager.Execute(CollectionChangeAction<LetterParagraphViewModel>.Add(
+            LetterParagraphs, CreateLetterParagraph(""), -1, "paragraph", OnLetterEditorChanged));
     }
 
     [RelayCommand]
     private void RemoveLetterParagraph(LetterParagraphViewModel paragraph)
     {
-        LetterParagraphs.Remove(paragraph);
-        OnLetterEditorChanged();
+        var index = LetterParagraphs.IndexOf(paragraph);
+        if (index >= 0)
+            _letterUndoManager.Execute(CollectionChangeAction<LetterParagraphViewModel>.Remove(
+                LetterParagraphs, paragraph, index, "paragraph", OnLetterEditorChanged));
     }
 
     [RelayCommand]
@@ -202,8 +233,8 @@ public partial class MainWindowViewModel
         if (index < 0 || target < 0 || target >= LetterParagraphs.Count)
             return;
 
-        LetterParagraphs.Move(index, target);
-        OnLetterEditorChanged();
+        _letterUndoManager.Execute(CollectionChangeAction<LetterParagraphViewModel>.Move(
+            LetterParagraphs, index, target, "paragraph", OnLetterEditorChanged));
     }
 
     // ---------------------------------------------------------------- AI draft
@@ -211,30 +242,47 @@ public partial class MainWindowViewModel
     [RelayCommand]
     private async Task DraftCoverLetterWithAiAsync()
     {
-        SyncEditorToResume();
+        if (LetterParagraphs.Any(p => !string.IsNullOrWhiteSpace(p.Text)) &&
+            !await Dialogs.ConfirmAsync("Replace letter draft", "Replace this letter's paragraphs with a new draft?", "Replace", "Keep current text"))
+            return;
 
         IsDraftingLetter = true;
         StatusMessage = "Drafting the cover letter...";
+        var letter = CurrentLetter;
+        _letterDraftCts?.Cancel();
+        _letterDraftCts?.Dispose();
+        var request = _letterDraftCts = new CancellationTokenSource();
 
         try
         {
-            var targetRole = string.IsNullOrWhiteSpace(TargetRoleText) ? JobTitle : TargetRoleText;
+            var source = letter.SourceResumeJson is { } json ? JsonSerializer.Deserialize<Resume>(json)
+                : letter.ResumeId is { } id ? await _services.Repository.GetByIdAsync(id) : null;
+            if (source is null)
+            {
+                await Dialogs.ShowErrorAsync("Source resume unavailable", "Create a new letter from the resume you want to use. This letter's source is no longer available.");
+                return;
+            }
+            var targetRole = string.IsNullOrWhiteSpace(letter.TargetRole) ? source.PersonalInfo.JobTitle : letter.TargetRole;
 
             // Not gated on IsConfigured: without AI the service still returns a structured draft
             // built from the resume itself.
             var result = await _services.CoverLetterService.DraftAsync(
-                CurrentResume, LetterCompanyName, targetRole, JobDescriptionText);
+                source, LetterCompanyName, targetRole, letter.JobDescription, request.Token);
+
+            if (request.IsCancellationRequested || !ReferenceEquals(letter, CurrentLetter)) return;
 
             if (!result.Success || result.Data == null)
             {
-                await DialogService.ShowErrorAsync("Draft failed", result.ErrorMessage ?? "The letter could not be drafted.");
+                await Dialogs.ShowErrorAsync("Draft failed", result.ErrorMessage ?? "The letter could not be drafted.");
                 return;
             }
 
             var draft = result.Data;
 
-            LetterParagraphs = new ObservableCollection<LetterParagraphViewModel>(
-                draft.Paragraphs.Select(p => new LetterParagraphViewModel(p, OnLetterEditorChanged)));
+            _letterUndoManager.Execute(new PropertyChangeAction<ObservableCollection<LetterParagraphViewModel>>(
+                value => LetterParagraphs = value!, LetterParagraphs,
+                new ObservableCollection<LetterParagraphViewModel>(draft.Paragraphs.Select(CreateLetterParagraph)),
+                "Replace letter draft", OnLetterEditorChanged));
 
             if (string.IsNullOrWhiteSpace(LetterSubject))
                 LetterSubject = draft.Subject;
@@ -247,11 +295,12 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Draft failed", ex.Message);
+            if (request.IsCancellationRequested) return;
+            await Dialogs.ShowErrorAsync("Draft failed", ex.Message);
         }
         finally
         {
-            IsDraftingLetter = false;
+            if (ReferenceEquals(request, _letterDraftCts)) IsDraftingLetter = false;
         }
     }
 
@@ -310,7 +359,7 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Could not load your cover letters", ex.Message);
+            await Dialogs.ShowErrorAsync("Could not load your cover letters", ex.Message);
         }
     }
 
@@ -322,10 +371,13 @@ public partial class MainWindowViewModel
 
         try
         {
+            var current = CurrentLetter;
+            var generation = _letterEdits.BeginSave();
             var loaded = await _services.CoverLetterRepository.GetByIdAsync(letter.Id);
+            if (!ReferenceEquals(current, CurrentLetter) || generation != _letterEdits.BeginSave()) return;
             if (loaded == null)
             {
-                await DialogService.ShowErrorAsync("Open failed", $"'{letter.Name}' no longer exists.");
+                await Dialogs.ShowErrorAsync("Open failed", $"'{letter.Name}' no longer exists.");
                 await LoadCoverLettersAsync();
                 return;
             }
@@ -341,31 +393,38 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Open failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Open failed", ex.Message);
         }
     }
 
     [RelayCommand]
     private async Task SaveCoverLetterAsync()
     {
+        var letter = CurrentLetter;
+        await _letterSaveGate.WaitAsync();
         try
         {
-            var token = _letterEdits.BeginSave();
-            SyncLetterEditorToModel();
-
-            LetterSaveStateText = "Saving...";
-
-            if (CurrentLetter.Id == 0)
+            if (!ReferenceEquals(letter, CurrentLetter)) return;
+            do
             {
-                await _services.CoverLetterRepository.CreateAsync(CurrentLetter);
-            }
-            else
-            {
-                await _services.CoverLetterRepository.UpdateAsync(CurrentLetter);
-            }
+                var token = _letterEdits.BeginSave();
+                SyncLetterEditorToModel();
 
-            // Same rule as the resume: an edit typed during the write stays unsaved until the next save.
-            IsLetterDirty = !_letterEdits.CompleteSave(token);
+                LetterSaveStateText = "Saving...";
+
+                var snapshot = JsonSerializer.Deserialize<CoverLetter>(JsonSerializer.Serialize(letter))!;
+                var saved = snapshot.Id == 0
+                    ? await _services.CoverLetterRepository.CreateAsync(snapshot)
+                    : await _services.CoverLetterRepository.UpdateAsync(snapshot);
+                if (!ReferenceEquals(letter, CurrentLetter)) return;
+                letter.Id = saved.Id;
+                letter.RowVersion = saved.RowVersion;
+                letter.CreatedAt = saved.CreatedAt;
+                letter.UpdatedAt = saved.UpdatedAt;
+
+                // Same rule as the resume: an edit typed during the write stays unsaved until the next save.
+                IsLetterDirty = !_letterEdits.CompleteSave(token);
+            } while (IsLetterDirty);
             LetterSaveStateText = IsLetterDirty ? "Unsaved changes" : $"Saved at {DateTime.Now:HH:mm:ss}";
             StatusMessage = $"Saved: {CurrentLetter.Name}";
 
@@ -374,14 +433,48 @@ public partial class MainWindowViewModel
         catch (Exception ex)
         {
             LetterSaveStateText = "Unsaved changes";
-            await DialogService.ShowErrorAsync("Save failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Save failed", ex.Message);
         }
+        finally { _letterSaveGate.Release(); }
+    }
+
+    private async Task DuplicateCoverLetterAsync()
+    {
+        var name = await Dialogs.PromptAsync("Duplicate cover letter", "Name for the copy:", LetterName);
+        if (name is null) return;
+        var source = CurrentLetter;
+        await _letterSaveGate.WaitAsync();
+        try
+        {
+            if (!ReferenceEquals(source, CurrentLetter)) return;
+            var generation = _letterEdits.BeginSave();
+            SyncLetterEditorToModel();
+            var copy = JsonSerializer.Deserialize<CoverLetter>(JsonSerializer.Serialize(source))!;
+            copy.Id = 0;
+            copy.RowVersion = Guid.NewGuid();
+            copy.Name = string.IsNullOrWhiteSpace(name) ? DefaultLetterName : name.Trim();
+            var saved = await _services.CoverLetterRepository.CreateAsync(copy);
+            if (ReferenceEquals(source, CurrentLetter) && generation == _letterEdits.BeginSave())
+            {
+                LoadLetterIntoEditor(saved);
+                _letterEdits.Reset();
+                IsLetterDirty = false;
+                LetterSaveStateText = "No changes";
+            }
+            await LoadCoverLettersAsync();
+            StatusMessage = $"Created copy: {saved.Name}";
+        }
+        catch (Exception ex)
+        {
+            await Dialogs.ShowErrorAsync("Could not duplicate this letter", ex.Message);
+        }
+        finally { _letterSaveGate.Release(); }
     }
 
     [RelayCommand]
     private async Task DeleteCoverLetterAsync(CoverLetter letter)
     {
-        var confirmed = await DialogService.ConfirmAsync(
+        var confirmed = await Dialogs.ConfirmAsync(
             "Delete cover letter",
             $"Delete \"{letter.Name}\"? This cannot be undone.",
             "Delete",
@@ -391,26 +484,33 @@ public partial class MainWindowViewModel
 
         try
         {
-            await _services.CoverLetterRepository.DeleteAsync(letter.Id);
-
-            // The editor is showing the row that just went away; keep the content, drop the identity.
-            if (CurrentLetter.Id == letter.Id)
+            await _letterSaveGate.WaitAsync();
+            try
             {
-                CurrentLetter.Id = 0;
-                MarkLetterDirty();
+                await _services.CoverLetterRepository.DeleteAsync(letter.Id);
+                if (CurrentLetter.Id == letter.Id)
+                {
+                    LoadLetterIntoEditor(new CoverLetter());
+                    _letterEdits.Reset();
+                    IsLetterDirty = false;
+                    LetterSaveStateText = "No changes";
+                    ShowCoverLetterEditor = false;
+                }
             }
+            finally { _letterSaveGate.Release(); }
 
             await LoadCoverLettersAsync();
             StatusMessage = $"Deleted: {letter.Name}";
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Delete failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Delete failed", ex.Message);
         }
     }
 
     private async Task AutoSaveCoverLetterAsync()
     {
+        if (IsLoading) return;
         if (!ShowCoverLetterEditor || !IsLetterDirty)
             return;
 
@@ -423,10 +523,12 @@ public partial class MainWindowViewModel
 
     private async Task<bool> ConfirmDiscardLetterChangesAsync()
     {
+        await _letterSaveGate.WaitAsync();
+        _letterSaveGate.Release();
         if (!IsLetterDirty)
             return true;
 
-        var choice = await DialogService.ConfirmUnsavedChangesAsync(LetterName);
+        var choice = await Dialogs.ConfirmUnsavedChangesAsync(LetterName);
 
         return choice switch
         {
@@ -473,7 +575,7 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Preview failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Preview failed", ex.Message);
             return;
         }
 
@@ -533,7 +635,7 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Preview failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Preview failed", ex.Message);
         }
     }
 
@@ -550,7 +652,7 @@ public partial class MainWindowViewModel
             var exporter = _services.CoverLetterExportService.GetExporter(format);
             if (exporter == null)
             {
-                await DialogService.ShowErrorAsync("Export failed", $"Unknown export format: {format}");
+                await Dialogs.ShowErrorAsync("Export failed", $"Unknown export format: {format}");
                 return;
             }
 
@@ -584,7 +686,7 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex)
         {
-            await DialogService.ShowErrorAsync("Export failed", ex.Message);
+            await Dialogs.ShowErrorAsync("Export failed", ex.Message);
         }
         finally
         {

@@ -31,7 +31,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       - name: Install Linux native deps
         run: sudo apt-get update && sudo apt-get install -y libfontconfig1
@@ -65,7 +65,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       # The tag is the single source of truth for the version. Strip the leading
       # "v" so 1.0.0 reaches both the assembly and the Velopack package id.

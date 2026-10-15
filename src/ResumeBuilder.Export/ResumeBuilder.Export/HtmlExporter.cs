@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Core.Validation;
 using ResumeBuilder.Templates;
 
@@ -29,7 +30,7 @@ public class HtmlExporter : IExporter
     public async Task ExportToFileAsync(Resume resume, string templateId, string filePath)
     {
         var bytes = await ExportAsync(resume, templateId);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await AtomicFile.WriteAllBytesAsync(filePath, bytes);
     }
 
     private string GenerateHtml(Resume resume, string templateId)

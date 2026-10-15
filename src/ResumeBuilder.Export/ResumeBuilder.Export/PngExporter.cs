@@ -1,6 +1,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using ResumeBuilder.Core.Models;
+using ResumeBuilder.Core.Sync;
 using ResumeBuilder.Templates;
 using SkiaSharp;
 
@@ -84,20 +85,23 @@ public class PngExporter : IExporter
     /// Writes one file per page. A single-page resume keeps the requested name; multiple pages get a
     /// "-p1", "-p2" suffix.
     /// </summary>
-    public async Task ExportAllPagesToFilesAsync(Resume resume, string templateId, string baseFilePath)
+    public async Task<IReadOnlyList<string>> ExportAllPagesToFilesAsync(Resume resume, string templateId, string baseFilePath)
     {
         var pages = await ExportAllPagesAsync(resume, templateId);
+        var paths = Enumerable.Range(0, pages.Length).Select(i => pages.Length == 1
+            ? baseFilePath
+            : Path.Combine(Path.GetDirectoryName(baseFilePath) ?? "",
+                $"{Path.GetFileNameWithoutExtension(baseFilePath)}-p{i + 1}{Path.GetExtension(baseFilePath)}")).ToArray();
+
+        if (pages.Length > 1 && paths.Any(File.Exists))
+            throw new IOException("Some PNG page files already exist. Choose a different filename to keep those files.");
 
         for (var i = 0; i < pages.Length; i++)
         {
-            var fileName = pages.Length == 1
-                ? baseFilePath
-                : Path.Combine(
-                    Path.GetDirectoryName(baseFilePath) ?? "",
-                    $"{Path.GetFileNameWithoutExtension(baseFilePath)}-p{i + 1}{Path.GetExtension(baseFilePath)}");
-
-            await File.WriteAllBytesAsync(fileName, pages[i]);
+            await AtomicFile.WriteAllBytesAsync(paths[i], pages[i], overwrite: pages.Length == 1);
         }
+
+        return paths;
     }
 
     private byte[][] RenderPages(Resume resume, string templateId)

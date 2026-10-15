@@ -1,0 +1,20 @@
+name: Feature request
+description: Explain the task you could not complete.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What were you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: obstacle
+    attributes:
+      label: What prevented you from completing it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help?
+      description: Include your current workaround and platform. Do not include personal resume content.

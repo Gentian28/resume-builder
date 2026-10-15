@@ -23,7 +23,11 @@ public abstract class BaseCoverLetterTemplate : ICoverLetterTemplate
     public IDocument CreateDocument(CoverLetter letter)
     {
         ArgumentNullException.ThrowIfNull(letter);
+        return ((BaseCoverLetterTemplate)MemberwiseClone()).CreateIsolatedDocument(letter);
+    }
 
+    private IDocument CreateIsolatedDocument(CoverLetter letter)
+    {
         Settings = letter.TemplateSettings?.Clone() ?? new TemplateSettings();
 
         return Document.Create(container =>

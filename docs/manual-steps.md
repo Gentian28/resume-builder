@@ -40,6 +40,8 @@ winget distribution does not guarantee suppression of SmartScreen or other Windo
 
 The existing signing application is tracked in Accession as `260921-signpath-reapplication-now-has`. Keep that as the canonical follow-up rather than filing a second application task.
 
+SignPath eligibility also needs clarification: its current conditions require OSI-approved licenses without commercial dual licensing for all components, while QuestPDF 2026.7.2 uses a source-available Community License. The package and upstream terms were checked, the README's incorrect MIT/all-OSI claim was corrected, and the live application draft now discloses this conflict. See [the dependency assessment and fallback plan](signing-readiness.md#dependency-eligibility-needs-clarification). Free-use eligibility under QuestPDF does not establish eligibility for SignPath's separate program. Do not assert compliance or accept a signing policy before resolving it.
+
 ## macOS signing and notarisation
 
 No Apple signing/notarisation credentials are configured in the release repository. Trusted distribution needs owner-controlled Developer ID signing identities and notarisation access. Once available, configure Velopack signing for both app and installer, notarise both architectures, and verify with `codesign`, `spctl`, `pkgutil --check-signature` and the stapler validation commands before publication.

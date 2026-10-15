@@ -141,12 +141,12 @@ For volunteer usability sessions and privacy-preserving observation, use the [se
 
 [MIT](LICENSE), © 2026 Gentian Shkembi.
 
-Every dependency is OSI-licensed. One is worth knowing about if you fork this for commercial
-work: **QuestPDF**, which renders every template, is MIT for open-source projects, non-profits
-and companies under $1M USD annual revenue, and requires a paid licence above that. It does not
-affect using, forking or redistributing this project.
+The application's source is MIT licensed; dependencies retain their own licenses.
+**QuestPDF 2026.7.2**, which renders the templates, uses a source-available Community
+License, not MIT or another OSI-approved license. Its [license selection guide](https://www.questpdf.com/license/guide.html)
+includes qualifying open-source projects among those eligible for free use. Commercial
+forks and other uses must check the applicable [Community License](https://www.questpdf.com/license/community.html)
+and eligibility rules rather than assuming the application's MIT license covers QuestPDF.
 
-(The test suite used to depend on FluentAssertions 8.x, which moved to the non-OSI Xceed
-Community License permitting non-commercial use only, meaning a commercial fork could not
-legally run the tests. It now uses [AwesomeAssertions](https://github.com/AwesomeAssertions/AwesomeAssertions),
-the Apache-2.0 community fork.)
+The test suite uses [AwesomeAssertions](https://github.com/AwesomeAssertions/AwesomeAssertions),
+the Apache-2.0 community fork of FluentAssertions.

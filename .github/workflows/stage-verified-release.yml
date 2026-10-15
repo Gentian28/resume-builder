@@ -64,10 +64,11 @@ jobs:
               assert p['source_run'] == os.environ['PACKAGE_RUN'] and p['source_commit'] == source['headSha']
               assert p['installed_version'] == version and p['safety_backup_verified'] and p['native_startup_and_restart'] and p['new_installer_startup']
               if p['rid'] == 'win-x64': assert p['windows_default_install_migration_and_uninstall_preservation']
-          existing = subprocess.run(['gh', 'api', f'repos/{repo}/releases/tags/v{version}'], capture_output=True, text=True)
-          if existing.returncode == 0:
-              release = json.loads(existing.stdout)
-              assert release['draft'] and release['target_commitish'] == source['headSha'], 'Refusing to modify a public release or different candidate'
+          # A GITHUB_TOKEN cannot create/edit historical releases whose workflows
+          # differ from main. Require an authenticated maintainer-created draft;
+          # the integration only uploads assets and never changes its target.
+          release = gh('release', 'view', 'v' + version, '--repo', repo, '--json', 'isDraft,targetCommitish')
+          assert release['isDraft'] and release['targetCommitish'] == source['headSha'], 'Expected a draft for the exact tested candidate'
           output = pathlib.Path('out')
           output.mkdir()
           sums = list(pathlib.Path('packages').rglob('SHA256SUMS-*.txt'))
@@ -94,11 +95,8 @@ jobs:
               stream.write('sha=' + source['headSha'] + '\ntag=v' + version + '\n')
           print('Verified', len(assets), 'assets and all five native acceptance proofs for', source['headSha'])
           PY
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: out/*
-          tag_name: ${{ steps.release.outputs.tag }}
-          target_commitish: ${{ steps.release.outputs.sha }}
-          draft: true
-          body_path: NOTES.md
-          fail_on_unmatched_files: true
+      - name: Upload verified assets to the existing draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: gh release upload "$RELEASE_TAG" out/* --repo "$GITHUB_REPOSITORY" --clobber

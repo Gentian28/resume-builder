@@ -7,6 +7,27 @@
     "code_ci":  "https://github.com/Gentian28/resume-builder/actions/runs/38782836975",
     "tests_passed":  571,
     "live_tests_skipped":  3,
+    "windows_manual_display_followup": {
+        "date": "2026-10-15",
+        "method": "Native computer-use observation, separate from hosted package acceptance",
+        "app_version": "1.3.0",
+        "profile": "Isolated temporary profile with the synthetic example",
+        "display_resolution": "3440x1440",
+        "original_scale_percent": 125,
+        "additional_scales_observed_percent": [100, 150, 200],
+        "original_scale_restored_and_verified": true,
+        "compact_window_captures": ["893x931", "893x594"],
+        "observations": [
+            "Toolbar wrapping retains Save and Export at compact width",
+            "Editor and navigation panes scroll at compact height",
+            "Applications and export review retain visible controls",
+            "Export review adapts to 150 and 200 percent work areas",
+            "Editing at 200 percent updates the PDF preview",
+            "Autosave is confirmed after restoring 125 percent",
+            "Temporary QA and Settings windows closed; real profile not opened"
+        ],
+        "limits": "One Windows desktop and selected display; no mixed-monitor transition, human participant study or native Mac/Linux workflow observation"
+    },
     "cases":  [
                   {
                       "rid":  "linux-x64",

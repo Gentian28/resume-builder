@@ -46,3 +46,6 @@ secrets.json
 # Claude Code personal settings. ".local." is per-machine by convention and it
 # accumulates permission entries as you work, so it only ever creates diff noise.
 .claude/settings.local.json
+
+# Python packaging/acceptance helpers
+__pycache__/

@@ -18,6 +18,8 @@ section matching the tag and fails the build if there isn't one.
 - Applications preserve dates, retain failed edits for retry, and capture the sent content for newly tracked or newly sent applications. Historical records without a snapshot keep their existing live link.
 - Letter drafting uses the letter's own resume and posting. Save, export and undo target the active document, with separate letter undo history and macOS Command shortcuts.
 - Creating or resetting a cover letter works in time zones with a nonzero UTC offset.
+- Changing an application status keeps the active dropdown stable instead of crashing during selection.
+- Word import retains names, complete job titles and October dates. Export review displays readable lines, and GitHub usernames no longer produce a false warning.
 
 ### Added
 
@@ -29,6 +31,7 @@ section matching the tag and fails the build if there isn't one.
 - A4/US Letter paper and English/Albanian generated document headings and dates, isolated per export.
 - Local support diagnostics containing software details and fixed error codes only, plus a usability-session kit and distribution-link audit.
 - Headless layout, theme and Escape/focus tests; native unsigned installer packaging is now rehearsed in CI.
+- Release gates exercise native Windows, Linux, Apple silicon and Intel Mac installers and installed upgrades with synthetic data and verified safety backups.
 
 - Complete workspace backup and restore through the JSON backup/import flow. Restore validates the archive, keeps a safety database copy and pauses sync.
 - Persistent non-secret preferences for models, sync and the last open resume. API keys remain session-only.

@@ -1,12 +1,12 @@
 # Signing access and reapplication draft
 
-Prepared 2026-10-15. This is a draft for the project owner to review and submit through the provider's application process. No application or message was sent.
+Prepared 2026-10-15. Technical project fields are filled in the live [application form](https://signpath.org/apply), with Productivity, Individual maintainer(s) and GitHub Actions selected. Contact information, actual discovery source and required consent remain for the owner. No application or message was submitted. The form requires agreement to the [Foundation terms](https://signpath.org/terms) and personal-data processing; general permission to work does not replace action-time consent to those agreements. Marketing consent remains unchecked. If the live draft is lost, this document preserves the project text.
 
 ## Evidence
 
 The public [repository](https://github.com/Gentian28/resume-builder) was created on 2026-07-28. GitHub's public API reported 4 stars, 1 fork and 10 published releases when checked on 2026-10-15. Those releases had 1,832 asset downloads in total. Only 555 downloads were installer, portable ZIP or AppImage assets; the remaining asset count includes update feeds, packages and checksum files. None of these figures establishes a number of distinct people, active installations or retained users. Some downloads include development and verification activity.
 
-The app is distributed as `Gentian28.ResumeBuilder` through [winget](https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Gentian28/ResumeBuilder). Published releases trigger manifest generation and submission. The public project includes build/test workflows, a changelog, contributor instructions, a security reporting policy and synthetic fixtures. The current release work adds native installer/upgrade acceptance for Windows, Linux and both Mac architectures.
+The app is distributed as `Gentian28.ResumeBuilder` through [winget](https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Gentian28/ResumeBuilder). Published releases trigger manifest generation and submission. The public project includes build/test workflows, a changelog, contributor instructions, a security reporting policy and synthetic fixtures. [Version 1.3.0 is public](https://github.com/Gentian28/resume-builder/releases/tag/v1.3.0), and all five exact-package native installer/upgrade acceptance cases passed for Windows, Linux and both Mac architectures in [verification 38784069423](https://github.com/Gentian28/resume-builder/actions/runs/38784069423). Its [winget update PR](https://github.com/microsoft/winget-pkgs/pull/453487) is submitted and awaiting Microsoft's remaining validation. Baseline counters above precede this release and its verification downloads.
 
 ## Suggested application text
 

@@ -20,10 +20,13 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: winget-submission
+  cancel-in-progress: false
+
 jobs:
   submit:
-    # Two gates. The variable is the opt-in; the tag check keeps a pre-release or a hand-made
-    # draft from submitting something winget should never see.
+    # The variable opts in; release eligibility is checked through GitHub before generation.
     if: vars.WINGET_AUTO_SUBMIT == 'true'
     runs-on: windows-latest
 
@@ -34,14 +37,21 @@ jobs:
           # needs the branch rather than the detached tag commit.
           ref: main
 
+      - name: Test submission retry checks
+        shell: pwsh
+        run: node --test scripts/winget-submission-status.test.cjs
+
       - name: Resolve version
         id: v
         shell: bash
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            ver="${{ github.event.inputs.version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            ver="$INPUT_VERSION"
           else
-            ver="${{ github.event.release.tag_name }}"
+            ver="$RELEASE_TAG"
             ver="${ver#v}"
           fi
           if ! echo "$ver" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
@@ -49,6 +59,19 @@ jobs:
             exit 1
           fi
           echo "version=$ver" >> "$GITHUB_OUTPUT"
+
+      - name: Check release eligibility
+        uses: actions/github-script@v7
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        with:
+          script: |
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              ...context.repo, tag: `v${process.env.VERSION}`,
+            });
+            if (release.draft || release.prerelease) {
+              throw new Error('Only a published stable release can be submitted.');
+            }
 
       - name: Generate the manifest
         shell: pwsh
@@ -62,22 +85,59 @@ jobs:
           git config user.name  "Gentian Shkembi"
           git config user.email "gentian.shkembi@gmail.com"
           git add packaging/winget
-          git commit -m "Add winget manifest for ${{ steps.v.outputs.version }}" || {
-            echo "nothing to commit - manifest already present"
+          if git diff --cached --quiet; then
+            echo "Manifest already committed"
             exit 0
-          }
+          fi
+          git commit -m "Add winget manifest for ${{ steps.v.outputs.version }}"
           git push
 
+      - name: Check existing submission
+        id: status
+        uses: actions/github-script@v7
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        with:
+          script: |
+            const check = require('./scripts/winget-submission-status.cjs');
+            const result = await check({ github, version: process.env.VERSION,
+              manifestRoot: `packaging/winget/${process.env.VERSION}` });
+            core.setOutput('submit', String(result.submit));
+            await core.summary.addRaw(result.reason).write();
+
+      - name: Check dedicated credential
+        if: steps.status.outputs.submit == 'true'
+        shell: pwsh
+        env:
+          WINGET_CREATE_GITHUB_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINGET_CREATE_GITHUB_TOKEN)) {
+            throw 'Set the dedicated WINGET_TOKEN repository secret. See docs/manual-steps.md.'
+          }
+          $headers = @{ Authorization = "Bearer $env:WINGET_CREATE_GITHUB_TOKEN"; Accept = 'application/vnd.github+json' }
+          try {
+            $response = Invoke-WebRequest -Uri https://api.github.com/user -Headers $headers
+          } catch {
+            throw 'WINGET_TOKEN is invalid or GitHub is unavailable. Replace the dedicated credential; do not copy the interactive gh token into CI.'
+          }
+          $scopes = [string]::Join(',', $response.Headers['X-OAuth-Scopes']) -split ',' | ForEach-Object { $_.Trim() }
+          if ('public_repo' -notin $scopes -or @($scopes | Where-Object { $_ -and $_ -ne 'public_repo' }).Count -gt 0) {
+            throw 'Use a dedicated classic PAT with only public_repo. Fine-grained tokens are not supported by wingetcreate.'
+          }
+
       - name: Install wingetcreate
+        if: steps.status.outputs.submit == 'true'
         shell: pwsh
         run: winget install --id Microsoft.WingetCreate --accept-source-agreements --accept-package-agreements --disable-interactivity
 
       - name: Submit
+        if: steps.status.outputs.submit == 'true'
         shell: pwsh
         env:
-          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          WINGET_CREATE_GITHUB_TOKEN: ${{ secrets.WINGET_TOKEN }}
         # Opens the PR against microsoft/winget-pkgs from your fork. The package must already
         # exist there - the very first submission carries package-identity review and is done
         # by hand.
         run: |
-          wingetcreate submit --token $env:WINGET_TOKEN packaging\winget\${{ steps.v.outputs.version }}
+          wingetcreate submit packaging\winget\${{ steps.v.outputs.version }}
+          if ($LASTEXITCODE -ne 0) { throw "wingetcreate submit failed with exit code $LASTEXITCODE." }

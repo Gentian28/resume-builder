@@ -36,7 +36,12 @@ public class ResumeDbContext : DbContext
         {
             var legacyDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData,
                 Environment.SpecialFolderOption.DoNotVerify), "ResumeBuilder");
-            try { LegacyWorkspaceMigration.CopyIfNeeded(legacyDirectory, appDataPath); }
+            try
+            {
+                legacyDirectory = LegacyWorkspaceMigration.FindSourceDirectory(legacyDirectory,
+                    Path.Combine(Path.GetDirectoryName(legacyDirectory)!, "ResumeBuilderLegacyRecovery"));
+                LegacyWorkspaceMigration.CopyIfNeeded(legacyDirectory, appDataPath);
+            }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
             {
                 // A failed migration must show recovery rather than opening an empty workspace.

@@ -16,6 +16,8 @@ On a Linux profile whose data base directory did not exist, v1.2.3 could create 
 
 Windows 1.3.0 uses `%LocalAppData%/ResumeBuilderData`, outside the `%LocalAppData%/ResumeBuilder` installer tree. On first launch it takes a SQLite online snapshot of the legacy workspace, validates it, copies theme/preferences/sync history and database backups, then publishes the database without replacing an existing destination. The legacy source stays intact. Migration errors open the existing recovery window rather than silently starting an empty workspace. Dictionary and thumbnail caches can be regenerated. Downgrading to an older app opens its older data location; it does not synchronize edits back from the new location.
 
+Installing the new Setup.exe directly over v1.2.3 has its own gate, in addition to the in-app update route. Velopack renames the old install during repair and deletes that rollback when setup succeeds. The new install hook preserves a matching legacy tree containing user data under `%LocalAppData%/ResumeBuilderLegacyRecovery` before that cleanup. Ordinary launch then migrates from the preserved source. This recovery tree deliberately retains the old files; it is not an automatically deleted cache. Do not discard it before verifying the migrated workspace and an independent backup.
+
 ## Windows signing
 
 The current builds are unsigned. SignPath declined the initial application on 2026-07-29 and invited reapplication with evidence of adoption. The refreshed [reapplication draft](signing-readiness.md) contains current, clearly labelled download counts and project links. It has not been sent.

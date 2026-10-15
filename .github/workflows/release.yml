@@ -176,7 +176,7 @@ jobs:
           retention-days: 7
 
   acceptance:
-    name: installed upgrade ${{ matrix.rid }}
+    name: installed upgrade ${{ matrix.rid }} (${{ matrix.route }})
     needs: package
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
@@ -184,10 +184,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: windows-latest, rid: win-x64 }
-          - { os: ubuntu-latest, rid: linux-x64 }
-          - { os: macos-latest, rid: osx-arm64 }
-          - { os: macos-15-intel, rid: osx-x64 }
+          - { os: windows-latest, rid: win-x64, route: package }
+          - { os: windows-latest, rid: win-x64, route: installer }
+          - { os: ubuntu-latest, rid: linux-x64, route: package }
+          - { os: macos-latest, rid: osx-arm64, route: package }
+          - { os: macos-15-intel, rid: osx-x64, route: package }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -209,12 +210,12 @@ jobs:
           version="${INPUT_VERSION:-${GITHUB_REF_NAME#v}}"
           desktop=()
           if [ "${{ runner.os }}" = "Linux" ]; then desktop=(xvfb-run -a); fi
-          "${desktop[@]}" python scripts/release-acceptance.py --rid "${{ matrix.rid }}" --version "$version" --artifacts artifacts
+          "${desktop[@]}" python scripts/release-acceptance.py --rid "${{ matrix.rid }}" --version "$version" --artifacts artifacts --upgrade-route "${{ matrix.route }}"
       - name: Keep acceptance evidence even on failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: acceptance-${{ matrix.rid }}
+          name: acceptance-${{ matrix.rid }}-${{ matrix.route }}
           path: acceptance-evidence/**
           if-no-files-found: warn
           retention-days: 30

@@ -161,6 +161,7 @@ def main():
     parser.add_argument("--version", required=True)
     parser.add_argument("--previous", default="1.2.3")
     parser.add_argument("--artifacts", type=Path, required=True)
+    parser.add_argument("--upgrade-route", choices=("package", "installer"), default="package")
     args = parser.parse_args()
     assert os.environ.get("GITHUB_ACTIONS") == "true", "Only run on disposable GitHub-hosted runners"
     assert os.environ.get("RUNNER_ENVIRONMENT") == "github-hosted", "Never use a persistent self-hosted runner"
@@ -226,8 +227,11 @@ def main():
     # For /Applications installations the updater needs administrative access.
     # CI supplies it explicitly; this does not test a human Gatekeeper/admin prompt.
     prefix = ["sudo"] if sys.platform == "darwin" else []
-    run(*prefix, updater, "--rootDir", install, "--verbose", "--log", evidence / "update.log",
-        "apply", "--norestart", "--package", packages[0])
+    if sys.platform == "win32" and args.upgrade_route == "installer":
+        run(artifacts / name, "--silent", "--log", evidence / "installer-upgrade.log")
+    else:
+        run(*prefix, updater, "--rootDir", install, "--verbose", "--log", evidence / "update.log",
+            "apply", "--norestart", "--package", packages[0])
     if sys.platform.startswith("linux"):
         # Re-extract the updated image into a different directory. Never launch
         # stale files from the previous extraction after the AppImage is replaced.
@@ -242,6 +246,11 @@ def main():
     assert version == args.version, (version, args.version)
     legacy_database = database
     if sys.platform == "win32":
+        if args.upgrade_route == "installer":
+            recovery = Path(os.environ["LOCALAPPDATA"]) / "ResumeBuilderLegacyRecovery"
+            preserved = list(recovery.glob("*/resumes.db"))
+            assert len(preserved) == 1, "Installer did not retain the legacy workspace"
+            legacy_database = preserved[0]
         database = Path(os.environ["LOCALAPPDATA"]) / "ResumeBuilderData/resumes.db"
         assert not database.exists(), "Migration destination was not empty"
     start_and_stop(executable, evidence / "updated-startup.log", env, database)
@@ -292,6 +301,7 @@ def main():
         assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert db.execute('SELECT count(*) FROM Resumes').fetchone()[0] == 0
     result = {"rid": args.rid, "native_architecture": actual_arch, "previous_version": args.previous,
+              "upgrade_route": args.upgrade_route,
               "installed_version": version, "old_schema_created_by_previous_app": True,
               "preserved_tables": list(snapshot), "safety_backup_verified": True,
               "native_startup_and_restart": True, "new_installer_startup": True, "unsigned": True,

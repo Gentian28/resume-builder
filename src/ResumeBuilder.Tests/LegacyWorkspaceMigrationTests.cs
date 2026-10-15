@@ -16,7 +16,8 @@ public sealed class LegacyWorkspaceMigrationTests : IDisposable
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
         {
-            DataSource = Path.Combine(directory, "resumes.db"), Pooling = false
+            DataSource = Path.Combine(directory, "resumes.db"),
+            Pooling = false
         }.ToString());
         connection.Open();
         return connection;
@@ -92,6 +93,46 @@ public sealed class LegacyWorkspaceMigrationTests : IDisposable
     {
         LegacyWorkspaceMigration.CopyIfNeeded(Source, Destination).Should().BeFalse();
         Directory.Exists(Destination).Should().BeFalse();
+    }
+
+    [Fact]
+    public void InstallerRollback_IsMovedOutsideCleanupBeforeDatabaseMigration()
+    {
+        var rollback = Source + ".0123456789ABCDEF";
+        Directory.CreateDirectory(Path.Combine(rollback, "current"));
+        File.WriteAllText(Path.Combine(rollback, "current", "sq.version"), "<package><metadata><id>ResumeBuilder</id></metadata></package>");
+        using (var db = Open(rollback)) Execute(db, "CREATE TABLE Payload(Value TEXT); INSERT INTO Payload VALUES('kept');");
+        var recovery = Path.Combine(_root, "recovery");
+
+        LegacyWorkspaceMigration.PreserveInstallerRollback(Source, recovery);
+
+        Directory.Exists(rollback).Should().BeFalse();
+        var preserved = Directory.EnumerateDirectories(recovery).Single();
+        File.Exists(Path.Combine(preserved, "resumes.db")).Should().BeTrue();
+        LegacyWorkspaceMigration.FindSourceDirectory(Source, recovery).Should().Be(preserved);
+        LegacyWorkspaceMigration.CopyIfNeeded(preserved, Destination).Should().BeTrue();
+        using var copy = Open(Destination);
+        using var query = copy.CreateCommand();
+        query.CommandText = "SELECT Value FROM Payload";
+        query.ExecuteScalar().Should().Be("kept");
+    }
+
+    [Fact]
+    public void InstallerRollback_IgnoresUnrelatedDirectoriesAndLiveProfileWins()
+    {
+        var unrelated = Source + ".0123456789ABCDEF";
+        Directory.CreateDirectory(Path.Combine(unrelated, "current"));
+        File.WriteAllText(Path.Combine(unrelated, "current", "sq.version"), "<package><metadata><id>AnotherApp</id></metadata></package>");
+        File.WriteAllText(Path.Combine(unrelated, "resumes.db"), "unrelated fixture");
+        var recovery = Path.Combine(_root, "recovery");
+
+        LegacyWorkspaceMigration.PreserveInstallerRollback(Source, recovery);
+
+        Directory.Exists(unrelated).Should().BeTrue();
+        Directory.Exists(recovery).Should().BeFalse();
+        using var live = Open(Source);
+        Execute(live, "CREATE TABLE Payload(Value TEXT);");
+        LegacyWorkspaceMigration.FindSourceDirectory(Source, recovery).Should().Be(Source);
     }
 
     public void Dispose()

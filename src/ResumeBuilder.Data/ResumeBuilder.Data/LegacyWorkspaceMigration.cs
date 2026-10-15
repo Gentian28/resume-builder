@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using Microsoft.Data.Sqlite;
 
 namespace ResumeBuilder.Data;
@@ -5,6 +6,46 @@ namespace ResumeBuilder.Data;
 /// <summary>Copies legacy user data out of the Windows install tree before it can be uninstalled.</summary>
 public static class LegacyWorkspaceMigration
 {
+    /// <summary>
+    /// Setup renames an existing install before invoking the new app's install hook,
+    /// then deletes that rollback directory. Move the whole legacy tree outside
+    /// its cleanup path before doing any slower database work on ordinary launch.
+    /// </summary>
+    public static void PreserveInstallerRollback(string installDirectory, string recoveryDirectory)
+    {
+        var parent = Path.GetDirectoryName(Path.GetFullPath(installDirectory))!;
+        var prefix = Path.GetFileName(installDirectory) + ".";
+        foreach (var candidate in Directory.EnumerateDirectories(parent, prefix + "*"))
+        {
+            var name = Path.GetFileName(candidate);
+            // Windows wildcard matching can return the extensionless install itself.
+            if (!name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
+            var suffix = name[prefix.Length..];
+            if (suffix.Length != 16 || !suffix.All(char.IsAsciiLetterOrDigit)
+                || !File.Exists(Path.Combine(candidate, "resumes.db"))) continue;
+            var manifest = Path.Combine(candidate, "current", "sq.version");
+            if (!File.Exists(manifest)) continue;
+            try
+            {
+                if (!XDocument.Load(manifest).Descendants().Any(e => e.Name.LocalName == "id" && e.Value == "ResumeBuilder")) continue;
+            }
+            catch (System.Xml.XmlException) { continue; }
+
+            Directory.CreateDirectory(recoveryDirectory);
+            Directory.Move(candidate, Path.Combine(recoveryDirectory, Guid.NewGuid().ToString("N")));
+        }
+    }
+
+    /// <summary>Find the still-live legacy profile, or the newest preserved installer rollback.</summary>
+    public static string FindSourceDirectory(string legacyDirectory, string recoveryDirectory)
+    {
+        if (File.Exists(Path.Combine(legacyDirectory, "resumes.db")) || !Directory.Exists(recoveryDirectory)) return legacyDirectory;
+        return Directory.EnumerateDirectories(recoveryDirectory)
+            .Where(p => File.Exists(Path.Combine(p, "resumes.db")))
+            .OrderByDescending(p => File.GetLastWriteTimeUtc(Path.Combine(p, "resumes.db")))
+            .FirstOrDefault() ?? legacyDirectory;
+    }
+
     /// <summary>
     /// Publishes a consistent database snapshot last, leaving the source intact and never
     /// replacing a destination workspace. Only known user files cross, not installer content.
@@ -21,11 +62,14 @@ public static class LegacyWorkspaceMigration
         {
             using (var source = new SqliteConnection(new SqliteConnectionStringBuilder
             {
-                DataSource = sourcePath, Mode = SqliteOpenMode.ReadOnly, Pooling = false
+                DataSource = sourcePath,
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false
             }.ToString()))
             using (var destination = new SqliteConnection(new SqliteConnectionStringBuilder
             {
-                DataSource = stagingPath, Pooling = false
+                DataSource = stagingPath,
+                Pooling = false
             }.ToString()))
             {
                 source.Open();

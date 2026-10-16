@@ -14,6 +14,10 @@ on:
       version:
         description: "Version to submit (no leading v), e.g. 1.1.0"
         required: true
+      verify_credential:
+        description: "Check the dedicated credential even when this version is already submitted"
+        type: boolean
+        default: false
 
 # The job commits the generated manifest back to main; without this the push is refused
 # with a 403 (default workflow permissions are read-only).
@@ -123,7 +127,7 @@ jobs:
             await core.summary.addRaw(result.reason).write();
 
       - name: Check dedicated credential
-        if: steps.status.outputs.submit == 'true'
+        if: steps.status.outputs.submit == 'true' || inputs.verify_credential == true
         shell: pwsh
         env:
           WINGET_CREATE_GITHUB_TOKEN: ${{ secrets.WINGET_TOKEN }}
@@ -141,6 +145,7 @@ jobs:
           if ('public_repo' -notin $scopes -or @($scopes | Where-Object { $_ -and $_ -ne 'public_repo' }).Count -gt 0) {
             throw 'Use a dedicated classic PAT with only public_repo. Fine-grained tokens are not supported by wingetcreate.'
           }
+          'Dedicated credential authentication and public_repo-only scope check passed. This does not exercise a new PR submission.' >> $env:GITHUB_STEP_SUMMARY
 
       - name: Install wingetcreate
         if: steps.status.outputs.submit == 'true'

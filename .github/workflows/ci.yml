@@ -1,14 +1,29 @@
 name: CI
 
 on:
+  # Docs and markdown cannot break the build, so a change that touches nothing else skips CI.
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   # Advisories are published against packages that have not changed. A weekly scan catches the
   # ones that land between pushes; only the vulnerable-packages job runs on this trigger.
   schedule:
     - cron: "0 6 * * 1"
+  # The way to ask for the installer packaging rehearsal without opening a pull request.
+  workflow_dispatch:
+
+# A newer push or pull request update makes the run in progress moot, so it is cancelled rather
+# than left to finish. The event is part of the key so the weekly scan never cancels a push.
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -57,9 +72,13 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # Pull requests and manual runs only, not every push to main. Two of these four legs are
+  # macOS, the costliest runner, and release.yml packs and verifies all four targets before
+  # anything is published, so a packaging break still cannot ship. Run CI by hand before
+  # tagging to find one earlier.
   publish:
     name: publish ${{ matrix.rid }}
-    if: github.event_name != 'schedule'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
